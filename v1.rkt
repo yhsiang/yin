@@ -58,8 +58,8 @@
     [(? string? x) (Const x)]
     [(? symbol? x) (Var x)]
     [`(quote ,x) (Symbol x)]
-    [`(fn ,x ,body)
-     (Fun (parse x) (parse body))]
+    [`(fn ,x ,body ...)
+     (Fun (parse x) (Seq (map parse body)))]
     [(list (? op? op) e1 e2)
      (Op (parse op) (parse e1) (parse e2))]
     [`(if ,test ,then ,else)
