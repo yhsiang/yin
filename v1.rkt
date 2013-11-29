@@ -42,6 +42,7 @@
 (struct Define (pattern value) #:transparent)
 (struct Assign (pattern value) #:transparent)
 (struct Seq (statements) #:transparent)
+(struct Return (value) #:transparent)
 (struct If (test then else) #:transparent)
 (struct Op (op e1 e2) #:transparent)
 
@@ -66,6 +67,8 @@
      (If (parse test) (parse then) (parse else))]
     [`(begin ,statements ...)
      (Seq (map parse statements))]
+    [`(return ,value)
+     (Return (parse value))]
     [`(def ,pattern ,value)
      (Define (parse pattern) (parse value))]
     [`(<- ,pattern ,value)
@@ -75,7 +78,6 @@
     [`(,e1 ,e2)  ; must stay last
      (App (parse e1) (parse e2))]
     ))
-
 
 (define (unparse t)
   (match t
@@ -96,6 +98,8 @@
      `(<- ,(unparse pattern) ,(unparse value))]
     [(Seq statements)
      `(begin ,@(map unparse statements))]
+    [(Return value)
+     `(return ,(unparse value))]
     [(If test then else)
      `(if ,(unparse test) ,(unparse then) ,(unparse else))]
     [(Closure fun env)
@@ -103,6 +107,7 @@
     [other other]
     ))
 
+;; (unparse (parse '(return 1)))
 ;; (unparse (parse '(f 'x)))
 ;; (parse '(op + 1 2))
 ;; (unparse (parse '(begin x y z)))
@@ -220,12 +225,16 @@
             (env-put env-def x v))]))]
     [(Seq statements)
      (let loop ([statements statements])
-       (cond
-        [(null? (rest statements))
-         (interp1 (first statements) env)]
-        [else
-         (interp1 (first statements) env)
-         (loop (rest statements))]))]
+       (let ([s0 (first statements)]
+             [ss (rest statements)])
+         (cond
+          [(Return? s0)
+           (interp1 (Return-value s0) env)]
+          [(null? ss)
+           (interp1 s0 env)]
+          [else
+           (interp1 s0 env)
+           (loop ss)])))]
     ))
 
 
@@ -288,3 +297,27 @@
         (def f "no"))
     f))
 
+
+(interp
+ '(begin
+    (def g
+         (fn x
+             (if (< x 2)
+                 (begin
+                   (def g (fn y (* y 2))))
+                 (begin
+                   (def g (fn y (/ y 2)))))
+             (g 3)))
+    (g 4)))
+
+
+(interp
+ '(begin
+    1))
+
+(interp
+ '(begin
+    (def x 1)
+    (def y 2)
+    (return (+ x y))
+    10))
