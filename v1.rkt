@@ -85,7 +85,7 @@
           (Attribute seg-symbols))]))]
     [`(quote ,x) (Symbol x)]
     [`(fn (,params ...) ,body ...)
-     (Fun (parse `(rec params ,@params)) (Seq (map parse body)))]
+     (Fun (parse `(record params ,@params)) (Seq (map parse body)))]
     [(list (? op? op) e1 e2)
      (Op (parse op) (parse e1) (parse e2))]
     [`(if ,test ,then ,else)
@@ -100,7 +100,7 @@
      (Def (parse pattern) (parse value))]
     [`(<- ,pattern ,value)
      (Assign (parse pattern) (parse value))]
-    [`(rec ,name ,fields ...)
+    [`(record ,name ,fields ...)
      (RecordDef (parse name) (map parse fields))]
     [`(vec ,elems ...)
      (Vector (map parse elems))]
@@ -109,7 +109,7 @@
     [`(,f ,args ...)  ; application must stay last
      (cond
       [(andmap def-form? args)
-       (App (parse f) (parse `(rec args ,@args)))]
+       (App (parse f) (parse `(record args ,@args)))]
       [(andmap (negate def-form?) args)
        (App (parse f) (parse `(vec ,@args)))]
       [else
@@ -139,12 +139,12 @@
     [(Op op e1 e2)
      `(,(unparse op) ,(unparse e1) ,(unparse e2))]
     [(RecordDef name fields)
-     `(rec ,(unparse name) ,@(map unparse fields))]
+     `(record ,(unparse name) ,@(map unparse fields))]
     [(Record name fields table)
      (let ([fs (hash-map table
                          (lambda (k v)
                            `(:+ ,(unparse k) ,(unparse v))))])
-       `(rec ,(unparse name) ,@fs))]
+       `(record ,(unparse name) ,@fs))]
     [(Vector elems)
      `(vec ,@(map unparse elems))]
     [(Import origin names)
@@ -177,14 +177,14 @@
 ;; (unparse (parse '(:+ (f x (:+ y 1)) (+ x y))))
 ;; (unparse (parse '(import r x y z)))
 ;; (unparse (parse 'x.y.z.w))
-;; (unparse (parse '(rec r1 f1 (<- f2 0))))
+;; (unparse (parse '(record r1 f1 (<- f2 0))))
 ;; (unparse (parse '(return 1)))
 ;; (unparse (parse '(f 'x)))
 ;; (parse '(op + 1 2))
 ;; (unparse (parse '(begin x y z)))
 ;; (unparse (parse '(:+ x 1)))
-;; (unparse (parse '(rec x (1 2))))
-;; (unparse (parse '(fn (rec x (1 2)) "hi")))
+;; (unparse (parse '(record x (1 2))))
+;; (unparse (parse '(fn (record x (1 2)) "hi")))
 
 
 ;; --------------- symbol table (environment) ---------------

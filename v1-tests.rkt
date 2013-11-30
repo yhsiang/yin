@@ -81,7 +81,7 @@
  42
  '(begin
     (:+ f (fn (x) x.a))
-    (:+ o (rec any (:+ a 42)))
+    (:+ o (record any (:+ a 42)))
     (f o)))
 
 (test
@@ -108,7 +108,7 @@
  "import from record simple"
  1
  '(begin
-    (rec r1 (:+ x 1) (:+ y 2))
+    (record r1 (:+ x 1) (:+ y 2))
     (import r1 x)
     x))
 
@@ -116,8 +116,8 @@
  "import from record nested"
  1
  '(begin
-    (rec r1 (:+ x 1))
-    (rec r2 (:+ y r1))
+    (record r1 (:+ x 1))
+    (record r2 (:+ y r1))
     (import r2.y x)
     x))
 
@@ -125,8 +125,8 @@
  "import from record nested"
  1
  '(begin
-    (rec r1 (:+ x 1))
-    (rec r2 (:+ y r1))
+    (record r1 (:+ x 1))
+    (record r2 (:+ y r1))
     (import r2 y)
     (import y x)
     x))
@@ -135,8 +135,8 @@
  "import function and fields"
  30
   '(begin
-     (rec r1 (:+ x 2) (:+ y 3))
-     (rec r2
+     (record r1 (:+ x 2) (:+ y 3))
+     (record r2
           (:+ z 5)
           (:+ f (fn (x y z) (* (* x y) z))))
      (import r1 x y)
@@ -147,7 +147,7 @@
  "import inside function"
  6
  '(begin
-    (rec r1
+    (record r1
          (:+ x 1)
          (:+ y 2))
     (:+ (f z)
@@ -256,7 +256,7 @@
     (even 9)))
 
 (test
- "mutural recursion (even 9 = true)"
+ "mutural recursion (even 100 = true)"
  'true
  '(begin
     (:+ not (fn (x) (if (eq? x true) false true)))
@@ -319,7 +319,7 @@
  "function stored in record field"
  10
  '(begin
-    (:+ r1 (rec something (:+ x (fn (y) (* y 2)))))
+    (:+ r1 (record something (:+ x (fn (y) (* y 2)))))
     (r1.x 5)))
 
 (test
@@ -327,5 +327,4 @@
  10
  '(begin
     (:+ (bar x) (x.foo 5))
-    (bar (rec something (:+ foo (fn (y) (* y 2)))))))
-
+    (bar (record something (:+ foo (fn (y) (* y 2)))))))
