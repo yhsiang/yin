@@ -2,7 +2,7 @@
 
 
 ;; --------------- utilities ---------------
-(define (fatal who . args)
+(define (abort who . args)
   (printf "~s: " who)
   (for-each display args)
   (display "\n")
@@ -21,8 +21,8 @@
          (void))]))
 
 
-; special value for representing "nothing"
-; (avoid using #f for nothing because nothing is not boolean)
+;; special value for representing "nothing"
+;; (avoid using #f for nothing because nothing is not boolean)
 (define nothing 'nothing)
 (define (nothing? x) (eq? x 'nothing))
 (define (something? x) (not (eq? x 'nothing)))
@@ -40,7 +40,7 @@
 (struct Fun (param body) #:transparent)
 (struct App (fun arg) #:transparent)
 (struct RecordDef (name fields) #:transparent)
-(struct Define (pattern value) #:transparent)
+(struct Def (pattern value) #:transparent)
 (struct Import (origin names) #:transparent)
 (struct Assign (pattern value) #:transparent)
 (struct Seq (statements) #:transparent)
@@ -51,6 +51,7 @@
 ;; interpreter's internal structures
 (struct Closure (fun env) #:transparent)
 (struct Record (name fields table) #:transparent)
+(struct Vector (elems) #:transparent)
 
 
 ;; --------------- parser and unparser ---------------
@@ -69,8 +70,8 @@
          (let ([seg-symbols (map string->symbol segs)])
           (Attribute seg-symbols))]))]
     [`(quote ,x) (Symbol x)]
-    [`(fn ,x ,body ...)
-     (Fun (parse x) (Seq (map parse body)))]
+    [`(fn (,params ...) ,body ...)
+     (Fun (parse `(rec params ,@params)) (Seq (map parse body)))]
     [(list (? op? op) e1 e2)
      (Op (parse op) (parse e1) (parse e2))]
     [`(if ,test ,then ,else)
@@ -79,17 +80,35 @@
      (Seq (map parse statements))]
     [`(return ,value)
      (Return (parse value))]
+    [`(:+ (,f ,params ...) ,body ...)
+     (Def (parse f) (parse `(fn ,params ,@body)))]
     [`(:+ ,pattern ,value)
-     (Define (parse pattern) (parse value))]
+     (Def (parse pattern) (parse value))]
     [`(<- ,pattern ,value)
      (Assign (parse pattern) (parse value))]
     [`(rec ,name ,fields ...)
      (RecordDef (parse name) (map parse fields))]
+    [`(vec ,elems ...)
+     (Vector (map parse elems))]
     [`(import ,origin ,names ...)
      (Import (parse origin) (map parse names))]
-    [`(,e1 ,e2)  ; must stay last
-     (App (parse e1) (parse e2))]
+    [`(,f ,args ...)  ; application must stay last
+     (cond
+      [(andmap def-form? args)
+       (App (parse f) (parse `(rec args ,@args)))]
+      [(andmap (negate def-form?) args)
+       (App (parse f) (parse `(vec ,@args)))]
+      [else
+       (abort 'parse 
+              "application must either be all keyword args"
+              " or all positional args, no mixture please")])]
     ))
+
+(define (def-form? x)
+  (and (list? x)
+       (= 3 (length x))
+       (eq? ':+ (car x))))
+
 
 (define (unparse t)
   (match t
@@ -112,9 +131,11 @@
                          (lambda (k v)
                            `(:+ ,(unparse k) ,(unparse v))))])
        `(rec ,(unparse name) ,@fs))]
+    [(Vector elems)
+     `(vec ,@(map unparse elems))]
     [(Import origin names)
      `(import ,(unparse origin) ,(map unparse names))]
-    [(Define pattern value)
+    [(Def pattern value)
      `(:+ ,(unparse pattern) ,(unparse value))]
     [(Assign pattern value)
      `(<- ,(unparse pattern) ,(unparse value))]
@@ -134,6 +155,12 @@
     [other other]
     ))
 
+;; (parse '(f (:+ x 1) (:+ y 2)))
+;; (parse '(f x y))
+;; (parse '(f x (:+ y 2)))
+;; (unparse (parse '(vec 1 2 3)))
+;; (unparse (parse '(f (:+ x 1) (:+ y 2))))
+;; (unparse (parse '(:+ (f x (:+ y 1)) (+ x y))))
 ;; (unparse (parse '(import r x y z)))
 ;; (unparse (parse 'x.y.z.w))
 ;; (unparse (parse '(rec r1 f1 (<- f2 0))))
@@ -158,7 +185,7 @@
 (define (env-extend env)
   (Env (make-hasheq) env))
 
-(define (env-put env key value)
+(define (env-put! env key value)
   (hash-set! (Env-table env) key value))
 
 (define (lookup-local var env)
@@ -185,7 +212,7 @@
        [else env]))]))
 
 ;; (define e1 (env-extend env0))
-;; (env-put e1 'x 2)
+;; (env-put! e1 'x 2)
 
 
 (define constants
@@ -206,18 +233,43 @@
        (let ([val (lookup name env)])
          (cond
           [(nothing? val)
-           (fatal 'interp "unbound variable: " name)]
+           (abort 'interp "unbound variable: " name)]
           [else
            val]))])]
     [(Fun x body)
-     (Closure exp env)]
+     (Closure (Fun (interp1 x env) body) env)]
     [(App e1 e2)
      (let ([v1 (interp1 e1 env)]
            [v2 (interp1 e2 env)])
        (match v1
-         [(Closure (Fun (Var x) body) env1)
+         [(Closure (Fun (Record name1 fields1 table1) body) env1)
           (let ([env2 (env-extend env1)])
-            (env-put env2 x v2)
+            (match v2
+              [(Record name2 fields2 table2)
+               (hash-for-each
+                table1
+                (lambda (k v)
+                  (let ([v2 (hash-ref table2 k nothing)])
+                    (cond
+                     [(nothing? v2)
+                      (env-put! env2 k v)]
+                     [else
+                      (env-put! env2 k v2)]))))]
+              [(Vector elems)
+               (cond
+                [(= (length fields1) (length elems))
+                 (let loop ([vec1 fields1]
+                            [vec2 elems])
+                   (cond
+                    [(null? vec1) (void)]
+                    [else
+                     (env-put! env2 (Var-name (first fields1)) (first elems))
+                     (loop (rest fields1) (rest elems))]))]
+                [else
+                 (abort 'interp1
+                        "incorrect number of arguments\n"
+                        " expected: " (length fields1)
+                        " got: " (length elems))])])
             (interp1 body env2))]
          [(? procedure? prim)
           (prim v2)]))]
@@ -231,20 +283,20 @@
        (if tv
            (interp1 then env)
            (interp1 else env)))]
-    [(Define lhs value)
+    [(Def lhs value)
      (match lhs
        [(Var x)
         (let ([existing (lookup-local x env)])
           (cond
            [(something? existing)
-            (fatal 'interp
+            (abort 'interp
                    "redefining: " x
                    " was defined as: " (unparse existing))]
            [else
             (let ([v (interp1 value env)])
-              (env-put env x v))]))]
+              (env-put! env x v))]))]
        [other
-        (fatal 'interp
+        (abort 'interp
                "currently can only assign to variables"
                ", but got: " other)])]
     [(Assign lhs value)
@@ -252,7 +304,7 @@
        (match lhs
          [(Var x)
           (let ([env-def (find-defining-env x env)])
-            (env-put env-def x v))]))]
+            (env-put! env-def x v))]))]
     [(Seq statements)
      (let loop ([statements statements])
        (let ([s0 (first statements)]
@@ -267,8 +319,11 @@
            (loop ss)])))]
     [(RecordDef (Var name) fields)
      (let ([r (new-record exp env)])
-      (env-put env name r)
-      r)]
+       (env-put! env name r)
+       r)]
+    [(Vector elems)
+     (let ([res (map (lambda (x) (interp1 x env)) elems)])
+       (Vector res))]
     [(Attribute segs)
      (let* ([s0 (first segs)]
             [v0 (lookup s0 env)])
@@ -284,14 +339,14 @@
                                        nothing)])
                (cond
                 [(nothing? next-val)
-                 (fatal 'interp1 "attr not exist: " (first segs))]
+                 (abort 'interp1 "attr not exist: " (first segs))]
                 [else
                  (loop (rest segs)
                        next-val)]))]
             [else
-             (fatal 'interp1 "take attr of a non-table: " v0)]))]
+             (abort 'interp1 "take attr of a non-table: " (unparse v0))]))]
         [else
-         (fatal 'interp1 "take attr of a non-table: " v0)]))]
+         (abort 'interp1 "take attr of a non-table: " (unparse v0))]))]
     [(Import origin names)
      (let ([vo (interp1 origin env)])
        (cond
@@ -301,10 +356,10 @@
             [(null? names) (void)]
             [else
              (let ([n0 (first names)])
-               (env-put env (Var-name n0) (record-ref vo n0))
+               (env-put! env (Var-name n0) (record-ref vo n0))
                (loop (rest names)))]))]
         [else
-         (fatal 'interp "trying to import from non-record: " vo)]))]
+         (abort 'interp "trying to import from non-record: " vo)]))]
     ))
 
 
@@ -328,35 +383,45 @@
                                       nothing)])
               (cond
                [(nothing? next-val)
-                (fatal 'interp1 "attr not exist: " (first segs))]
+                (abort 'interp1 "attr not exist: " (first segs))]
                [else
                 (loop (rest segs)
                       next-val)]))]
            [else
-            (fatal 'interp1 "take attr of a non-table: " v0)]))]
+            (abort 'interp1
+                   "take attr of a non-table: "
+                   (unparse v0))]))]
        [else
-        (fatal 'interp1 "take attr of a non-table: " v0)]))]
+        (abort 'interp1
+               "take attr of a non-table: "
+               (unparse v0))]))]
    [else
-    (fatal 'record-ref "access with non-var and non-attr: " name/attr)]))
+    (abort 'record-ref
+           "access with non-var and non-attr: "
+           (unparse name/attr))]))
 
 
 (define (new-record desc env)
   (match desc
     [(RecordDef (Var name) fields)
      (let ([table (make-hasheq)])
-       (let loop ([fields (RecordDef-fields desc)])
-         (cond
-          [(null? fields) (void)]
-          [else
-           (let ([f0 (first fields)])
-             (match f0
-               [(Var x)
-                (hash-set! table x 'nothing)]
-               [(Define (Var x) value)
-                (let ([v (interp1 value env)])
-                  (hash-set! table x v))])
-             (loop (rest fields)))]))
+       (fill-record-table desc table env)
        (Record name fields table))]))
+
+
+(define (fill-record-table desc table env)
+  (let loop ([fields (RecordDef-fields desc)])
+    (cond
+     [(null? fields) (void)]
+     [else
+      (let ([f0 (first fields)])
+        (match f0
+          [(Var x)
+           (hash-set! table x 'nothing)]
+          [(Def (Var x) value)
+           (let ([v (interp1 value env)])
+             (hash-set! table x v))])
+        (loop (rest fields)))])))
 
 
 ;; may not useful
@@ -380,50 +445,50 @@
 ;; -------------- examples --------------
 ;; (interp '((fn x (x x)) (fn x (x x))))
 
-(interp
+(view
  '(begin
-   (:+ f (fn x x))
-   (:+ g (fn x (* x 2)))
+   (:+ f (fn (x) x))
+   (:+ g (fn (x) (* x 2)))
    (:+ fg (f g))
    (fg 3)))
 
-(interp
+(view
  '(if (> 1 2) "yes" "no"))
 
-(interp
+(view
  '(begin
     (:+ x 2)
-    (:+ f (fn x (* x 2)))
+    (:+ f (fn (x) (* x 2)))
     (if (< (f x) 5) "<" ">=")))
 
-(interp
+(view
  '(begin
-    (:+ fact (fn x (if (= x 0) 1 (* x (fact (- x 1))))))
+    (:+ fact (fn (x) (if (= x 0) 1 (* x (fact (- x 1))))))
     (fact 5)))
 
-(interp
+(view
  '(begin
-    (:+ not (fn x (if (eq? x true) false true)))
+    (:+ not (fn (x) (if (eq? x true) false true)))
     (not true)))
 
 ;; even & odd mutural recursion
 ;; (define (even x) (if (= x 0) #t (odd (- x 1))))
 ;; (define (odd x) (if (= x 0) #f (even (- x 1))))
-(interp
+(view
  '(begin
-    (:+ not (fn x (if (eq? x true) false true)))
-    (:+ even (fn x (if (= x 0) true (odd (- x 1)))))
-    (:+ odd (fn x (if (= x 0) false (even (- x 1)))))
-    (even 0)))
+    (:+ not (fn (x) (if (eq? x true) false true)))
+    (:+ even (fn (x) (if (= x 0) true (odd (- x 1)))))
+    (:+ odd (fn (x) (if (= x 0) false (even (- x 1)))))
+    (even 9)))
 
-(interp
+(view
  '(begin
     (:+ x 1)
-    (:+ f (fn y (<- x y)))
+    (:+ f (fn (y) (<- x y)))
     (f 42)
     x))
 
-(interp
+(view
  '(begin
     (:+ x 3)
     (if (< x 2)
@@ -432,24 +497,24 @@
     f))
 
 
-(interp
+(view
  '(begin
     (:+ g
-         (fn x
+         (fn (x)
              (if (< x 2)
                  (begin
-                   (:+ g (fn y (* y 2))))
+                   (:+ g (fn (y) (* y 2))))
                  (begin
-                   (:+ g (fn y (/ y 2)))))
+                   (:+ g (fn (y) (/ y 2)))))
              (g 3)))
     (g 4)))
 
 
-(interp
+(view
  '(begin
     1))
 
-(interp
+(view
  '(begin
     (:+ x 1)
     (:+ y 2)
@@ -457,33 +522,33 @@
     10))
 
 
-(interp '(rec r1 x y (:+ z 0)))
+(view '(rec r1 x y (:+ z 0)))
 
-(interp '(rec ok
-              (:+ x 1)
-              (:+ y 2)
-              (:+ z (+ 1 2))))
+(view
+ '(rec ok
+       (:+ x 1)
+       (:+ y 2)
+       (:+ z (+ 1 2))))
 
-(unparse
- (interp
-  '(begin
-     (rec r1 x y (:+ z 0))
-     (rec ok
-          (:+ x 1)
-          (:+ y 2)
-          (:+ z (+ 1 2))))))
+(view
+ '(begin
+    (rec r1 x y (:+ z 0))
+    (rec ok
+         (:+ x 1)
+         (:+ y 2)
+         (:+ z (+ 1 2)))))
 
-(unparse
- (interp
+
+(view
   '(begin
      (rec r1
           (:+ x 1)
           (:+ y 2))
      (rec r2
           (:+ z 3)
-          (:+ f (fn x (* x 2)))
+          (:+ f (fn (x) (* x 2)))
           (:+ w r1))
-     r2.w.y)))
+     r2.w.y))
 
 
 ;; import
@@ -494,9 +559,9 @@
          (:+ y 2))
     (rec r2
          (:+ z 3)
-         (:+ f (fn x (* x 2)))
+         (:+ f (fn (x) (* x 2)))
          (:+ w r1))
-    (import r1 y)
+    (import r2.w y)
     (import r2 f z)
     (f (+ y z))))
 
@@ -506,8 +571,44 @@
     (rec r1
          (:+ x 1)
          (:+ y 2))
-    (:+ f (fn z 
+    (:+ f (fn (z)
                (import r1 y)
                (* y z)))
     (f 3)))
 
+
+(view
+ '(begin
+    (:+ x 1)
+    (if (< x 2)
+        (begin
+          (<- x 2)
+          (:+ y (* x 2)))
+        (:+ y 3))
+    x))
+
+
+(view
+ '(begin
+    (:+ f (fn (x) x.a))
+    (:+ o (rec any (:+ a 42)))
+    (f (:+ x o))))
+
+
+(view
+ '(begin
+    (:+ (f x (:+ y 1))
+        (* x y))
+    (f (:+ x 2) (:+ y 3))))
+
+
+(view
+ '(begin
+    (:+ (f x) x)
+    (f (:+ x 1))))
+
+
+(view
+ '(begin
+    (:+ (f x) x)
+    (f 1)))
