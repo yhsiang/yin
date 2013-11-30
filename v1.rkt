@@ -16,7 +16,7 @@
     [(_ args ...)
      (if *debug*
          (begin
-           (printf "~s = ~s~n" 'args args)
+           (printf "~s = ~s~n" 'args (unparse args))
            ...)
          (void))]))
 
@@ -36,18 +36,21 @@
 (struct Const (obj) #:transparent)
 (struct Symbol (name) #:transparent)
 (struct Var (name) #:transparent)
+(struct Attribute (segs) #:transparent)
 (struct Fun (param body) #:transparent)
 (struct App (fun arg) #:transparent)
-(struct Record (name fields) #:transparent)
+(struct RecordDef (name fields) #:transparent)
 (struct Define (pattern value) #:transparent)
+(struct Import (origin names) #:transparent)
 (struct Assign (pattern value) #:transparent)
 (struct Seq (statements) #:transparent)
 (struct Return (value) #:transparent)
 (struct If (test then else) #:transparent)
 (struct Op (op e1 e2) #:transparent)
 
-;; closure
+;; interpreter's internal structures
 (struct Closure (fun env) #:transparent)
+(struct Record (name fields table) #:transparent)
 
 
 ;; --------------- parser and unparser ---------------
@@ -57,7 +60,14 @@
   (match sexp
     [(? number? x) (Const x)]
     [(? string? x) (Const x)]
-    [(? symbol? x) (Var x)]
+    [(? symbol? x)
+     (let ([segs (string-split (symbol->string x) ".")])
+       (cond
+        [(= 1 (length segs))
+         (Var x)]
+        [else
+         (let ([seg-symbols (map string->symbol segs)])
+          (Attribute seg-symbols))]))]
     [`(quote ,x) (Symbol x)]
     [`(fn ,x ,body ...)
      (Fun (parse x) (Seq (map parse body)))]
@@ -69,12 +79,14 @@
      (Seq (map parse statements))]
     [`(return ,value)
      (Return (parse value))]
-    [`(def ,pattern ,value)
+    [`(:+ ,pattern ,value)
      (Define (parse pattern) (parse value))]
     [`(<- ,pattern ,value)
      (Assign (parse pattern) (parse value))]
-    [`(rec ,name ,fields)
-     (Record (parse name) (map parse fields))]
+    [`(rec ,name ,fields ...)
+     (RecordDef (parse name) (map parse fields))]
+    [`(import ,origin ,names ...)
+     (Import (parse origin) (map parse names))]
     [`(,e1 ,e2)  ; must stay last
      (App (parse e1) (parse e2))]
     ))
@@ -83,6 +95,9 @@
   (match t
     [(Const obj) obj]
     [(Var name) name]
+    [(Attribute segs)
+     (let ([seg-strings (map symbol->string segs)])
+       (string->symbol (string-join seg-strings ".")))]
     [(Symbol name) name]
     [(Fun x body)
      `(fn ,(unparse x) ,(unparse body))]
@@ -90,14 +105,26 @@
      `(,(unparse e1) ,(unparse e2))]
     [(Op op e1 e2)
      `(,(unparse op) ,(unparse e1) ,(unparse e2))]
-    [(Record name fields)
-     `(rec ,(unparse name) ,(map unparse fields))]
+    [(RecordDef name fields)
+     `(rec ,(unparse name) ,@(map unparse fields))]
+    [(Record name fields table)
+     (let ([fs (hash-map table
+                         (lambda (k v)
+                           `(:+ ,(unparse k) ,(unparse v))))])
+       `(rec ,(unparse name) ,@fs))]
+    [(Import origin names)
+     `(import ,(unparse origin) ,(map unparse names))]
     [(Define pattern value)
-     `(def ,(unparse pattern) ,(unparse value))]
+     `(:+ ,(unparse pattern) ,(unparse value))]
     [(Assign pattern value)
      `(<- ,(unparse pattern) ,(unparse value))]
     [(Seq statements)
-     `(begin ,@(map unparse statements))]
+     (let ([sts (map unparse statements)])
+       (cond
+        [(= 1 (length sts))
+         sts]
+        [else
+         `(begin ,@sts)]))]
     [(Return value)
      `(return ,(unparse value))]
     [(If test then else)
@@ -107,11 +134,14 @@
     [other other]
     ))
 
+;; (unparse (parse '(import r x y z)))
+;; (unparse (parse 'x.y.z.w))
+;; (unparse (parse '(rec r1 f1 (<- f2 0))))
 ;; (unparse (parse '(return 1)))
 ;; (unparse (parse '(f 'x)))
 ;; (parse '(op + 1 2))
 ;; (unparse (parse '(begin x y z)))
-;; (unparse (parse '(def x 1)))
+;; (unparse (parse '(:+ x 1)))
 ;; (unparse (parse '(rec x (1 2))))
 ;; (unparse (parse '(fn (rec x (1 2)) "hi")))
 
@@ -235,12 +265,116 @@
           [else
            (interp1 s0 env)
            (loop ss)])))]
+    [(RecordDef (Var name) fields)
+     (let ([r (new-record exp env)])
+      (env-put env name r)
+      r)]
+    [(Attribute segs)
+     (let* ([s0 (first segs)]
+            [v0 (lookup s0 env)])
+       (cond
+        [(Record? v0)
+         (let loop ([segs (rest segs)]
+                    [value v0])
+           (cond
+            [(null? segs) value]
+            [(Record? value)
+             (let ([next-val (hash-ref (Record-table value)
+                                       (first segs)
+                                       nothing)])
+               (cond
+                [(nothing? next-val)
+                 (fatal 'interp1 "attr not exist: " (first segs))]
+                [else
+                 (loop (rest segs)
+                       next-val)]))]
+            [else
+             (fatal 'interp1 "take attr of a non-table: " v0)]))]
+        [else
+         (fatal 'interp1 "take attr of a non-table: " v0)]))]
+    [(Import origin names)
+     (let ([vo (interp1 origin env)])
+       (cond
+        [(Record? vo)
+         (let loop ([names names])
+           (cond
+            [(null? names) (void)]
+            [else
+             (let ([n0 (first names)])
+               (env-put env (Var-name n0) (record-ref vo n0))
+               (loop (rest names)))]))]
+        [else
+         (fatal 'interp "trying to import from non-record: " vo)]))]
     ))
+
+
+(define (record-ref record name/attr)
+  (cond
+   [(Var? name/attr)
+    (hash-ref (Record-table record) (Var-name name/attr))]
+   [(Attribute? name/attr)
+    (let* ([segs (Attribute-segs name/attr)]
+           [s0 (first name/attr)]
+           [v0 record])
+      (cond
+       [(Record? v0)
+        (let loop ([segs (rest segs)]
+                   [value v0])
+          (cond
+           [(null? segs) value]
+           [(Record? value)
+            (let ([next-val (hash-ref (Record-table value)
+                                      (first segs)
+                                      nothing)])
+              (cond
+               [(nothing? next-val)
+                (fatal 'interp1 "attr not exist: " (first segs))]
+               [else
+                (loop (rest segs)
+                      next-val)]))]
+           [else
+            (fatal 'interp1 "take attr of a non-table: " v0)]))]
+       [else
+        (fatal 'interp1 "take attr of a non-table: " v0)]))]
+   [else
+    (fatal 'record-ref "access with non-var and non-attr: " name/attr)]))
+
+
+(define (new-record desc env)
+  (match desc
+    [(RecordDef (Var name) fields)
+     (let ([table (make-hasheq)])
+       (let loop ([fields (RecordDef-fields desc)])
+         (cond
+          [(null? fields) (void)]
+          [else
+           (let ([f0 (first fields)])
+             (match f0
+               [(Var x)
+                (hash-set! table x 'nothing)]
+               [(Define (Var x) value)
+                (let ([v (interp1 value env)])
+                  (hash-set! table x v))])
+             (loop (rest fields)))]))
+       (Record name fields table))]))
+
+
+;; may not useful
+(define (record-copy r1 r2)
+  (let ([table1 (Record-table r1)]
+        [table2 (Record-table r2)])
+    (hash-for-each table1
+                   (lambda (key value)
+                     (let ([v2 (hash-ref table2 x)])
+                       (hash-set! table1 key v2))))))
 
 
 (define (interp exp)
   (interp1 (parse exp) (env0)))
 
+
+(define (view exp)
+  (unparse (interp exp)))
 
 
 ;; -------------- examples --------------
@@ -248,9 +382,9 @@
 
 (interp
  '(begin
-   (def f (fn x x))
-   (def g (fn x (* x 2)))
-   (def fg (f g))
+   (:+ f (fn x x))
+   (:+ g (fn x (* x 2)))
+   (:+ fg (f g))
    (fg 3)))
 
 (interp
@@ -258,18 +392,18 @@
 
 (interp
  '(begin
-    (def x 2)
-    (def f (fn x (* x 2)))
+    (:+ x 2)
+    (:+ f (fn x (* x 2)))
     (if (< (f x) 5) "<" ">=")))
 
 (interp
  '(begin
-    (def fact (fn x (if (= x 0) 1 (* x (fact (- x 1))))))
+    (:+ fact (fn x (if (= x 0) 1 (* x (fact (- x 1))))))
     (fact 5)))
 
 (interp
  '(begin
-    (def not (fn x (if (eq? x true) false true)))
+    (:+ not (fn x (if (eq? x true) false true)))
     (not true)))
 
 ;; even & odd mutural recursion
@@ -277,36 +411,36 @@
 ;; (define (odd x) (if (= x 0) #f (even (- x 1))))
 (interp
  '(begin
-    (def not (fn x (if (eq? x true) false true)))
-    (def even (fn x (if (= x 0) true (odd (- x 1)))))
-    (def odd (fn x (if (= x 0) false (even (- x 1)))))
+    (:+ not (fn x (if (eq? x true) false true)))
+    (:+ even (fn x (if (= x 0) true (odd (- x 1)))))
+    (:+ odd (fn x (if (= x 0) false (even (- x 1)))))
     (even 0)))
 
 (interp
  '(begin
-    (def x 1)
-    (def f (fn y (<- x y)))
+    (:+ x 1)
+    (:+ f (fn y (<- x y)))
     (f 42)
     x))
 
 (interp
  '(begin
-    (def x 3)
+    (:+ x 3)
     (if (< x 2)
-        (def f "yes")
-        (def f "no"))
+        (:+ f "yes")
+        (:+ f "no"))
     f))
 
 
 (interp
  '(begin
-    (def g
+    (:+ g
          (fn x
              (if (< x 2)
                  (begin
-                   (def g (fn y (* y 2))))
+                   (:+ g (fn y (* y 2))))
                  (begin
-                   (def g (fn y (/ y 2)))))
+                   (:+ g (fn y (/ y 2)))))
              (g 3)))
     (g 4)))
 
@@ -317,7 +451,63 @@
 
 (interp
  '(begin
-    (def x 1)
-    (def y 2)
+    (:+ x 1)
+    (:+ y 2)
     (return (+ x y))
     10))
+
+
+(interp '(rec r1 x y (:+ z 0)))
+
+(interp '(rec ok
+              (:+ x 1)
+              (:+ y 2)
+              (:+ z (+ 1 2))))
+
+(unparse
+ (interp
+  '(begin
+     (rec r1 x y (:+ z 0))
+     (rec ok
+          (:+ x 1)
+          (:+ y 2)
+          (:+ z (+ 1 2))))))
+
+(unparse
+ (interp
+  '(begin
+     (rec r1
+          (:+ x 1)
+          (:+ y 2))
+     (rec r2
+          (:+ z 3)
+          (:+ f (fn x (* x 2)))
+          (:+ w r1))
+     r2.w.y)))
+
+
+;; import
+(view
+ '(begin
+    (rec r1
+         (:+ x 1)
+         (:+ y 2))
+    (rec r2
+         (:+ z 3)
+         (:+ f (fn x (* x 2)))
+         (:+ w r1))
+    (import r1 y)
+    (import r2 f z)
+    (f (+ y z))))
+
+
+(view
+ '(begin
+    (rec r1
+         (:+ x 1)
+         (:+ y 2))
+    (:+ f (fn z 
+               (import r1 y)
+               (* y z)))
+    (f 3)))
+
