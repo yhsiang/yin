@@ -21,6 +21,20 @@
          (void))]))
 
 
+(define-syntax test
+  (syntax-rules ()
+    [(_ name expected exp)
+     (begin
+       (printf "testing: ~a ... " name)
+       (let ([result (view exp)])
+         (cond
+          [(equal? result expected)
+           (printf "passed!~n")]
+          [else
+           (printf "failed!~n  expected: ~a~n  got: ~a~n  input: ~a~n"
+                   expected result exp)])))]))
+
+
 ;; special value for representing "nothing"
 ;; (avoid using #f for nothing because nothing is not boolean)
 (define nothing 'nothing)
@@ -263,8 +277,8 @@
                    (cond
                     [(null? vec1) (void)]
                     [else
-                     (env-put! env2 (Var-name (first fields1)) (first elems))
-                     (loop (rest fields1) (rest elems))]))]
+                     (env-put! env2 (Var-name (first vec1)) (first vec2))
+                     (loop (rest vec1) (rest vec2))]))]
                 [else
                  (abort 'interp1
                         "incorrect number of arguments\n"
@@ -441,174 +455,3 @@
 (define (view exp)
   (unparse (interp exp)))
 
-
-;; -------------- examples --------------
-;; (interp '((fn x (x x)) (fn x (x x))))
-
-(view
- '(begin
-   (:+ f (fn (x) x))
-   (:+ g (fn (x) (* x 2)))
-   (:+ fg (f g))
-   (fg 3)))
-
-(view
- '(if (> 1 2) "yes" "no"))
-
-(view
- '(begin
-    (:+ x 2)
-    (:+ f (fn (x) (* x 2)))
-    (if (< (f x) 5) "<" ">=")))
-
-(view
- '(begin
-    (:+ fact (fn (x) (if (= x 0) 1 (* x (fact (- x 1))))))
-    (fact 5)))
-
-(view
- '(begin
-    (:+ not (fn (x) (if (eq? x true) false true)))
-    (not true)))
-
-;; even & odd mutural recursion
-;; (define (even x) (if (= x 0) #t (odd (- x 1))))
-;; (define (odd x) (if (= x 0) #f (even (- x 1))))
-(view
- '(begin
-    (:+ not (fn (x) (if (eq? x true) false true)))
-    (:+ even (fn (x) (if (= x 0) true (odd (- x 1)))))
-    (:+ odd (fn (x) (if (= x 0) false (even (- x 1)))))
-    (even 9)))
-
-(view
- '(begin
-    (:+ x 1)
-    (:+ f (fn (y) (<- x y)))
-    (f 42)
-    x))
-
-(view
- '(begin
-    (:+ x 3)
-    (if (< x 2)
-        (:+ f "yes")
-        (:+ f "no"))
-    f))
-
-
-(view
- '(begin
-    (:+ g
-         (fn (x)
-             (if (< x 2)
-                 (begin
-                   (:+ g (fn (y) (* y 2))))
-                 (begin
-                   (:+ g (fn (y) (/ y 2)))))
-             (g 3)))
-    (g 4)))
-
-
-(view
- '(begin
-    1))
-
-(view
- '(begin
-    (:+ x 1)
-    (:+ y 2)
-    (return (+ x y))
-    10))
-
-
-(view '(rec r1 x y (:+ z 0)))
-
-(view
- '(rec ok
-       (:+ x 1)
-       (:+ y 2)
-       (:+ z (+ 1 2))))
-
-(view
- '(begin
-    (rec r1 x y (:+ z 0))
-    (rec ok
-         (:+ x 1)
-         (:+ y 2)
-         (:+ z (+ 1 2)))))
-
-
-(view
-  '(begin
-     (rec r1
-          (:+ x 1)
-          (:+ y 2))
-     (rec r2
-          (:+ z 3)
-          (:+ f (fn (x) (* x 2)))
-          (:+ w r1))
-     r2.w.y))
-
-
-;; import
-(view
- '(begin
-    (rec r1
-         (:+ x 1)
-         (:+ y 2))
-    (rec r2
-         (:+ z 3)
-         (:+ f (fn (x) (* x 2)))
-         (:+ w r1))
-    (import r2.w y)
-    (import r2 f z)
-    (f (+ y z))))
-
-
-(view
- '(begin
-    (rec r1
-         (:+ x 1)
-         (:+ y 2))
-    (:+ f (fn (z)
-               (import r1 y)
-               (* y z)))
-    (f 3)))
-
-
-(view
- '(begin
-    (:+ x 1)
-    (if (< x 2)
-        (begin
-          (<- x 2)
-          (:+ y (* x 2)))
-        (:+ y 3))
-    x))
-
-
-(view
- '(begin
-    (:+ f (fn (x) x.a))
-    (:+ o (rec any (:+ a 42)))
-    (f (:+ x o))))
-
-
-(view
- '(begin
-    (:+ (f x (:+ y 1))
-        (* x y))
-    (f (:+ x 2) (:+ y 3))))
-
-
-(view
- '(begin
-    (:+ (f x) x)
-    (f (:+ x 1))))
-
-
-(view
- '(begin
-    (:+ (f x) x)
-    (f 1)))
