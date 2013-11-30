@@ -4,76 +4,81 @@
  '(begin
     1))
 
-(test 
+(test
  "single positional arg"
  1
  '(begin
-    (:+ (f x) x)
+    (defn (f x) x)
     (f 1)))
 
 (test
  "function positional param single keyword arg"
  1
  '(begin
-    (:+ (f x) x)
+    (defn (f x) x)
     (f (:+ x 1))))
 
 (test
  "function with multiple positional args"
- 15
+ '(vec 3 5)
  '(begin
-    (:+ f (fn (x y) (* x y)))
+    (defn (f x y)
+      (vec x y))
     (f 3 5)))
 
 (test
  "function mutiple positional param with keyword args same order"
- 30
+ '(vec 2 3 5)
  '(begin
-    (:+ (f x y z) (* (* x y) z))
+    (defn (f x y z) 
+      (vec x y z))
     (f (:+ x 2)
        (:+ y 3)
        (:+ z 5))))
 
 (test
  "function mutiple positional param with keyword args (different order)"
- 30
+ '(vec 2 3 5)
  '(begin
-    (:+ (f x y z) (* (* x y) z))
+    (defn (f x y z) 
+      (vec x y z))
     (f (:+ y 3)
        (:+ z 5)
        (:+ x 2))))
 
 (test
  "function mutiple keyword params with keyword args (full)"
- 30
+ '(vec 2 3 5)
  '(begin
-    (:+ (f x (:+ y 3) (:+ z 7)) (* (* x y) z))
+    (defn (f x (:+ y 42) (:+ z 7)) 
+      (vec x y z))
     (f (:+ y 3)
        (:+ z 5)
        (:+ x 2))))
 
 (test
  "function mutiple keyword params with keyword args (missing z)"
- 42
+ '(vec 2 5 7)
  '(begin
-    (:+ (f x (:+ y 3) (:+ z 7)) (* (* x y) z))
-    (f (:+ y 3)
+    (defn (f x (:+ y 3) (:+ z 7)) 
+      (vec x y z))
+    (f (:+ y 5)
        (:+ x 2))))
 
 (test
  "mixed parameter full keyword args"
  6
  '(begin
-    (:+ (f x (:+ y 1))
-        (* x y))
+    (defn (f x (:+ y 1))
+      (* x y))
     (f (:+ x 2) (:+ y 3))))
 
 (test
  "mixed parameters default keyword arg for y"
  2
  '(begin
-    (:+ (f x (:+ y 1))
-        (* x y))
+    (defn (f x (:+ y 1))
+      (* x y))
     (f (:+ x 2))))
 
 (test
@@ -131,28 +136,28 @@
     (import y x)
     x))
 
-(test 
+(test
  "import function and fields"
  30
-  '(begin
-     (record r1 (:+ x 2) (:+ y 3))
-     (record r2
-          (:+ z 5)
-          (:+ f (fn (x y z) (* (* x y) z))))
-     (import r1 x y)
-     (import r2 f z)
-     (f x y z)))
+ '(begin
+    (record r1 (:+ x 2) (:+ y 3))
+    (record r2
+            (:+ z 5)
+            (:+ f (fn (x y z) (* (* x y) z))))
+    (import r1 x y)
+    (import r2 f z)
+    (f x y z)))
 
 (test
  "import inside function"
  6
  '(begin
     (record r1
-         (:+ x 1)
-         (:+ y 2))
-    (:+ (f z)
-        (import r1 y)
-        (* y z))
+            (:+ x 1)
+            (:+ y 2))
+    (defn (f z)
+      (import r1 y)
+      (* y z))
     (f 3)))
 
 (test
@@ -216,9 +221,9 @@
     (:+ x 1)
     (if (< x 2)
         (begin
-          (:+ (g y) (* y 2)))
+          (defn (g y) (* y 2)))
         (begin
-          (:+ (g y) (/ y 2))))
+          (defn (g y) (/ y 2))))
     (g 4)))
 
 (test
@@ -228,9 +233,9 @@
     (:+ x 5)
     (if (< x 2)
         (begin
-          (:+ (g y) (* y 2)))
+          (defn (g y) (* y 2)))
         (begin
-          (:+ (g y) (/ y 2))))
+          (defn (g y) (/ y 2))))
     (g 4)))
 
 (test
@@ -308,12 +313,12 @@
 
 (test
  "function goes through identity function"
- 6 
+ 6
  '(begin
-   (:+ f (fn (x) x))
-   (:+ g (fn (x) (* x 2)))
-   (:+ fg (f g))
-   (fg 3)))
+    (:+ f (fn (x) x))
+    (:+ g (fn (x) (* x 2)))
+    (:+ fg (f g))
+    (fg 3)))
 
 (test
  "function stored in record field"
@@ -326,5 +331,57 @@
  "function field pass to function and apply"
  10
  '(begin
-    (:+ (bar x) (x.foo 5))
+    (defn (bar x) (x.foo 5))
     (bar (record something (:+ foo (fn (y) (* y 2)))))))
+
+;; ----------------- pattern binding ------------------
+(test
+ "pattern binding, keyword, simple"
+ '(vec 2 5)
+ '(begin
+    (:+ (record a (:+ x foo) (:+ y bar))
+        (record a (:+ y 5) (:+ x 2)))
+    (vec foo bar)))
+
+(test
+ "pattern binding, keyword, nested"
+ '(vec 2 3 5)
+ '(begin
+    (:+ (record a
+                (:+ x foo)
+                (:+ y (record b
+                              (:+ u bar)
+                              (:+ v baz))))
+        (record a
+                (:+ y (record b
+                              (:+ v 5)
+                              (:+ u 3)))
+                (:+ x 2)))
+    (vec foo bar baz)))
+
+
+(test
+ "pattern binding, vector, simple"
+ '(vec 2 3 5)
+ '(begin
+    (:+ (vec x y z) (vec 2 3 5))
+    (vec x y z)))
+
+(test
+ "pattern binding, vector, nested"
+ '(vec 2 3 5 7)
+ '(begin
+    (:+ (vec x y (vec u v)) (vec 2 3 (vec 5 7)))
+    (vec x y u v)))
+
+(test
+ "pattern binding, vector, nested"
+ '(vec 2 3 5 7 11)
+ '(begin
+    (:+ (record a
+                (:+ w foo)
+                (:+ y (vec x y (vec u v))))
+        (record a
+                (:+ y (vec 2 3 (vec 5 7)))
+                (:+ w 11)))
+    (vec x y u v foo)))

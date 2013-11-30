@@ -29,9 +29,9 @@
        (let ([result (view exp)])
          (cond
           [(equal? result expected)
-           (printf "passed!~n")]
+           (printf "~n[pass]~n")]
           [else
-           (printf "failed!~n  expected: ~a~n  got: ~a~n  input: ~a~n"
+           (printf "~n[fail]!~n  expected: ~a~n  got: ~a~n  input: ~a~n"
                    expected result exp)])))]))
 
 
@@ -94,7 +94,7 @@
      (Seq (map parse statements))]
     [`(return ,value)
      (Return (parse value))]
-    [`(:+ (,f ,params ...) ,body ...)
+    [`(defn (,f ,params ...) ,body ...)
      (Def (parse f) (parse `(fn ,params ,@body)))]
     [`(:+ ,pattern ,value)
      (Def (parse pattern) (parse value))]
@@ -113,7 +113,7 @@
       [(andmap (negate def-form?) args)
        (App (parse f) (parse `(vec ,@args)))]
       [else
-       (abort 'parse 
+       (abort 'parse
               "application must either be all keyword args"
               " or all positional args, no mixture please")])]
     ))
@@ -200,29 +200,41 @@
   (Env (make-hasheq) env))
 
 (define (env-put! env key value)
-  (hash-set! (Env-table env) key value))
-
-(define (lookup-local var env)
-  (hash-ref (Env-table env) var 'nothing))
-
-(define (lookup var env)
   (cond
+   [(not (symbol? key))
+    (abort 'lookup-local "only accept symbols, but got: " key)]
+   [else
+    (hash-set! (Env-table env) key value)]))
+
+(define (lookup-local key env)
+  (cond
+   [(not (symbol? key))
+    (abort 'lookup-local "only accept symbols, but got: " key)]
+   [else
+    (hash-ref (Env-table env) key 'nothing)]))
+
+(define (lookup key env)
+  (cond
+   [(not (symbol? key))
+    (abort 'lookup "only accept symbols, but got: " key)]
    [(nothing? env) nothing]
    [else
-    (let ([val (lookup-local var env)])
+    (let ([val (lookup-local key env)])
       (cond
        [(nothing? val)
-        (lookup var (Env-parent env))]
+        (lookup key (Env-parent env))]
        [else val]))]))
 
-(define (find-defining-env var env)
+(define (find-defining-env key env)
   (cond
+   [(not (symbol? key))
+    (abort 'find-defining-env "only accept symbols, but got: " key)]
    [(nothing? env) nothing]
    [else
-    (let ([val (lookup-local var env)])
+    (let ([val (lookup-local key env)])
       (cond
        [(nothing? val)
-        (find-defining-env var (Env-parent env))]
+        (find-defining-env key (Env-parent env))]
        [else env]))]))
 
 ;; (define e1 (env-extend env0))
@@ -234,12 +246,12 @@
 
 (define (env0) (empty-env))
 
+
+;; ---------------- main interpreter -----------------
 (define (interp1 exp env)
   (match exp
-    [(Const obj)
-     obj]
-    [(Symbol name)
-     name]
+    [(Const obj) obj]
+    [(Symbol name) name]
     [(Var name)
      (cond
       [(memq name constants) name]
@@ -248,71 +260,29 @@
          (cond
           [(nothing? val)
            (abort 'interp "unbound variable: " name)]
-          [else
-           val]))])]
+          [else val]))])]
     [(Fun x body)
      (Closure (Fun (interp1 x env) body) env)]
     [(App e1 e2)
      (let ([v1 (interp1 e1 env)]
            [v2 (interp1 e2 env)])
        (match v1
-         [(Closure (Fun (Record name1 fields1 table1) body) env1)
-          (let ([env2 (env-extend env1)])
-            (match v2
-              [(Record name2 fields2 table2)
-               (hash-for-each
-                table1
-                (lambda (k v)
-                  (let ([v2 (hash-ref table2 k nothing)])
-                    (cond
-                     [(nothing? v2)
-                      (env-put! env2 k v)]
-                     [else
-                      (env-put! env2 k v2)]))))]
-              [(Vector elems)
-               (cond
-                [(= (length fields1) (length elems))
-                 (let loop ([vec1 fields1]
-                            [vec2 elems])
-                   (cond
-                    [(null? vec1) (void)]
-                    [else
-                     (env-put! env2 (Var-name (first vec1)) (first vec2))
-                     (loop (rest vec1) (rest vec2))]))]
-                [else
-                 (abort 'interp1
-                        "incorrect number of arguments\n"
-                        " expected: " (length fields1)
-                        " got: " (length elems))])])
-            (interp1 body env2))]
-         [(? procedure? prim)
-          (prim v2)]))]
+         [(Closure (Fun pattern body) env1)
+          (let ([env+ (env-extend env1)])
+            (bind-params pattern v2 env+)
+            (interp1 body env+))]))]
     [(Op op e1 e2)
      (let ([v1 (interp1 e1 env)]
            [v2 (interp1 e2 env)])
-       (match op
-         [(Var x) ((eval x) v1 v2)]))]
+       ((eval (Var-name op)) v1 v2))]
     [(If test then else)
      (let ([tv (interp1 test env)])
        (if tv
            (interp1 then env)
            (interp1 else env)))]
-    [(Def lhs value)
-     (match lhs
-       [(Var x)
-        (let ([existing (lookup-local x env)])
-          (cond
-           [(something? existing)
-            (abort 'interp
-                   "redefining: " x
-                   " was defined as: " (unparse existing))]
-           [else
-            (let ([v (interp1 value env)])
-              (env-put! env x v))]))]
-       [other
-        (abort 'interp
-               "currently can only assign to variables"
-               ", but got: " other)])]
+    [(Def pattern value)
+     (let ([v (interp1 value env)])
+       (bind pattern v env))]
     [(Assign lhs value)
      (let ([v (interp1 value env)])
        (match lhs
@@ -332,7 +302,7 @@
            (interp1 s0 env)
            (loop ss)])))]
     [(RecordDef (Var name) fields)
-     (let ([r (new-record exp env)])
+     (let ([r (new-record exp env #f)])
        (env-put! env name r)
        r)]
     [(Vector elems)
@@ -377,6 +347,99 @@
     ))
 
 
+;; general pattern binder
+;; can be arbitrarily nested
+(define (bind v1 v2 env)
+  (match (list v1 v2)
+    [(list (RecordDef name1 fields1)
+           (Record name2 fields2 table2))
+     (bind (new-record v1 env #t) v2 env)]
+    ;; records
+    [(list (Record name1 fields1 table1)
+           (Record name2 fields2 table2))
+     (hash-for-each
+      table1
+      (lambda (k1 v1)
+        (let ([v2 (hash-ref table2 k1 nothing)])
+          (cond
+           [(something? v2)
+            (bind v1 v2 env)]
+           [else
+            (abort 'bind "unbound key in rhs: " k1)]))))]
+    ;; vectors
+    [(list (Vector names)
+           (Vector values))
+     (cond
+      [(= (length names) (length values))
+       (let loop ([vec1 names]
+                  [vec2 values])
+         (cond
+          [(null? vec1) (void)]
+          [else
+           (bind(first vec1) (first vec2) env)
+           (loop (rest vec1) (rest vec2))]))]
+      [else
+       (abort 'interp1
+              "incorrect number of arguments\n"
+              " expected: " (length names)
+              " got: " (length values))])]
+    ;; base case
+    [(list (Var x) v2)
+     (let ([existing (lookup-local x env)])
+       (cond
+        [(something? existing)
+         (abort 'interp
+                "redefining: " x
+                " was defined as: " (unparse existing))]
+        [else
+         (env-put! env x v2)]))]))
+
+
+;; parameter binder for functions
+;; only slightly different from bind
+;; but separate it out in order to be clear
+(define (bind-params v1 v2 env)
+  (match (list v1 v2)
+    [(list (Record name1 fields1 table1)
+           (Record name2 fields2 table2))
+     (hash-for-each
+      table1
+      (lambda (k1 v1)
+        (let ([v2 (hash-ref table2 k1 nothing)])
+          (cond
+           [(something? v2)
+            (env-put! env k1 v2)]
+           [(something? v1)
+            (env-put! env k1 v1)]
+           [else
+            (abort 'bind "unbound key in rhs: " k1)]))))]
+    [(list (Record name1 fields1 table1)
+           (Vector elems))
+     (cond
+      [(= (length fields1) (length elems))
+       (let loop ([vec1 fields1]
+                  [vec2 elems])
+         (cond
+          [(null? vec1) (void)]
+          [else
+           (env-put! env (Var-name (first vec1)) (first vec2))
+           (loop (rest vec1) (rest vec2))]))]
+      [else
+       (abort 'interp1
+              "incorrect number of arguments\n"
+              " expected: " (length fields1)
+              " got: " (length elems))])]
+    [(list (Var x) v2)
+     (let ([existing (lookup-local x env)])
+       (cond
+        [(something? existing)
+         (abort 'interp
+                "redefining: " x
+                " was defined as: " (unparse existing))]
+        [else
+         (env-put! env x v2)]))]))
+
+
 (define (record-ref record name/attr)
   (cond
    [(Var? name/attr)
@@ -415,15 +478,15 @@
            (unparse name/attr))]))
 
 
-(define (new-record desc env)
+(define (new-record desc env pattern?)
   (match desc
     [(RecordDef (Var name) fields)
      (let ([table (make-hasheq)])
-       (fill-record-table desc table env)
+       (fill-record-table desc table env pattern?)
        (Record name fields table))]))
 
 
-(define (fill-record-table desc table env)
+(define (fill-record-table desc table env pattern?)
   (let loop ([fields (RecordDef-fields desc)])
     (cond
      [(null? fields) (void)]
@@ -433,19 +496,13 @@
           [(Var x)
            (hash-set! table x 'nothing)]
           [(Def (Var x) value)
-           (let ([v (interp1 value env)])
-             (hash-set! table x v))])
+           (cond
+            [pattern?
+             (hash-set! table x value)]
+            [else
+             (let ([v (interp1 value env)])
+               (hash-set! table x v))])])
         (loop (rest fields)))])))
-
-
-;; may not useful
-(define (record-copy r1 r2)
-  (let ([table1 (Record-table r1)]
-        [table2 (Record-table r2)])
-    (hash-for-each table1
-                   (lambda (key value)
-                     (let ([v2 (hash-ref table2 x)])
-                       (hash-set! table1 key v2))))))
 
 
 (define (interp exp)
@@ -455,3 +512,4 @@
 (define (view exp)
   (unparse (interp exp)))
 
+(load "v1-tests.rkt")
