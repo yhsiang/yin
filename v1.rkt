@@ -104,7 +104,7 @@
      (RecordDef (parse name) (map parse fields))]
     [`(vec ,elems ...)
      (Vector (map parse elems))]
-    [`(import ,origin ,names ...)
+    [`(import ,origin (,names ...))
      (Import (parse origin) (map parse names))]
     [`(,f ,args ...)  ; application must stay last
      (cond

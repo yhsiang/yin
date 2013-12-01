@@ -114,7 +114,7 @@
  1
  '(begin
     (record r1 (:+ x 1) (:+ y 2))
-    (import r1 x)
+    (import r1 (x))
     x))
 
 (test
@@ -123,7 +123,7 @@
  '(begin
     (record r1 (:+ x 1))
     (record r2 (:+ y r1))
-    (import r2.y x)
+    (import r2.y (x))
     x))
 
 (test
@@ -132,8 +132,8 @@
  '(begin
     (record r1 (:+ x 1))
     (record r2 (:+ y r1))
-    (import r2 y)
-    (import y x)
+    (import r2 (y))
+    (import y (x))
     x))
 
 (test
@@ -144,8 +144,8 @@
     (record r2
             (:+ z 5)
             (:+ f (fn (x y z) (* (* x y) z))))
-    (import r1 x y)
-    (import r2 f z)
+    (import r1 (x y))
+    (import r2 (f z))
     (f x y z)))
 
 (test
@@ -156,7 +156,7 @@
             (:+ x 1)
             (:+ y 2))
     (defn (f z)
-      (import r1 y)
+      (import r1 (y))
       (* y z))
     (f 3)))
 
