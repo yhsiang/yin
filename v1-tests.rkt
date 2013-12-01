@@ -394,6 +394,7 @@
 
 (test
  "function parameter destrcuturing binding (positional only)"
+ '(vec 1 2 3)
  '(begin
     (defn (f (vec x (vec y z)))
       (vec x y z))
