@@ -520,7 +520,8 @@
   (match exp
    [(Var x) exp]
    [(Def (Var x) value)
-    (Var x)]))
+    (Var x)]
+   [other other]))
 
 
 (define (new-record desc env pattern?)

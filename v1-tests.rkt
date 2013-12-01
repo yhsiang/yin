@@ -391,3 +391,10 @@
     (:+ (record a (:+ x 1) (:+ y 2))
         (vec 3 5))
     (vec x y)))
+
+(test
+ "function parameter destrcuturing binding (positional only)"
+ '(begin
+    (defn (f (vec x (vec y z)))
+      (vec x y z))
+    (f (vec 1 (vec 2 3)))))
