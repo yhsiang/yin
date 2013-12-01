@@ -169,7 +169,6 @@
     (return (+ x y))
     10))
 
-
 (test
  "defs to same var in different branches"
  "yes"
@@ -255,9 +254,9 @@
  "mutural recursion (even 9 = false)"
  'false
  '(begin
-    (:+ not (fn (x) (if (eq? x true) false true)))
-    (:+ even (fn (x) (if (= x 0) true (odd (- x 1)))))
-    (:+ odd (fn (x) (if (= x 0) false (even (- x 1)))))
+    (defn (not x) (if (eq? x true) false true))
+    (defn (even x) (if (= x 0) true (odd (- x 1))))
+    (defn (odd x) (if (= x 0) false (even (- x 1))))
     (even 9)))
 
 (test
@@ -359,7 +358,6 @@
                 (:+ x 2)))
     (vec foo bar baz)))
 
-
 (test
  "pattern binding, vector, simple"
  '(vec 2 3 5)
@@ -385,3 +383,11 @@
                 (:+ y (vec 2 3 (vec 5 7)))
                 (:+ w 11)))
     (vec x y u v foo)))
+
+(test
+ "positionally bind vector into record"
+ '(vec 3 5)
+ '(begin
+    (:+ (record a (:+ x 1) (:+ y 2))
+        (vec 3 5))
+    (vec x y)))

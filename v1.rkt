@@ -16,7 +16,7 @@
     [(_ args ...)
      (if *debug*
          (begin
-           (printf "~s = ~s~n" 'args (unparse args))
+           (printf "~s = ~s~n" 'args args)
            ...)
          (void))]))
 
@@ -351,8 +351,7 @@
 ;; can be arbitrarily nested
 (define (bind v1 v2 env)
   (match (list v1 v2)
-    [(list (RecordDef name1 fields1)
-           (Record name2 fields2 table2))
+    [(list (RecordDef name1 fields1) v2)
      (bind (new-record v1 env #t) v2 env)]
     ;; records
     [(list (Record name1 fields1 table1)
@@ -376,19 +375,35 @@
          (cond
           [(null? vec1) (void)]
           [else
-           (bind(first vec1) (first vec2) env)
+           (bind (first vec1) (first vec2) env)
            (loop (rest vec1) (rest vec2))]))]
       [else
-       (abort 'interp1
+       (abort 'bind
               "incorrect number of arguments\n"
               " expected: " (length names)
               " got: " (length values))])]
+    [(list (Record name1 fields1 table1)
+           (Vector elems))
+     (cond
+      [(= (length fields1) (length elems))
+       (let loop ([vec1 fields1]
+                  [vec2 elems])
+         (cond
+          [(null? vec1) (void)]
+          [else
+           (bind (first vec1) (first vec2) env)
+           (loop (rest vec1) (rest vec2))]))]
+      [else
+       (abort 'bind
+              "incorrect number of arguments\n"
+              " expected: " (length fields1)
+              " got: " (length elems))])]
     ;; base case
     [(list (Var x) v2)
      (let ([existing (lookup-local x env)])
        (cond
         [(something? existing)
-         (abort 'interp
+         (abort 'bind
                 "redefining: " x
                 " was defined as: " (unparse existing))]
         [else
@@ -400,6 +415,10 @@
 ;; but separate it out in order to be clear
 (define (bind-params v1 v2 env)
   (match (list v1 v2)
+    [(list (RecordDef name1 fields1)
+           (Record name2 fields2 table2))
+     (bind-params (new-record v1 env #t) v2 env)]
+    ;; records
     [(list (Record name1 fields1 table1)
            (Record name2 fields2 table2))
      (hash-for-each
@@ -412,7 +431,25 @@
            [(something? v1)
             (env-put! env k1 v1)]
            [else
-            (abort 'bind "unbound key in rhs: " k1)]))))]
+            (abort 'bind-params "unbound key in rhs: " k1)]))))]
+    ;; vectors
+    [(list (Vector names)
+           (Vector values))
+     (cond
+      [(= (length names) (length values))
+       (let loop ([vec1 names]
+                  [vec2 values])
+         (cond
+          [(null? vec1) (void)]
+          [else
+           (bind-params (first vec1) (first vec2) env)
+           (loop (rest vec1) (rest vec2))]))]
+      [else
+       (abort 'bind-params
+              "incorrect number of arguments\n"
+              " expected: " (length names)
+              " got: " (length values))])]
+    ;; record <- vector, positional assignment
     [(list (Record name1 fields1 table1)
            (Vector elems))
      (cond
@@ -422,18 +459,19 @@
          (cond
           [(null? vec1) (void)]
           [else
-           (env-put! env (Var-name (first vec1)) (first vec2))
+           (bind-params (first vec1) (first vec2) env)
            (loop (rest vec1) (rest vec2))]))]
       [else
-       (abort 'interp1
+       (abort 'bind-params
               "incorrect number of arguments\n"
               " expected: " (length fields1)
               " got: " (length elems))])]
+    ;; base case
     [(list (Var x) v2)
      (let ([existing (lookup-local x env)])
        (cond
         [(something? existing)
-         (abort 'interp
+         (abort 'bind-params
                 "redefining: " x
                 " was defined as: " (unparse existing))]
         [else
@@ -478,12 +516,20 @@
            (unparse name/attr))]))
 
 
+(define (find-name exp)
+  (match exp
+   [(Var x) exp]
+   [(Def (Var x) value)
+    (Var x)]))
+
+
 (define (new-record desc env pattern?)
   (match desc
     [(RecordDef (Var name) fields)
-     (let ([table (make-hasheq)])
+     (let ([table (make-hasheq)]
+           [field-names (map find-name fields)])
        (fill-record-table desc table env pattern?)
-       (Record name fields table))]))
+       (Record name field-names table))]))
 
 
 (define (fill-record-table desc table env pattern?)
@@ -501,7 +547,8 @@
              (hash-set! table x value)]
             [else
              (let ([v (interp1 value env)])
-               (hash-set! table x v))])])
+               (hash-set! table x v))])]
+          [other (void)])
         (loop (rest fields)))])))
 
 
