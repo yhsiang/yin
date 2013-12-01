@@ -1,3 +1,6 @@
+#lang typed/racket
+
+
 (test
  "begin with only one statement"
  1
