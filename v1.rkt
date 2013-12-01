@@ -34,6 +34,11 @@
            (printf "~n[fail]!~n  expected: ~a~n  got: ~a~n  input: ~a~n"
                    expected result exp)])))]))
 
+(define-syntax dolist
+  (syntax-rules ()
+    [(_ (iter ls) body ...)
+     (for-each (lambda (iter) (begin body ...)) ls)]))
+
 
 ;; special value for representing "nothing"
 ;; (avoid using #f for nothing because nothing is not boolean)
@@ -81,8 +86,8 @@
         [(= 1 (length segs))
          (Var x)]
         [else
-         (let ([seg-symbols (map string->symbol segs)])
-          (Attribute seg-symbols))]))]
+         (let ([segs (map Var  (map string->symbol segs))])
+          (Attribute segs))]))]
     [`(quote ,x) (Symbol x)]
     [`(fn (,params ...) ,body ...)
      (Fun (parse `(record params ,@params)) (Seq (map parse body)))]
@@ -117,6 +122,7 @@
               "application must either be all keyword args"
               " or all positional args, no mixture please")])]
     ))
+
 
 (define (def-form? x)
   (and (list? x)
@@ -309,42 +315,46 @@
      (let ([res (map (lambda (x) (interp1 x env)) elems)])
        (Vector res))]
     [(Attribute segs)
-     (let* ([s0 (first segs)]
-            [v0 (lookup s0 env)])
-       (cond
-        [(Record? v0)
-         (let loop ([segs (rest segs)]
-                    [value v0])
-           (cond
-            [(null? segs) value]
-            [(Record? value)
-             (let ([next-val (hash-ref (Record-table value)
-                                       (first segs)
-                                       nothing)])
-               (cond
-                [(nothing? next-val)
-                 (abort 'interp1 "attr not exist: " (first segs))]
-                [else
-                 (loop (rest segs)
-                       next-val)]))]
-            [else
-             (abort 'interp1 "take attr of a non-table: " (unparse v0))]))]
-        [else
-         (abort 'interp1 "take attr of a non-table: " (unparse v0))]))]
+     (let ([r (interp1 (first segs) env)])
+      (record-ref r (Attribute (rest segs))))]
     [(Import origin names)
-     (let ([vo (interp1 origin env)])
+     (let ([r (interp1 origin env)])
        (cond
-        [(Record? vo)
-         (let loop ([names names])
-           (cond
-            [(null? names) (void)]
-            [else
-             (let ([n0 (first names)])
-               (env-put! env (Var-name n0) (record-ref vo n0))
-               (loop (rest names)))]))]
+        [(Record? r)
+         (dolist (name names)
+                 (env-put! env
+                           (Var-name name)
+                           (record-ref r name)))]
         [else
          (abort 'interp "trying to import from non-record: " vo)]))]
     ))
+
+
+(define (record-ref record accessor)
+  (match accessor
+    [(Var name)
+     (hash-ref (Record-table record) name)]
+    [(Attribute segs)
+     (let loop ([segs segs] [value record])
+       (cond
+        [(null? segs) value]
+        [(Record? value)
+         (let ([next-val (hash-ref (Record-table value)
+                                   (Var-name (first segs))
+                                   nothing)])
+           (cond
+            [(nothing? next-val)
+             (abort 'record-ref "attr not exist: " (first segs))]
+            [else
+             (loop (rest segs) next-val)]))]
+        [else
+         (abort 'record-ref
+                "take attr of a non-record: "
+                (unparse v0))]))]
+    [else
+     (abort 'record-ref
+            "access with non-var and non-attr: "
+            (unparse accessor))]))
 
 
 ;; general pattern binder
@@ -476,44 +486,6 @@
                 " was defined as: " (unparse existing))]
         [else
          (env-put! env x v2)]))]))
-
-
-(define (record-ref record name/attr)
-  (cond
-   [(Var? name/attr)
-    (hash-ref (Record-table record) (Var-name name/attr))]
-   [(Attribute? name/attr)
-    (let* ([segs (Attribute-segs name/attr)]
-           [s0 (first name/attr)]
-           [v0 record])
-      (cond
-       [(Record? v0)
-        (let loop ([segs (rest segs)]
-                   [value v0])
-          (cond
-           [(null? segs) value]
-           [(Record? value)
-            (let ([next-val (hash-ref (Record-table value)
-                                      (first segs)
-                                      nothing)])
-              (cond
-               [(nothing? next-val)
-                (abort 'interp1 "attr not exist: " (first segs))]
-               [else
-                (loop (rest segs)
-                      next-val)]))]
-           [else
-            (abort 'interp1
-                   "take attr of a non-table: "
-                   (unparse v0))]))]
-       [else
-        (abort 'interp1
-               "take attr of a non-table: "
-               (unparse v0))]))]
-   [else
-    (abort 'record-ref
-           "access with non-var and non-attr: "
-           (unparse name/attr))]))
 
 
 (define (find-name exp)
