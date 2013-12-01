@@ -1,5 +1,9 @@
 ;; The Y Programming Language (Version 1)
 
+#lang typed/racket
+
+(require/typed racket [string-split (String (U String Regexp) -> (Listof String))])
+
 
 ;; --------------- utilities ---------------
 (define (abort who . args)
@@ -39,43 +43,102 @@
     [(_ (iter ls) body ...)
      (for-each (lambda (iter) (begin body ...)) ls)]))
 
-
-;; special value for representing "nothing"
-;; (avoid using #f for nothing because nothing is not boolean)
-(define nothing 'nothing)
-(define (nothing? x) (eq? x 'nothing))
-(define (something? x) (not (eq? x 'nothing)))
-
 (define (op? x)
   (memq x '(+ - * / < <= >= > = eq?)))
 
 
 ;; --------------- data structures ---------------
 ;; AST nodes
-(struct Const (obj) #:transparent)
-(struct Symbol (name) #:transparent)
-(struct Var (name) #:transparent)
-(struct Attribute (segs) #:transparent)
-(struct Fun (param body) #:transparent)
-(struct App (fun arg) #:transparent)
-(struct RecordDef (name fields) #:transparent)
-(struct Def (pattern value) #:transparent)
-(struct Import (origin names) #:transparent)
-(struct Assign (pattern value) #:transparent)
-(struct Seq (statements) #:transparent)
-(struct Return (value) #:transparent)
-(struct If (test then else) #:transparent)
-(struct Op (op e1 e2) #:transparent)
+
+(define-type Node
+  (U Const
+     Sym
+     Var
+     Attribute
+     Fun
+     App
+     RecordDef
+     VectorDef
+     Def
+     Import
+     Assign
+     Seq
+     Return
+     If
+     Op))
+
+(struct: Const ([obj : (U Symbol Number String)])
+         #:transparent)
+(struct: Sym ([name : Symbol])
+         #:transparent)
+(struct: Var ([name : Symbol])
+         #:transparent)
+(struct: Attribute ([segs : (Listof Var)]) 
+         #:transparent)
+(struct: Fun ([param : Node] 
+              [body : Seq]) 
+         #:transparent)
+(struct: App ([fun : Node]
+              [arg : Node])
+         #:transparent)
+(struct: RecordDef ([name : Node]
+                    [fields : (Listof Node)])
+         #:transparent)
+(struct: VectorDef ([elems : (Listof Node)]) 
+         #:transparent)
+(struct: Def ([pattern : Node]
+              [value : Node]) 
+         #:transparent)
+(struct: Import ([origin : Node] 
+                 [names : (Listof Var)]) 
+         #:transparent)
+(struct: Assign ([pattern : Node] 
+                 [value : Node])
+         #:transparent)
+(struct: Seq ([statements : (Listof Node)]) 
+         #:transparent)
+(struct: Return ([value : Node])
+         #:transparent)
+(struct: If ([test : Node]
+             [then : Node] 
+             [else : Node])
+         #:transparent)
+(struct: Op ([op : Var] 
+             [e1 : Node] 
+             [e2 : Node]) 
+         #:transparent)
+
+
+(define-type Value
+  (U Const
+     Closure
+     Record
+     Vector
+     Symbol
+     Number
+     String
+     Boolean
+     False))
 
 ;; interpreter's internal structures
-(struct Closure (fun env) #:transparent)
-(struct Record (name fields table) #:transparent)
-(struct Vector (elems) #:transparent)
+(struct: Closure ([fun : FunValue] 
+                  [env : Env]) 
+         #:transparent)
+(struct: FunValue ([param : Value]
+                   [body : Seq]) 
+         #:transparent)
+(struct: Record ([name : Node]
+                 [fields : (Listof Var)]
+                 [table : (HashTable Symbol Value)])
+         #:transparent)
+(struct: Vector ([elems : (Listof Value)]) 
+         #:transparent)
 
 
 ;; --------------- parser and unparser ---------------
 ;; parse and unparse into record types
 
+(: parse (Any -> Node))
 (define (parse sexp)
   (match sexp
     [(? number? x) (Const x)]
@@ -86,13 +149,13 @@
         [(= 1 (length segs))
          (Var x)]
         [else
-         (let ([segs (map Var  (map string->symbol segs))])
+         (let ([segs (map Var (map string->symbol segs))])
           (Attribute segs))]))]
-    [`(quote ,x) (Symbol x)]
+    [`(quote ,(? symbol? x)) (Sym x)]
     [`(fn (,params ...) ,body ...)
      (Fun (parse `(record params ,@params)) (Seq (map parse body)))]
     [(list (? op? op) e1 e2)
-     (Op (parse op) (parse e1) (parse e2))]
+     (Op (Var op) (parse e1) (parse e2))]
     [`(if ,test ,then ,else)
      (If (parse test) (parse then) (parse else))]
     [`(begin ,statements ...)
@@ -108,9 +171,9 @@
     [`(record ,name ,fields ...)
      (RecordDef (parse name) (map parse fields))]
     [`(vec ,elems ...)
-     (Vector (map parse elems))]
-    [`(import ,(? symbol? origin) (,(? symbol? names) ...))
-     (Import (parse origin) (map parse names))]
+     (VectorDef (map parse elems))]
+    [`(import ,origin (,(? symbol? names) ...))
+     (Import (parse origin) (map Var names))]
     [`(,f ,args ...)  ; application must stay last
      (cond
       [(andmap def-form? args)
@@ -124,20 +187,22 @@
     ))
 
 
+(: def-form? (Any -> Boolean))
 (define (def-form? x)
   (and (list? x)
        (= 3 (length x))
        (eq? ':+ (car x))))
 
 
+(: unparse (Any -> Any))
 (define (unparse t)
   (match t
     [(Const obj) obj]
     [(Var name) name]
     [(Attribute segs)
-     (let ([seg-strings (map symbol->string segs)])
+     (let ([seg-strings (map symbol->string (map Var-name segs))])
        (string->symbol (string-join seg-strings ".")))]
-    [(Symbol name) name]
+    [(Sym name) name]
     [(Fun x body)
      `(fn ,(unparse x) ,(unparse body))]
     [(App e1 e2)
@@ -148,9 +213,11 @@
      `(record ,(unparse name) ,@(map unparse fields))]
     [(Record name fields table)
      (let ([fs (hash-map table
-                         (lambda (k v)
+                         (lambda: ([k : Symbol] [v : Value])
                            `(:+ ,(unparse k) ,(unparse v))))])
        `(record ,(unparse name) ,@fs))]
+    [(VectorDef elems)
+     `(vecdef ,@(map unparse elems))]
     [(Vector elems)
      `(vec ,@(map unparse elems))]
     [(Import origin names)
@@ -198,13 +265,17 @@
 ;; deliberately not using pure data structures
 ;; side effects make quite some things easier
 
-(struct Env (table parent) #:transparent)
+(struct: Env ([table : (HashTable Symbol Value)]
+              [parent : (Option Env)])
+  #:transparent)
 
-(define (empty-env) (Env (make-hasheq) nothing))
+(define (empty-env) (Env (make-hasheq) #f))
 
+(: env-extend (Env -> Env))
 (define (env-extend env)
   (Env (make-hasheq) env))
 
+(: env-put! (Env Symbol Value -> Void))
 (define (env-put! env key value)
   (cond
    [(not (symbol? key))
@@ -212,36 +283,33 @@
    [else
     (hash-set! (Env-table env) key value)]))
 
+(: lookup-local (Symbol Env -> (Option Value)))
 (define (lookup-local key env)
-  (cond
-   [(not (symbol? key))
-    (abort 'lookup-local "only accept symbols, but got: " key)]
-   [else
-    (hash-ref (Env-table env) key 'nothing)]))
+  (hash-ref (Env-table env) key #f))
 
+(: lookup (Symbol Env -> (Option Value)))
 (define (lookup key env)
-  (cond
-   [(not (symbol? key))
-    (abort 'lookup "only accept symbols, but got: " key)]
-   [(nothing? env) nothing]
-   [else
-    (let ([val (lookup-local key env)])
-      (cond
-       [(nothing? val)
-        (lookup key (Env-parent env))]
-       [else val]))]))
+  (let ([val (lookup-local key env)]
+        [parent (Env-parent env)])
+    (cond
+      [(not val)
+       (cond
+         [parent
+          (lookup key parent)]
+         [else #f])]
+      [else val])))
 
+(: find-defining-env (Symbol Env -> (Option Env)))
 (define (find-defining-env key env)
-  (cond
-   [(not (symbol? key))
-    (abort 'find-defining-env "only accept symbols, but got: " key)]
-   [(nothing? env) nothing]
-   [else
-    (let ([val (lookup-local key env)])
-      (cond
-       [(nothing? val)
-        (find-defining-env key (Env-parent env))]
-       [else env]))]))
+  (let ([val (lookup-local key env)]
+        [parent (Env-parent env)])
+    (cond
+      [(not val)
+       (cond
+         [parent
+          (find-defining-env key parent)]
+         [else #f])]
+      [else env])))
 
 ;; (define e1 (env-extend env0))
 ;; (env-put! e1 'x 2)
@@ -254,21 +322,22 @@
 
 
 ;; ---------------- main interpreter -----------------
+(: interp1 (Node Env -> Value))
 (define (interp1 exp env)
   (match exp
     [(Const obj) obj]
-    [(Symbol name) name]
+    [(Sym name) name]
     [(Var name)
      (cond
       [(memq name constants) name]
       [else
        (let ([val (lookup name env)])
          (cond
-          [(nothing? val)
+          [(not val)
            (abort 'interp "unbound variable: " name)]
           [else val]))])]
     [(Fun x body)
-     (Closure (Fun (interp1 x env) body) env)]
+     (Closure (FunValue (interp1 x env) body) env)]
     [(App e1 e2)
      (let ([v1 (interp1 e1 env)]
            [v2 (interp1 e2 env)])
@@ -280,7 +349,15 @@
     [(Op op e1 e2)
      (let ([v1 (interp1 e1 env)]
            [v2 (interp1 e2 env)])
-       ((eval (Var-name op)) v1 v2))]
+       (cond
+         [(and (number? v1) (number? v2))
+          (match (Var-name op)
+            ['+ (+ v1 v2)]
+            ['- (- v1 v2)]
+            ['* (* v1 v2)]
+            ['/ (/ v1 v2)])]
+         [else
+          (abort 'interp "can only operate on numbers, but got: " v1 v2)]))]
     [(If test then else)
      (let ([tv (interp1 test env)])
        (if tv
@@ -288,13 +365,21 @@
            (interp1 else env)))]
     [(Def pattern value)
      (let ([v (interp1 value env)])
-       (bind pattern v env))]
+       (bind pattern v env)
+       'void)]
     [(Assign lhs value)
      (let ([v (interp1 value env)])
        (match lhs
          [(Var x)
           (let ([env-def (find-defining-env x env)])
-            (env-put! env-def x v))]))]
+            (cond
+              [env-def 
+               (env-put! env-def x v)
+               'void]
+              [else
+               (abort 'assign
+                      "lhs of assignment if not bound: " 
+                      (unparse lhs))]))]))]
     [(Seq statements)
      (let loop ([statements statements])
        (let ([s0 (first statements)]
@@ -308,28 +393,35 @@
            (interp1 s0 env)
            (loop ss)])))]
     [(RecordDef (Var name) fields)
-     (let ([r (new-record exp env #f)])
+     (let ([r (new-record (RecordDef (Var name) fields) env #f)])
        (env-put! env name r)
        r)]
-    [(Vector elems)
-     (let ([res (map (lambda (x) (interp1 x env)) elems)])
+    [(VectorDef elems)
+     (let ([res (map (lambda: ([x : Node]) (interp1 x env)) elems)])
        (Vector res))]
     [(Attribute segs)
      (let ([r (interp1 (first segs) env)])
-      (record-ref r (Attribute (rest segs))))]
+       (cond
+         [(Record? r)
+          (record-ref r (Attribute (rest segs)))]
+         [else
+          (abort 'interp "trying to access fields of non-record: " r)]))]
     [(Import origin names)
      (let ([r (interp1 origin env)])
        (cond
         [(Record? r)
-         (dolist (name names)
-                 (env-put! env
+         (for-each (lambda: ([name : Var])
+                     (env-put! env
                            (Var-name name)
-                           (record-ref r name)))]
+                           (record-ref r name)))
+                   names)
+         'void]
         [else
-         (abort 'interp "trying to import from non-record: " vo)]))]
+         (abort 'interp "trying to import from non-record: " r)]))]
     ))
 
 
+(: record-ref (Record (U Var Attribute) -> Value))
 (define (record-ref record accessor)
   (match accessor
     [(Var name)
@@ -341,16 +433,16 @@
         [(Record? value)
          (let ([next-val (hash-ref (Record-table value)
                                    (Var-name (first segs))
-                                   nothing)])
+                                   #f)])
            (cond
-            [(nothing? next-val)
+            [(not next-val)
              (abort 'record-ref "attr not exist: " (first segs))]
             [else
              (loop (rest segs) next-val)]))]
         [else
          (abort 'record-ref
                 "take attr of a non-record: "
-                (unparse v0))]))]
+                (unparse value))]))]
     [else
      (abort 'record-ref
             "access with non-var and non-attr: "
@@ -359,24 +451,25 @@
 
 ;; general pattern binder
 ;; can be arbitrarily nested
+(: bind ((U Node Value) Value Env -> Void))
 (define (bind v1 v2 env)
   (match (list v1 v2)
     [(list (RecordDef name1 fields1) v2)
-     (bind (new-record v1 env #t) v2 env)]
+     (bind (new-record (RecordDef name1 fields1) env #t) v2 env)]
     ;; records
     [(list (Record name1 fields1 table1)
            (Record name2 fields2 table2))
      (hash-for-each
       table1
-      (lambda (k1 v1)
-        (let ([v2 (hash-ref table2 k1 nothing)])
+      (lambda: ([k1 : Symbol] [v1 : Value])
+        (let ([v2 (hash-ref table2 k1 #f)])
           (cond
-           [(something? v2)
+           [v2
             (bind v1 v2 env)]
            [else
             (abort 'bind "unbound key in rhs: " k1)]))))]
     ;; vectors
-    [(list (Vector names)
+    [(list (VectorDef names)
            (Vector values))
      (cond
       [(= (length names) (length values))
@@ -412,7 +505,7 @@
     [(list (Var x) v2)
      (let ([existing (lookup-local x env)])
        (cond
-        [(something? existing)
+        [existing
          (abort 'bind
                 "redefining: " x
                 " was defined as: " (unparse existing))]
@@ -423,27 +516,28 @@
 ;; parameter binder for functions
 ;; only slightly different from bind
 ;; but separate it out in order to be clear
+(: bind-params ((U Node Record) Value Env -> Void))
 (define (bind-params v1 v2 env)
   (match (list v1 v2)
     [(list (RecordDef name1 fields1)
            (Record name2 fields2 table2))
-     (bind-params (new-record v1 env #t) v2 env)]
+     (bind-params (new-record (RecordDef name1 fields1) env #t) v2 env)]
     ;; records
     [(list (Record name1 fields1 table1)
            (Record name2 fields2 table2))
      (hash-for-each
       table1
-      (lambda (k1 v1)
-        (let ([v2 (hash-ref table2 k1 nothing)])
+      (lambda: ([k1 : Symbol] [v1 : Value])
+        (let ([v2 (hash-ref table2 k1 #f)])
           (cond
-           [(something? v2)
+           [v2
             (env-put! env k1 v2)]
-           [(something? v1)
+           [v1
             (env-put! env k1 v1)]
            [else
             (abort 'bind-params "unbound key in rhs: " k1)]))))]
     ;; vectors
-    [(list (Vector names)
+    [(list (VectorDef names)
            (Vector values))
      (cond
       [(= (length names) (length values))
@@ -480,31 +574,31 @@
     [(list (Var x) v2)
      (let ([existing (lookup-local x env)])
        (cond
-        [(something? existing)
+        [existing
          (abort 'bind-params
                 "redefining: " x
                 " was defined as: " (unparse existing))]
         [else
          (env-put! env x v2)]))]))
 
-
+(: find-name ((U Var Def) -> Var))
 (define (find-name exp)
   (match exp
-   [(Var x) exp]
+   [(Var x) (Var x)]
    [(Def (Var x) value)
-    (Var x)]
-   [other other]))
+    (Var x)]))
 
-
+(: new-record (RecordDef Env Boolean -> Record))
 (define (new-record desc env pattern?)
   (match desc
-    [(RecordDef (Var name) fields)
+    [(RecordDef name fields)
      (let ([table (make-hasheq)]
            [field-names (map find-name fields)])
        (fill-record-table desc table env pattern?)
        (Record name field-names table))]))
 
 
+(: fill-record-table (RecordDef (HashTable Symbol Value) Env Boolean -> Void))
 (define (fill-record-table desc table env pattern?)
   (let loop ([fields (RecordDef-fields desc)])
     (cond
@@ -513,7 +607,7 @@
       (let ([f0 (first fields)])
         (match f0
           [(Var x)
-           (hash-set! table x 'nothing)]
+           (hash-set! table x #f)]
           [(Def (Var x) value)
            (cond
             [pattern?
