@@ -269,6 +269,9 @@
               [parent : (Option Env)])
   #:transparent)
 
+(: hash-none ( -> False))
+(define hash-none (lambda () #f))
+
 (define (empty-env) (Env (make-hasheq) #f))
 
 (: env-extend (Env -> Env))
@@ -285,7 +288,7 @@
 
 (: lookup-local (Symbol Env -> (Option Value)))
 (define (lookup-local key env)
-  (hash-ref (Env-table env) key #f))
+  (hash-ref (Env-table env) key hash-none))
 
 (: lookup (Symbol Env -> (Option Value)))
 (define (lookup key env)
@@ -433,12 +436,12 @@
         [(Record? value)
          (let ([next-val (hash-ref (Record-table value)
                                    (Var-name (first segs))
-                                   #f)])
+                                   hash-none)])
            (cond
-            [(not next-val)
-             (abort 'record-ref "attr not exist: " (first segs))]
-            [else
-             (loop (rest segs) next-val)]))]
+             [(Record? next-val)
+              (loop (rest segs) next-val)]
+             [else
+              (abort 'record-ref "attr not exist: " (first segs))]))]
         [else
          (abort 'record-ref
                 "take attr of a non-record: "
@@ -462,7 +465,7 @@
      (hash-for-each
       table1
       (lambda: ([k1 : Symbol] [v1 : Value])
-        (let ([v2 (hash-ref table2 k1 #f)])
+        (let ([v2 (hash-ref table2 k1 hash-none)])
           (cond
            [v2
             (bind v1 v2 env)]
@@ -528,7 +531,7 @@
      (hash-for-each
       table1
       (lambda: ([k1 : Symbol] [v1 : Value])
-        (let ([v2 (hash-ref table2 k1 #f)])
+        (let ([v2 (hash-ref table2 k1 hash-none)])
           (cond
            [v2
             (env-put! env k1 v2)]
@@ -581,12 +584,15 @@
         [else
          (env-put! env x v2)]))]))
 
-(: find-name ((U Var Def) -> Var))
+(: find-name (Node -> Var))
 (define (find-name exp)
   (match exp
    [(Var x) (Var x)]
    [(Def (Var x) value)
-    (Var x)]))
+    (Var x)]
+   [other
+    (abort 'find-name "only accepts Var and Def, but got: " exp)]))
+
 
 (: new-record (RecordDef Env Boolean -> Record))
 (define (new-record desc env pattern?)
@@ -598,7 +604,7 @@
        (Record name field-names table))]))
 
 
-(: fill-record-table (RecordDef (HashTable Symbol Value) Env Boolean -> Void))
+(: fill-record-table (RecordDef (HashTable Symbol (U Node Value)) Env Boolean -> Void))
 (define (fill-record-table desc table env pattern?)
   (let loop ([fields (RecordDef-fields desc)])
     (cond
