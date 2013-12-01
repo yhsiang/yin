@@ -30,7 +30,7 @@
  "function mutiple positional param with keyword args same order"
  '(vec 2 3 5)
  '(begin
-    (defn (f x y z) 
+    (defn (f x y z)
       (vec x y z))
     (f (:+ x 2)
        (:+ y 3)
@@ -40,7 +40,7 @@
  "function mutiple positional param with keyword args (different order)"
  '(vec 2 3 5)
  '(begin
-    (defn (f x y z) 
+    (defn (f x y z)
       (vec x y z))
     (f (:+ y 3)
        (:+ z 5)
@@ -50,7 +50,7 @@
  "function mutiple keyword params with keyword args (full)"
  '(vec 2 3 5)
  '(begin
-    (defn (f x (:+ y 42) (:+ z 7)) 
+    (defn (f x (:+ y 42) (:+ z 7))
       (vec x y z))
     (f (:+ y 3)
        (:+ z 5)
@@ -60,7 +60,7 @@
  "function mutiple keyword params with keyword args (missing z)"
  '(vec 2 5 7)
  '(begin
-    (defn (f x (:+ y 3) (:+ z 7)) 
+    (defn (f x (:+ y 3) (:+ z 7))
       (vec x y z))
     (f (:+ y 5)
        (:+ x 2))))
@@ -399,3 +399,27 @@
     (defn (f (vec x (vec y z)))
       (vec x y z))
     (f (vec 1 (vec 2 3)))))
+
+(test
+ "hyper-nested destructuring binding test 1"
+ '(vec 2 3 5)
+ '(begin
+    (:+ (record _ (:+ u (vec x (record _ (:+ w (vec y z))))))
+        (record _ (:+ u (vec 2 (record _ (:+ w (vec 3 5)))))))
+    (vec x y z)))
+
+(test
+ "hyper-nested destructuring binding test 2"
+ '(vec 2 3 5 7 11)
+ '(begin
+    (:+ (record _
+                (:+ w t)
+                (:+ u (vec x (record _
+                                     (:+ u foo)
+                                     (:+ w (vec y z))))))
+        (record _
+                (:+ u (vec 2 (record _
+                                     (:+ w (vec 3 5))
+                                     (:+ u 11))))
+                (:+ w 7)))
+    (vec x y z t foo)))
