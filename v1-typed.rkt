@@ -34,7 +34,7 @@
   (syntax-rules ()
     [(_ name expected exp)
      (begin
-       (printf "testing: ~a ... " name)
+       (printf "testing: ~a" name)
        (let ([result (view exp)])
          (cond
           [(equal? result expected)
@@ -341,6 +341,16 @@
 
 
 ;; ---------------- main interpreter -----------------
+(: interp (Any -> Value))
+(define (interp exp)
+  (interp1 (parse exp) (env0)))
+
+
+(: view (Any -> Any))
+(define (view exp)
+  (unparse (interp exp)))
+
+
 (: interp1 (Node Env -> Value))
 (define (interp1 exp env)
   (match exp
@@ -646,11 +656,6 @@
       [other (void)])))
 
 
-(define (interp exp)
-  (interp1 (parse exp) (env0)))
 
-
-(define (view exp)
-  (unparse (interp exp)))
 
 ;; (require "v1-tests.rkt")

@@ -9,6 +9,13 @@
     1))
 
 (test
+ "function with no arguments"
+ 1
+ '(begin
+    (defn (f) 1)
+    (f)))
+
+(test
  "single positional arg"
  1
  '(begin
