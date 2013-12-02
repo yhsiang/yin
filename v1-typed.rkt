@@ -2,7 +2,12 @@
 
 #lang typed/racket
 
-(require/typed racket [string-split (String (U String Regexp) -> (Listof String))])
+(require/typed racket
+               [string-split (String (U String Regexp) -> (Listof String))])
+
+(require racket/pretty)
+
+(provide view test)
 
 
 ;; --------------- utilities ---------------
@@ -35,8 +40,14 @@
           [(equal? result expected)
            (printf "~n[pass]~n")]
           [else
-           (printf "~n[fail]!~n  expected: ~a~n  got: ~a~n  input: ~a~n"
-                   expected result exp)])))]))
+           (printf "~n[fail]!~n")
+           (printf "- [expected]~n")
+           (pretty-print expected)
+           (printf "- [actual]~n")
+           (pretty-print result)
+           (printf "- [input] ~n")
+           (pretty-print exp)])))]))
+
 
 (define-syntax dolist
   (syntax-rules ()
@@ -642,4 +653,4 @@
 (define (view exp)
   (unparse (interp exp)))
 
-(load "v1-tests.rkt")
+;; (require "v1-tests.rkt")

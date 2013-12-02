@@ -1,5 +1,6 @@
 #lang typed/racket
 
+(require "v1-typed.rkt")
 
 (test
  "begin with only one statement"
@@ -426,3 +427,22 @@
                                      (:+ u 11))))
                 (:+ w 7)))
     (vec x y z t foo)))
+
+(test
+ "destructuring bind into record from function return"
+ '(vec 2 3)
+ '(begin
+    (defn (f x) (record _ (:+ a 2) (:+ b 3)))
+    (:+ (record _ (:+ b bar) (:+ a foo))
+        (f 1))
+    (vec foo bar)))
+
+(test
+ "destructuring bind into record from function return from parameter"
+ '(vec 2 3)
+ '(begin
+    (:+ r1 (record _ (:+ u 2) (:+ v 3)))
+    (defn (f x) (record _ (:+ a x.u) (:+ b x.v)))
+    (:+ (record _ (:+ b bar) (:+ a foo))
+        (f r1))
+    (vec foo bar)))
