@@ -400,8 +400,8 @@
           [else
            (interp1 s0 env)
            (loop ss)])))]
-    [(RecordDef (Var name) fields)
-     (new-record (RecordDef (Var name) fields) env #f)]
+    [(and r (RecordDef (Var name) fields))
+     (new-record r env #f)]
     [(VectorDef elems)
      (let ([res (map (lambda: ([x : Node]) (interp1 x env)) elems)])
        (Vector res))]
@@ -458,8 +458,8 @@
 (: bind ((U Node Value) Value Env -> Void))
 (define (bind v1 v2 env)
   (match (list v1 v2)
-    [(list (RecordDef name1 fields1) v2)
-     (bind (new-record (RecordDef name1 fields1) env #t) v2 env)]
+    [(list (and r1 (RecordDef name1 fields1)) v2)
+     (bind (new-record r1 env #t) v2 env)]
     ;; records
     [(list (Record name1 fields1 table1)
            (Record name2 fields2 table2))
@@ -502,7 +502,7 @@
      (bind x v2 env)]
     [(list (Var x) v2)
      (cond
-      [(eq? x '_) (void)]
+      [(eq? x '_) (void)]     ;; non-binding wild cards
       [else
        (let ([existing (lookup-local x env)])
          (cond
@@ -520,9 +520,9 @@
 (: bind-params ((U Node Value) Value Env -> Void))
 (define (bind-params v1 v2 env)
   (match (list v1 v2)
-    [(list (RecordDef name1 fields1)
+    [(list (and r1 (RecordDef name1 fields1))
            (Record name2 fields2 table2))
-     (bind-params (new-record (RecordDef name1 fields1) env #t) v2 env)]
+     (bind-params (new-record r1 env #t) v2 env)]
     ;; records
     [(list (Record name1 fields1 table1)
            (Record name2 fields2 table2))
@@ -566,7 +566,7 @@
     ;; base case
     [(list (Var x) v2)
      (cond
-      [(eq? x '_) (void)]
+      [(eq? x '_) (void)]      ;; non-binding wild cards
       [else
        (let ([existing (lookup-local x env)])
          (cond
@@ -581,9 +581,9 @@
 (: find-name (Node -> Var))
 (define (find-name exp)
   (match exp
-   [(Var x) (Var x)]
-   [(Def (Var x) value)
-    (Var x)]
+   [(and vx (Var x)) vx]
+   [(Def (and vx (Var x)) value)
+    vx]
    [other
     (abort 'find-name "only accepts Var and Def, but got: " exp)]))
 
