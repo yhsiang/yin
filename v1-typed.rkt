@@ -163,7 +163,7 @@
          (Var x)]
         [else
          (let ([segs (map Var (map string->symbol segs))])
-          (Attribute segs))]))]
+           (Attribute segs))]))]
     [`(quote ,(? symbol? x)) (Sym x)]
     [`(fn (,params ...) ,body ...)
      (Fun (parse `(record params ,@params)) (Seq (map parse body)))]
@@ -257,7 +257,7 @@
 
 (struct: Env ([table : (HashTable Symbol Value)]
               [parent : (Option Env)])
-  #:transparent)
+         #:transparent)
 
 (: hash-none ( -> False))
 (define hash-none (lambda () #f))
@@ -285,28 +285,20 @@
   (let ([val (lookup-local key env)]
         [parent (Env-parent env)])
     (cond
-      [(not val)
-       (cond
-         [parent
-          (lookup key parent)]
-         [else #f])]
-      [else val])))
+     [val val]
+     [parent
+      (lookup key parent)]
+     [else #f])))
 
 (: find-defining-env (Symbol Env -> (Option Env)))
 (define (find-defining-env key env)
   (let ([val (lookup-local key env)]
         [parent (Env-parent env)])
     (cond
-      [(not val)
-       (cond
-         [parent
-          (find-defining-env key parent)]
-         [else #f])]
-      [else env])))
-
-;; (define e1 (env-extend env0))
-;; (env-put! e1 'x 2)
-
+     [val env]
+     [parent
+      (find-defining-env key parent)]
+     [else #f])))
 
 (define constants
   `(true false))
@@ -422,11 +414,8 @@
      (let ([r (interp1 origin env)])
        (cond
         [(Record? r)
-         (for-each (lambda: ([name : Var])
-                     (env-put! env
-                           (Var-name name)
-                           (record-ref r name)))
-                   names)
+         (for ([name names])
+           (env-put! env (Var-name name) (record-ref r name)))
          'void]
         [else
          (abort 'interp "trying to import from non-record: " r)]))]
@@ -439,7 +428,8 @@
     [(Var name)
      (hash-ref (Record-table record) name)]
     [(Attribute segs)
-     (let: loop : Value ([segs : (Listof Var) segs] [value : Value record])
+     (let: loop : Value ([segs : (Listof Var) segs] 
+                         [value : Value record])
        (cond
         [(null? segs) value]
         [(Record? value)
@@ -447,10 +437,10 @@
                                    (Var-name (first segs))
                                    hash-none)])
            (cond
-            [(not next-val)
-             (abort 'record-ref "attr not exist: " (first segs))]
+            [next-val
+             (loop (rest segs) next-val)]
             [else
-             (loop (rest segs) next-val)]))]
+             (abort 'record-ref "attr not exist: " (first segs))]))]
         [else
          (abort 'record-ref
                 "take attr of a non-record: "
@@ -485,13 +475,9 @@
            (Vector values))
      (cond
       [(= (length names) (length values))
-       (let loop ([vec1 names]
-                  [vec2 values])
-         (cond
-          [(null? vec1) (void)]
-          [else
-           (bind (first vec1) (first vec2) env)
-           (loop (rest vec1) (rest vec2))]))]
+       (for ([name names]
+             [value values])
+         (bind name value env))]
       [else
        (abort 'bind
               "incorrect number of arguments\n"
@@ -501,13 +487,9 @@
            (Vector elems))
      (cond
       [(= (length fields1) (length elems))
-       (let loop ([vec1 fields1]
-                  [vec2 elems])
-         (cond
-          [(null? vec1) (void)]
-          [else
-           (bind (first vec1) (first vec2) env)
-           (loop (rest vec1) (rest vec2))]))]
+       (for ([name fields1]
+             [value elems])
+         (bind name value env))]
       [else
        (abort 'bind
               "incorrect number of arguments\n"
