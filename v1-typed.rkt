@@ -7,7 +7,7 @@
 
 (require racket/pretty)
 
-(provide view test)
+(provide (all-defined-out))
 
 
 ;; --------------- utilities ---------------
@@ -48,12 +48,6 @@
            (printf "- [input] ~n")
            (pretty-print exp)])))]))
 
-
-(define-syntax dolist
-  (syntax-rules ()
-    [(_ (iter ls) body ...)
-     (for-each (lambda (iter) (begin body ...)) ls)]))
-
 (define (op? x)
   (memq x '(+ - * / < <= >= > = eq?)))
 
@@ -77,6 +71,18 @@
      Return
      If
      Op))
+
+(define-type Value
+  (U Const
+     Closure
+     Record
+     Vector
+     Symbol
+     Number
+     String
+     Boolean
+     False
+     Node))
 
 (struct: Const ([obj : (U Symbol Number String)])
          #:transparent)
@@ -120,18 +126,6 @@
          #:transparent)
 
 
-(define-type Value
-  (U Const
-     Closure
-     Record
-     Vector
-     Symbol
-     Number
-     String
-     Boolean
-     False
-     Node))
-
 ;; interpreter's internal structures
 (struct: Closure ([fun : FunValue]
                   [env : Env])
@@ -148,8 +142,15 @@
 
 
 ;; --------------- parser and unparser ---------------
-;; parse and unparse into record types
+;; helper
+(: def-form? (Any -> Boolean))
+(define (def-form? x)
+  (and (list? x)
+       (= 3 (length x))
+       (eq? ':+ (car x))))
 
+
+;; parse and unparse into record types
 (: parse (Any -> Node))
 (define (parse sexp)
   (match sexp
@@ -185,12 +186,9 @@
     [`(vec ,elems ...)
      (VectorDef (map parse elems))]
     [`(import ,origin (,(? symbol? names) ...))
-     (cond
-       [(andmap symbol? names)
-        (Import (parse origin) (map Var names))]
-       [else
-        (error 'parse)])]
-    [`(,f ,args ...)  ; application must stay last
+     (Import (parse origin) (map Var (cast names (Listof Symbol))))]
+    ;; application has no keywords, must stay last
+    [`(,f ,args ...)
      (cond
       [(andmap def-form? args)
        (App (parse f) (parse `(record args ,@args)))]
@@ -201,13 +199,6 @@
               "application must either be all keyword args"
               " or all positional args, no mixture please")])]
     ))
-
-
-(: def-form? (Any -> Boolean))
-(define (def-form? x)
-  (and (list? x)
-       (= 3 (length x))
-       (eq? ':+ (car x))))
 
 
 (: unparse (Any -> Any))
@@ -257,23 +248,6 @@
      (unparse fun)]
     [other other]
     ))
-
-;; (parse '(f (:+ x 1) (:+ y 2)))
-;; (parse '(f x y))
-;; (parse '(f x (:+ y 2)))
-;; (unparse (parse '(vec 1 2 3)))
-;; (unparse (parse '(f (:+ x 1) (:+ y 2))))
-;; (unparse (parse '(:+ (f x (:+ y 1)) (+ x y))))
-;; (unparse (parse '(import r x y z)))
-;; (unparse (parse 'x.y.z.w))
-;; (unparse (parse '(record r1 f1 (<- f2 0))))
-;; (unparse (parse '(return 1)))
-;; (unparse (parse '(f 'x)))
-;; (parse '(op + 1 2))
-;; (unparse (parse '(begin x y z)))
-;; (unparse (parse '(:+ x 1)))
-;; (unparse (parse '(record x (1 2))))
-;; (unparse (parse '(fn (record x (1 2)) "hi")))
 
 
 ;; --------------- symbol table (environment) ---------------
@@ -581,13 +555,9 @@
            (Vector values))
      (cond
       [(= (length names) (length values))
-       (let loop ([vec1 names]
-                  [vec2 values])
-         (cond
-          [(null? vec1) (void)]
-          [else
-           (bind-params (first vec1) (first vec2) env)
-           (loop (rest vec1) (rest vec2))]))]
+       (for ([name names]
+             [value values])
+         (bind-params name value env))]
       [else
        (abort 'bind-params
               "incorrect number of arguments\n"
@@ -598,13 +568,9 @@
            (Vector elems))
      (cond
       [(= (length fields1) (length elems))
-       (let loop ([vec1 fields1]
-                  [vec2 elems])
-         (cond
-          [(null? vec1) (void)]
-          [else
-           (bind-params (first vec1) (first vec2) env)
-           (loop (rest vec1) (rest vec2))]))]
+       (for ([f fields1]
+             [e elems])
+         (bind-params f e env))]
       [else
        (abort 'bind-params
               "incorrect number of arguments\n"
@@ -621,6 +587,7 @@
         [else
          (env-put! env x v2)]))]))
 
+
 (: find-name (Node -> Var))
 (define (find-name exp)
   (match exp
@@ -636,26 +603,16 @@
   (match desc
     [(RecordDef name fields)
      (let: ([table : (HashTable Symbol Value) (make-hasheq)])
-       (fill-record-table desc table env pattern?)
+       (for ([f (RecordDef-fields desc)])
+         (match f
+           [(Var x)
+            (hash-set! table x #f)]
+           [(Def (Var x) value)
+            (cond
+             [pattern?
+              (hash-set! table x value)]
+             [else
+              (let ([v (interp1 value env)])
+                (hash-set! table x v))])]
+           [other (void)]))
        (Record name fields table))]))
-
-
-(: fill-record-table (RecordDef (HashTable Symbol Value) Env Boolean -> Void))
-(define (fill-record-table desc table env pattern?)
-  (dolist (f (RecordDef-fields desc))
-    (match f
-      [(Var x)
-       (hash-set! table x #f)]
-      [(Def (Var x) value)
-       (cond
-        [pattern?
-         (hash-set! table x value)]
-        [else
-         (let ([v (interp1 value env)])
-           (hash-set! table x v))])]
-      [other (void)])))
-
-
-
-
-;; (require "v1-tests.rkt")

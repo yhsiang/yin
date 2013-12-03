@@ -2,6 +2,25 @@
 
 (require "v1-typed.rkt")
 
+;; ------------------ parser tests ------------------
+;; (parse '(f (:+ x 1) (:+ y 2)))
+;; (parse '(f x y))
+;; (parse '(f x (:+ y 2)))
+;; (unparse (parse '(vec 1 2 3)))
+;; (unparse (parse '(f (:+ x 1) (:+ y 2))))
+;; (unparse (parse '(:+ (f x (:+ y 1)) (+ x y))))
+;; (unparse (parse '(import r x y z)))
+;; (unparse (parse 'x.y.z.w))
+;; (unparse (parse '(record r1 f1 (<- f2 0))))
+;; (unparse (parse '(return 1)))
+;; (unparse (parse '(f 'x)))
+;; (parse '(op + 1 2))
+;; (unparse (parse '(begin x y z)))
+;; (unparse (parse '(:+ x 1)))
+;; (unparse (parse '(record x (1 2))))
+;; (unparse (parse '(fn (record x (1 2)) "hi")))
+
+
 (test
  "begin with only one statement"
  1
@@ -453,3 +472,4 @@
     (:+ (record _ (:+ b bar) (:+ a foo))
         (f r1))
     (vec foo bar)))
+
