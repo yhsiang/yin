@@ -166,7 +166,7 @@
            (Attribute segs))]))]
     [`(quote ,(? symbol? x)) (Sym x)]
     [`(fn (,params ...) ,body ...)
-     (Fun (parse `(record params ,@params)) (Seq (map parse body)))]
+     (Fun (parse `(rec ,@params)) (Seq (map parse body)))]
     [(list (? op? op) e1 e2)
      (Op (Var op) (parse e1) (parse e2))]
     [`(if ,test ,then ,else)
@@ -181,8 +181,8 @@
      (Def (parse pattern) (parse value))]
     [`(<- ,pattern ,value)
      (Assign (parse pattern) (parse value))]
-    [`(record ,name ,fields ...)
-     (RecordDef (parse name) (map parse fields))]
+    [`(rec ,fields ...)
+     (RecordDef (Var '_) (map parse fields))]
     [`(vec ,elems ...)
      (VectorDef (map parse elems))]
     [`(import ,origin (,(? symbol? names) ...))
@@ -191,7 +191,7 @@
     [`(,f ,args ...)
      (cond
       [(andmap def-form? args)
-       (App (parse f) (parse `(record args ,@args)))]
+       (App (parse f) (parse `(rec ,@args)))]
       [(andmap (negate def-form?) args)
        (App (parse f) (parse `(vec ,@args)))]
       [else
@@ -217,12 +217,12 @@
     [(Op op e1 e2)
      `(,(unparse op) ,(unparse e1) ,(unparse e2))]
     [(RecordDef name fields)
-     `(record ,(unparse name) ,@(map unparse fields))]
+     `(rec ,(unparse name) ,@(map unparse fields))]
     [(Record name fields table)
      (let ([fs (hash-map table
                          (lambda: ([k : Symbol] [v : Value])
                            `(:+ ,(unparse k) ,(unparse v))))])
-       `(record ,(unparse name) ,@fs))]
+       `(rec ,(unparse name) ,@fs))]
     [(VectorDef elems)
      `(vecdef ,@(map unparse elems))]
     [(Vector elems)

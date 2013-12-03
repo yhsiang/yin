@@ -11,14 +11,11 @@
 ;; (unparse (parse '(:+ (f x (:+ y 1)) (+ x y))))
 ;; (unparse (parse '(import r x y z)))
 ;; (unparse (parse 'x.y.z.w))
-;; (unparse (parse '(record r1 f1 (<- f2 0))))
 ;; (unparse (parse '(return 1)))
 ;; (unparse (parse '(f 'x)))
 ;; (parse '(op + 1 2))
 ;; (unparse (parse '(begin x y z)))
 ;; (unparse (parse '(:+ x 1)))
-;; (unparse (parse '(record x (1 2))))
-;; (unparse (parse '(fn (record x (1 2)) "hi")))
 
 
 (test
@@ -116,7 +113,7 @@
  42
  '(begin
     (:+ f (fn (x) x.a))
-    (:+ o (record any (:+ a 42)))
+    (:+ o (rec (:+ a 42)))
     (f o)))
 
 (test
@@ -143,7 +140,7 @@
  "import from record simple"
  1
  '(begin
-    (:+ r1 (record _ (:+ x 1) (:+ y 2)))
+    (:+ r1 (rec (:+ x 1) (:+ y 2)))
     (import r1 (x))
     x))
 
@@ -151,8 +148,8 @@
  "import from record nested"
  1
  '(begin
-    (:+ r1 (record _ (:+ x 1)))
-    (:+ r2 (record _ (:+ y r1)))
+    (:+ r1 (rec (:+ x 1)))
+    (:+ r2 (rec (:+ y r1)))
     (import r2.y (x))
     x))
 
@@ -160,8 +157,8 @@
  "import from record nested"
  1
  '(begin
-    (:+ r1 (record _ (:+ x 1)))
-    (:+ r2 (record _ (:+ y r1)))
+    (:+ r1 (rec (:+ x 1)))
+    (:+ r2 (rec (:+ y r1)))
     (import r2 (y))
     (import y (x))
     x))
@@ -170,10 +167,9 @@
  "import function and fields"
  30
  '(begin
-    (:+ r1 (record _ (:+ x 2) (:+ y 3)))
-    (:+ r2 (record _
-                   (:+ z 5)
-                   (:+ f (fn (x y z) (* (* x y) z)))))
+    (:+ r1 (rec (:+ x 2) (:+ y 3)))
+    (:+ r2 (rec (:+ z 5)
+                (:+ f (fn (x y z) (* (* x y) z)))))
     (import r1 (x y))
     (import r2 (f z))
     (f x y z)))
@@ -182,9 +178,8 @@
  "import inside function"
  6
  '(begin
-    (:+ r1 (record _
-                   (:+ x 1)
-                   (:+ y 2)))
+    (:+ r1 (rec (:+ x 1)
+                (:+ y 2)))
     (defn (f z)
       (import r1 (y))
       (* y z))
@@ -353,7 +348,7 @@
  "function stored in record field"
  10
  '(begin
-    (:+ r1 (record something (:+ x (fn (y) (* y 2)))))
+    (:+ r1 (rec (:+ x (fn (y) (* y 2)))))
     (r1.x 5)))
 
 (test
@@ -361,31 +356,28 @@
  10
  '(begin
     (defn (bar x) (x.foo 5))
-    (bar (record something (:+ foo (fn (y) (* y 2)))))))
+    (bar (rec (:+ foo (fn (y) (* y 2)))))))
 
 ;; ----------------- pattern binding ------------------
 (test
  "pattern binding, keyword, simple"
  '(vec 2 5)
  '(begin
-    (:+ (record a (:+ x foo) (:+ y bar))
-        (record a (:+ y 5) (:+ x 2)))
+    (:+ (rec (:+ x foo) (:+ y bar))
+        (rec (:+ y 5) (:+ x 2)))
     (vec foo bar)))
 
 (test
  "pattern binding, keyword, nested"
  '(vec 2 3 5)
  '(begin
-    (:+ (record a
-                (:+ x foo)
-                (:+ y (record b
-                              (:+ u bar)
-                              (:+ v baz))))
-        (record a
-                (:+ y (record b
-                              (:+ v 5)
-                              (:+ u 3)))
-                (:+ x 2)))
+    (:+ (rec (:+ x foo)
+             (:+ y (rec (:+ u bar)
+                        (:+ v baz))))
+        (rec a
+             (:+ y (rec (:+ v 5)
+                        (:+ u 3)))
+             (:+ x 2)))
     (vec foo bar baz)))
 
 (test
@@ -430,19 +422,17 @@
  "pattern binding, record and vector, nested"
  '(vec 2 3 5 7 11)
  '(begin
-    (:+ (record a
-                (:+ w foo)
-                (:+ y (vec x y (vec u v))))
-        (record a
-                (:+ y (vec 2 3 (vec 5 7)))
-                (:+ w 11)))
+    (:+ (rec (:+ w foo)
+             (:+ y (vec x y (vec u v))))
+        (rec (:+ y (vec 2 3 (vec 5 7)))
+             (:+ w 11)))
     (vec x y u v foo)))
 
 (test
  "positionally bind vector into record"
  '(vec 3 5)
  '(begin
-    (:+ (record a (:+ x 1) (:+ y 2))
+    (:+ (rec (:+ x 1) (:+ y 2))
         (vec 3 5))
     (vec x y)))
 
@@ -458,32 +448,28 @@
  "hyper-nested destructuring binding test 1"
  '(vec 2 3 5)
  '(begin
-    (:+ (record _ (:+ u (vec x (record _ (:+ w (vec y z))))))
-        (record _ (:+ u (vec 2 (record _ (:+ w (vec 3 5)))))))
+    (:+ (rec (:+ u (vec x (rec (:+ w (vec y z))))))
+        (rec (:+ u (vec 2 (rec (:+ w (vec 3 5)))))))
     (vec x y z)))
 
 (test
  "hyper-nested destructuring binding test 2"
  '(vec 2 3 5 7 11)
  '(begin
-    (:+ (record _
-                (:+ w t)
-                (:+ u (vec x (record _
-                                     (:+ u foo)
-                                     (:+ w (vec y z))))))
-        (record _
-                (:+ u (vec 2 (record _
-                                     (:+ w (vec 3 5))
-                                     (:+ u 11))))
-                (:+ w 7)))
+    (:+ (rec (:+ w t)
+             (:+ u (vec x (rec (:+ u foo)
+                               (:+ w (vec y z))))))
+        (rec (:+ u (vec 2 (rec (:+ w (vec 3 5))
+                               (:+ u 11))))
+             (:+ w 7)))
     (vec x y z t foo)))
 
 (test
  "destructuring bind into record from function return"
  '(vec 2 3)
  '(begin
-    (defn (f x) (record _ (:+ a 2) (:+ b 3)))
-    (:+ (record _ (:+ b bar) (:+ a foo))
+    (defn (f x) (rec (:+ a 2) (:+ b 3)))
+    (:+ (rec (:+ b bar) (:+ a foo))
         (f 1))
     (vec foo bar)))
 
@@ -491,9 +477,9 @@
  "destructuring bind into record from function return from parameter"
  '(vec 2 3)
  '(begin
-    (:+ r1 (record _ (:+ u 2) (:+ v 3)))
-    (defn (f x) (record _ (:+ a x.u) (:+ b x.v)))
-    (:+ (record _ (:+ b bar) (:+ a foo))
+    (:+ r1 (rec (:+ u 2) (:+ v 3)))
+    (defn (f x) (rec (:+ a x.u) (:+ b x.v)))
+    (:+ (rec (:+ b bar) (:+ a foo))
         (f r1))
     (vec foo bar)))
 
