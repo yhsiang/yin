@@ -143,7 +143,7 @@
  "import from record simple"
  1
  '(begin
-    (record r1 (:+ x 1) (:+ y 2))
+    (:+ r1 (record _ (:+ x 1) (:+ y 2)))
     (import r1 (x))
     x))
 
@@ -151,8 +151,8 @@
  "import from record nested"
  1
  '(begin
-    (record r1 (:+ x 1))
-    (record r2 (:+ y r1))
+    (:+ r1 (record _ (:+ x 1)))
+    (:+ r2 (record _ (:+ y r1)))
     (import r2.y (x))
     x))
 
@@ -160,8 +160,8 @@
  "import from record nested"
  1
  '(begin
-    (record r1 (:+ x 1))
-    (record r2 (:+ y r1))
+    (:+ r1 (record _ (:+ x 1)))
+    (:+ r2 (record _ (:+ y r1)))
     (import r2 (y))
     (import y (x))
     x))
@@ -170,10 +170,10 @@
  "import function and fields"
  30
  '(begin
-    (record r1 (:+ x 2) (:+ y 3))
-    (record r2
-            (:+ z 5)
-            (:+ f (fn (x y z) (* (* x y) z))))
+    (:+ r1 (record _ (:+ x 2) (:+ y 3)))
+    (:+ r2 (record _
+                   (:+ z 5)
+                   (:+ f (fn (x y z) (* (* x y) z)))))
     (import r1 (x y))
     (import r2 (f z))
     (f x y z)))
@@ -182,9 +182,9 @@
  "import inside function"
  6
  '(begin
-    (record r1
-            (:+ x 1)
-            (:+ y 2))
+    (:+ r1 (record _
+                   (:+ x 1)
+                   (:+ y 2)))
     (defn (f z)
       (import r1 (y))
       (* y z))
@@ -403,7 +403,31 @@
     (vec x y u v)))
 
 (test
+ "pattern binding, vector, nested, with wildcards"
+ '(vec 1 5 9)
+ '(begin
+    (:+ (vec (vec x _ _) 
+             (vec _ y _)
+             (vec _ _ z)) 
+        (vec (vec 1 2 3)
+             (vec 4 5 6)
+             (vec 7 8 9)))
+    (vec x y z)))
+
+(test
  "pattern binding, vector, nested"
+ '(vec 1 2 3 4 5 6 7 8 9)
+ '(begin
+    (:+ (vec (vec x y z) 
+             (vec u v w)
+             (vec a b c)) 
+        (vec (vec 1 2 3)
+             (vec 4 5 6)
+             (vec 7 8 9)))
+    (vec x y z u v w a b c)))
+
+(test
+ "pattern binding, record and vector, nested"
  '(vec 2 3 5 7 11)
  '(begin
     (:+ (record a

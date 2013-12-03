@@ -375,15 +375,19 @@
      (let ([v (interp1 value env)])
        (match lhs
          [(Var x)
-          (let ([env-def (find-defining-env x env)])
-            (cond
-              [env-def
-               (env-put! env-def x v)
-               'void]
-              [else
-               (abort 'assign
-                      "lhs of assignment if not bound: "
-                      (unparse lhs))]))]))]
+          (cond
+           [(eq? x '_)
+            (abort 'assign "underscore can't be used in assignments")]
+           [else
+            (let ([env-def (find-defining-env x env)])
+              (cond
+               [env-def
+                (env-put! env-def x v)
+                'void]
+               [else
+                (abort 'assign
+                       "lhs of assignment if not bound: "
+                       (unparse lhs))]))])]))]
     [(Seq statements)
      (let loop ([statements statements])
        (let ([s0 (first statements)]
@@ -397,9 +401,7 @@
            (interp1 s0 env)
            (loop ss)])))]
     [(RecordDef (Var name) fields)
-     (let ([r (new-record (RecordDef (Var name) fields) env #f)])
-       (env-put! env name r)
-       r)]
+     (new-record (RecordDef (Var name) fields) env #f)]
     [(VectorDef elems)
      (let ([res (map (lambda: ([x : Node]) (interp1 x env)) elems)])
        (Vector res))]
@@ -499,14 +501,17 @@
     [(list (Def x y) v2)
      (bind x v2 env)]
     [(list (Var x) v2)
-     (let ([existing (lookup-local x env)])
-       (cond
-        [existing
-         (abort 'bind
-                "redefining: " x
-                " was defined as: " (unparse existing))]
-        [else
-         (env-put! env x v2)]))]))
+     (cond
+      [(eq? x '_) (void)]
+      [else
+       (let ([existing (lookup-local x env)])
+         (cond
+          [existing
+           (abort 'bind
+                  "redefining: " x
+                  " was defined as: " (unparse existing))]
+          [else
+           (env-put! env x v2)]))])]))
 
 
 ;; parameter binder for functions
@@ -560,14 +565,17 @@
               " got: " (length elems))])]
     ;; base case
     [(list (Var x) v2)
-     (let ([existing (lookup-local x env)])
-       (cond
-        [existing
-         (abort 'bind-params
-                "redefining: " x
-                " was defined as: " (unparse existing))]
-        [else
-         (env-put! env x v2)]))]))
+     (cond
+      [(eq? x '_) (void)]
+      [else
+       (let ([existing (lookup-local x env)])
+         (cond
+          [existing
+           (abort 'bind-params
+                  "redefining: " x
+                  " was defined as: " (unparse existing))]
+          [else
+           (env-put! env x v2)]))])]))
 
 
 (: find-name (Node -> Var))
@@ -588,9 +596,11 @@
        (for ([f (RecordDef-fields desc)])
          (match f
            [(Var x)
-            (hash-set! table x #f)]
+            (when (not (eq? x '_))
+                  (hash-set! table x #f))]
            [(Def (Var x) value)
             (cond
+             [(eq? x '_) (void)]
              [pattern?
               (hash-set! table x value)]
              [else
