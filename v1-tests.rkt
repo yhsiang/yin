@@ -2,6 +2,31 @@
 
 (require "v1-typed.rkt")
 
+(define *view* #f)
+(define *counter* 1)
+(define-syntax test
+  (syntax-rules ()
+    [(_ name expected exp)
+     (cond
+      [*view* (view exp)]
+      [else
+       (begin
+         (printf "test ~a: ~a" *counter* name)
+         (set! *counter* (+ 1 *counter*))
+         (let ([result (view exp)])
+           (cond
+            [(equal? result expected)
+             (printf "~n[\033[92mpass\033[0m]~n")]
+            [else
+             (printf "~n[\033[91mfail\033[0m]~n")
+             (printf "\033[92mexpected\033[0m:~n")
+             (pretty-print expected)
+             (printf "\033[91mactual\033[0m:~n")
+             (pretty-print result)
+             (printf "\033[93minput\033[0m:~n")
+             (pretty-print exp)])))])]))
+
+
 ;; ------------------ parser tests ------------------
 ;; (parse '(f (:+ x 1) (:+ y 2)))
 ;; (parse '(f x y))
@@ -398,21 +423,33 @@
  "pattern binding, vector, nested, with wildcards"
  '(vec 1 5 9)
  '(begin
-    (:+ (vec (vec x _ _) 
+    (:+ (vec (vec x _ _)
              (vec _ y _)
-             (vec _ _ z)) 
+             (vec _ _ z))
         (vec (vec 1 2 3)
              (vec 4 5 6)
              (vec 7 8 9)))
     (vec x y z)))
 
 (test
+ "pattern binding, vector, nested, with wildcards"
+ '(vec 1 3 5 7 9)
+ '(begin
+    (:+ (vec (vec a _ b)
+             (vec _ c _)
+             (vec d _ e))
+        (vec (vec 1 2 3)
+             (vec 4 5 6)
+             (vec 7 8 9)))
+    (vec a b c d e)))
+
+(test
  "pattern binding, vector, nested"
  '(vec 1 2 3 4 5 6 7 8 9)
  '(begin
-    (:+ (vec (vec x y z) 
+    (:+ (vec (vec x y z)
              (vec u v w)
-             (vec a b c)) 
+             (vec a b c))
         (vec (vec 1 2 3)
              (vec 4 5 6)
              (vec 7 8 9)))
@@ -483,3 +520,18 @@
         (f r1))
     (vec foo bar)))
 
+(test
+ "attribute reference - 3 levels simple"
+ 42
+ '(begin
+    (:+ r1 (rec (:+ x (rec (:+ y (rec (:+ z 42)))))))
+    r1.x.y.z))
+
+(test
+ "attribute reference - 3 levels from function"
+ 42
+ '(begin
+    (defn (f)
+      (rec (:+ x (rec (:+ y (rec (:+ z 42)))))))
+    (:+ r1 (f))
+    r1.x.y.z))

@@ -9,7 +9,7 @@ responsible for the language's design, implementation quality or features. This
 language is designed to satsify nobody but Yin's needs. It will not be
 influenced nor controlled by any external force. Yin reserves the rights to
 change the language, at any time and in any way he likes that may break any
-existing code. It will be non-portable and can only be guaranteed to work on
+existing code. It will not be guaranteed to be portable and may only work on
 Yin's computer. Although the code is opensource, it is fully copyrighted and
 non-free. You will be charged by enormous amount if you use it for commercial
 purposes.
@@ -17,8 +17,8 @@ purposes.
 Why Yin wants such a language? Because he wants it to be fun. Users destroy the
 fun and popularity prevent the languages from improving. This includes some of
 the highly-respected functional programming languages. They all suffer from
-their marketing hypes and trying to be "mainstream". They don't see their own
-shortcomings and once there are users, there is no way they can fix their
+their marketing hypes and trying to become "mainstream". They don't see their
+own shortcomings and once there are users, it becomes hard to fix their
 problems. The Y Language completely prevents these from happening by allowing
 only one person, its creator, to use it. You may understand this better by
 looking at the following quote from Alan Perlis:

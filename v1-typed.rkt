@@ -30,24 +30,6 @@
          (void))]))
 
 
-(define-syntax test
-  (syntax-rules ()
-    [(_ name expected exp)
-     (begin
-       (printf "testing: ~a" name)
-       (let ([result (view exp)])
-         (cond
-          [(equal? result expected)
-           (printf "~n[pass]~n")]
-          [else
-           (printf "~n[fail]!~n")
-           (printf "- [expected]~n")
-           (pretty-print expected)
-           (printf "- [actual]~n")
-           (pretty-print result)
-           (printf "- [input] ~n")
-           (pretty-print exp)])))]))
-
 (define (op? x)
   (memq x '(+ - * / < <= >= > = eq?)))
 
@@ -90,7 +72,8 @@
          #:transparent)
 (struct: Var ([name : Symbol])
          #:transparent)
-(struct: Attribute ([segs : (Listof Var)])
+(struct: Attribute ([value : Node]
+                    [attr : Var])
          #:transparent)
 (struct: Fun ([param : Node]
               [body : Seq])
@@ -157,13 +140,20 @@
     [(? number? x) (Const x)]
     [(? string? x) (Const x)]
     [(? symbol? x)
-     (let ([segs (string-split (symbol->string x) ".")])
+     (let ([segs (map string->symbol
+                      (string-split (symbol->string x) "."))])
        (cond
         [(= 1 (length segs))
          (Var x)]
         [else
-         (let ([segs (map Var (map string->symbol segs))])
-           (Attribute segs))]))]
+         (let: loop ([segs : (Listof Symbol) (rest segs)]
+                     [value : Node (Var (first segs))])
+           (cond
+            [(null? segs)
+             value]
+            [else
+             (loop (rest segs)
+                   (Attribute value (Var (first segs))))]))]))]
     [`(quote ,(? symbol? x)) (Sym x)]
     [`(fn (,params ...) ,body ...)
      (Fun (parse `(rec ,@params)) (Seq (map parse body)))]
@@ -206,9 +196,9 @@
   (match t
     [(Const obj) obj]
     [(Var name) name]
-    [(Attribute segs)
-     (let ([seg-strings (map symbol->string (map Var-name segs))])
-       (string->symbol (string-join seg-strings ".")))]
+    [(Attribute value attr)
+     (let ([e `(,(unparse value) ,(unparse attr))])
+       e)]
     [(Sym name) name]
     [(Fun x body)
      `(fn ,(unparse x) ,(unparse body))]
@@ -405,11 +395,11 @@
     [(VectorDef elems)
      (let ([res (map (lambda: ([x : Node]) (interp1 x env)) elems)])
        (Vector res))]
-    [(Attribute segs)
-     (let ([r (interp1 (first segs) env)])
+    [(Attribute value attr)
+     (let ([r (interp1 value env)])
        (cond
          [(Record? r)
-          (record-ref r (Attribute (rest segs)))]
+          (record-ref r attr)]
          [else
           (abort 'interp "trying to access fields of non-record: " r)]))]
     [(Import origin names)
@@ -424,33 +414,9 @@
     ))
 
 
-(: record-ref (Record (U Var Attribute) -> Value))
-(define (record-ref record accessor)
-  (match accessor
-    [(Var name)
-     (hash-ref (Record-table record) name)]
-    [(Attribute segs)
-     (let: loop : Value ([segs : (Listof Var) segs] 
-                         [value : Value record])
-       (cond
-        [(null? segs) value]
-        [(Record? value)
-         (let ([next-val (hash-ref (Record-table value)
-                                   (Var-name (first segs))
-                                   hash-none)])
-           (cond
-            [next-val
-             (loop (rest segs) next-val)]
-            [else
-             (abort 'record-ref "attr not exist: " (first segs))]))]
-        [else
-         (abort 'record-ref
-                "take attr of a non-record: "
-                (unparse value))]))]
-    [else
-     (abort 'record-ref
-            "access with non-var and non-attr: "
-            (unparse accessor))]))
+(: record-ref (Record Var -> Value))
+(define (record-ref record attr)
+  (hash-ref (Record-table record) (Var-name attr)))
 
 
 ;; general pattern binder
