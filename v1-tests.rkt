@@ -31,13 +31,13 @@
          (set! *counter* (+ 1 *counter*)))])]))
 
 (define (summary)
- (let ([nfailed (length *failed*)])
-   (cond
-    [(= 0 nfailed)
-     (printf "all tests passed")]
-    [else
-     (printf "~a tests failed~n" nfailed)
-     (pretty-print *failed*)])))
+  (let ([nfailed (length *failed*)])
+    (cond
+     [(= 0 nfailed)
+      (printf "all tests passed")]
+     [else
+      (printf "~a tests failed~n" nfailed)
+      (pretty-print *failed*)])))
 
 
 ;; ------------------ parser tests ------------------
@@ -66,28 +66,28 @@
  "function with no arguments"
  1
  '(begin
-    (defn (f) 1)
+    (defun (f) 1)
     (f)))
 
 (test
  "single positional arg"
  1
  '(begin
-    (defn (f x) x)
+    (defun (f x) x)
     (f 1)))
 
 (test
  "function positional param single keyword arg"
  1
  '(begin
-    (defn (f x) x)
+    (defun (f x) x)
     (f (:+ x 1))))
 
 (test
  "function with multiple positional args"
  '(vec 3 5)
  '(begin
-    (defn (f x y)
+    (defun (f x y)
       (vec x y))
     (f 3 5)))
 
@@ -95,7 +95,7 @@
  "function mutiple positional param with keyword args same order"
  '(vec 2 3 5)
  '(begin
-    (defn (f x y z)
+    (defun (f x y z)
       (vec x y z))
     (f (:+ x 2)
        (:+ y 3)
@@ -105,7 +105,7 @@
  "function mutiple positional param with keyword args (different order)"
  '(vec 2 3 5)
  '(begin
-    (defn (f x y z)
+    (defun (f x y z)
       (vec x y z))
     (f (:+ y 3)
        (:+ z 5)
@@ -115,7 +115,7 @@
  "function mutiple keyword params with keyword args (full)"
  '(vec 2 3 5)
  '(begin
-    (defn (f x (:+ y 42) (:+ z 7))
+    (defun (f x (:+ y 42) (:+ z 7))
       (vec x y z))
     (f (:+ y 3)
        (:+ z 5)
@@ -125,7 +125,7 @@
  "function mutiple keyword params with keyword args (missing z)"
  '(vec 2 5 7)
  '(begin
-    (defn (f x (:+ y 3) (:+ z 7))
+    (defun (f x (:+ y 3) (:+ z 7))
       (vec x y z))
     (f (:+ y 5)
        (:+ x 2))))
@@ -134,7 +134,7 @@
  "mixed parameter full keyword args"
  6
  '(begin
-    (defn (f x (:+ y 1))
+    (defun (f x (:+ y 1))
       (* x y))
     (f (:+ x 2) (:+ y 3))))
 
@@ -142,7 +142,7 @@
  "mixed parameters default keyword arg for y"
  2
  '(begin
-    (defn (f x (:+ y 1))
+    (defun (f x (:+ y 1))
       (* x y))
     (f (:+ x 2))))
 
@@ -150,9 +150,10 @@
  "function access field of arbitrary record arg"
  42
  '(begin
-    (:+ f (fn (x) x.a))
+    (:+ f (fun (x) x.a))
     (:+ o (rec (:+ a 42)))
     (f o)))
+
 
 (test
  "assignment in true branch"
@@ -207,7 +208,7 @@
  '(begin
     (:+ r1 (rec (:+ x 2) (:+ y 3)))
     (:+ r2 (rec (:+ z 5)
-                (:+ f (fn (x y z) (* (* x y) z)))))
+                (:+ f (fun (x y z) (* (* x y) z)))))
     (import r1 (x y))
     (import r2 (f z))
     (f x y z)))
@@ -218,7 +219,7 @@
  '(begin
     (:+ r1 (rec (:+ x 1)
                 (:+ y 2)))
-    (defn (f z)
+    (defun (f z)
       (import r1 (y))
       (* y z))
     (f 3)))
@@ -259,9 +260,9 @@
     (:+ x 1)
     (if (< x 2)
         (begin
-          (:+ g (fn (y) (* y 2))))
+          (:+ g (fun (y) (* y 2))))
         (begin
-          (:+ g (fn (y) (/ y 2)))))
+          (:+ g (fun (y) (/ y 2)))))
     (g 4)))
 
 (test
@@ -271,9 +272,9 @@
     (:+ x 5)
     (if (< x 2)
         (begin
-          (:+ g (fn (y) (* y 2))))
+          (:+ g (fun (y) (* y 2))))
         (begin
-          (:+ g (fn (y) (/ y 2)))))
+          (:+ g (fun (y) (/ y 2)))))
     (g 4)))
 
 (test
@@ -283,9 +284,9 @@
     (:+ x 1)
     (if (< x 2)
         (begin
-          (defn (g y) (* y 2)))
+          (defun (g y) (* y 2)))
         (begin
-          (defn (g y) (/ y 2))))
+          (defun (g y) (/ y 2))))
     (g 4)))
 
 (test
@@ -295,9 +296,9 @@
     (:+ x 5)
     (if (< x 2)
         (begin
-          (defn (g y) (* y 2)))
+          (defun (g y) (* y 2)))
         (begin
-          (defn (g y) (/ y 2))))
+          (defun (g y) (/ y 2))))
     (g 4)))
 
 (test
@@ -305,7 +306,7 @@
  42
  '(begin
     (:+ x 1)
-    (:+ f (fn (y) (<- x y)))
+    (:+ f (fun (y) (<- x y)))
     (f 42)
     x))
 
@@ -317,18 +318,18 @@
  "mutural recursion (even 9 = false)"
  'false
  '(begin
-    (defn (not x) (if (eq? x true) false true))
-    (defn (even x) (if (= x 0) true (odd (- x 1))))
-    (defn (odd x) (if (= x 0) false (even (- x 1))))
+    (defun (not x) (if (eq? x true) false true))
+    (defun (even x) (if (= x 0) true (odd (- x 1))))
+    (defun (odd x) (if (= x 0) false (even (- x 1))))
     (even 9)))
 
 (test
  "mutural recursion (even 100 = true)"
  'true
  '(begin
-    (:+ not (fn (x) (if (eq? x true) false true)))
-    (:+ even (fn (x) (if (= x 0) true (odd (- x 1)))))
-    (:+ odd (fn (x) (if (= x 0) false (even (- x 1)))))
+    (:+ not (fun (x) (if (eq? x true) false true)))
+    (:+ even (fun (x) (if (= x 0) true (odd (- x 1)))))
+    (:+ odd (fun (x) (if (= x 0) false (even (- x 1)))))
     (even 100)))
 
 
@@ -336,7 +337,7 @@
  "definition of not"
  'false
  '(begin
-    (:+ not (fn (x) (if (eq? x true) false true)))
+    (:+ not (fun (x) (if (eq? x true) false true)))
     (not true)))
 
 
@@ -344,7 +345,7 @@
  "direct recursion (fact 5)"
  120
  '(begin
-    (:+ fact (fn (x) (if (= x 0) 1 (* x (fact (- x 1))))))
+    (:+ fact (fun (x) (if (= x 0) 1 (* x (fact (- x 1))))))
     (fact 5)))
 
 (test
@@ -352,7 +353,7 @@
  "<"
  '(begin
     (:+ x 2)
-    (:+ f (fn (x) (* x 2)))
+    (:+ f (fun (x) (* x 2)))
     (if (< (f x) 5) "<" ">=")))
 
 (test
@@ -360,7 +361,7 @@
  ">="
  '(begin
     (:+ x 3)
-    (:+ f (fn (x) (* x 2)))
+    (:+ f (fun (x) (* x 2)))
     (if (< (f x) 5) "<" ">=")))
 
 (test
@@ -377,8 +378,8 @@
  "function goes through identity function"
  6
  '(begin
-    (:+ f (fn (x) x))
-    (:+ g (fn (x) (* x 2)))
+    (:+ f (fun (x) x))
+    (:+ g (fun (x) (* x 2)))
     (:+ fg (f g))
     (fg 3)))
 
@@ -386,15 +387,15 @@
  "function stored in record field"
  10
  '(begin
-    (:+ r1 (rec (:+ x (fn (y) (* y 2)))))
+    (:+ r1 (rec (:+ x (fun (y) (* y 2)))))
     (r1.x 5)))
 
 (test
  "function field pass to function and apply"
  10
  '(begin
-    (defn (bar x) (x.foo 5))
-    (bar (rec (:+ foo (fn (y) (* y 2)))))))
+    (defun (bar x) (x.foo 5))
+    (bar (rec (:+ foo (fun (y) (* y 2)))))))
 
 ;; ----------------- pattern binding ------------------
 (test
@@ -490,7 +491,7 @@
  "function parameter destrcuturing binding (positional only)"
  '(vec 1 2 3)
  '(begin
-    (defn (f (vec x (vec y z)))
+    (defun (f (vec x (vec y z)))
       (vec x y z))
     (f (vec 1 (vec 2 3)))))
 
@@ -518,7 +519,7 @@
  "destructuring bind into record from function return"
  '(vec 2 3)
  '(begin
-    (defn (f x) (rec (:+ a 2) (:+ b 3)))
+    (defun (f x) (rec (:+ a 2) (:+ b 3)))
     (:+ (rec (:+ b bar) (:+ a foo))
         (f 1))
     (vec foo bar)))
@@ -528,7 +529,7 @@
  '(vec 2 3)
  '(begin
     (:+ r1 (rec (:+ u 2) (:+ v 3)))
-    (defn (f x) (rec (:+ a x.u) (:+ b x.v)))
+    (defun (f x) (rec (:+ a x.u) (:+ b x.v)))
     (:+ (rec (:+ b bar) (:+ a foo))
         (f r1))
     (vec foo bar)))
@@ -544,7 +545,7 @@
  "attribute reference - 3 levels from function"
  42
  '(begin
-    (defn (f)
+    (defun (f)
       (rec (:+ x (rec (:+ y (rec (:+ z 42)))))))
     (:+ r1 (f))
     r1.x.y.z))
@@ -553,32 +554,47 @@
  "field acess after application - level 1"
  6
  '(begin
-    (defn (f y) (rec (:+ x (* y 2))))
+    (defun (f y) (rec (:+ x (* y 2))))
     (f 3).x))
 
 (test
  "field acess after application - level 2"
  6
  '(begin
-    (defn (f n) (rec (:+ x (rec (:+ y (* n 2))))))
+    (defun (f n) (rec (:+ x (rec (:+ y (* n 2))))))
     (f 3).x.y))
+
+(test
+ "field acess after application - level 3"
+ 6
+ '(begin
+    (defun (f n) (rec (:+ x (rec (:+ y (rec (:+ z (* n 2))))))))
+    (f 3).x.y.z))
 
 (test
  "complex field acess - func inside rec, returns rec"
  6
  '(begin
     (:+ r1 (rec
-            (defn (f n) (rec (:+ x (* n 2))))))
+            (defun (f n) (rec (:+ x (* n 2))))))
     (r1.f 3).x))
 
 (test
  "complex field access - func returns rec, contains func returns rec"
  6
  '(begin
-    (defn (f n)
-      (rec (:+ x (fn (m) (rec (:+ y (* n m)))))))
+    (defun (f n)
+      (rec (:+ x (fun (m) (rec (:+ y (* n m)))))))
     ((f 2).x 3).y))
 
+(test
+ "complex field access - func applies to field, returns rec, contains func returns rec"
+ 6
+ '(begin
+    (:+ u (rec (:+ v 3)))
+    (defun (f n)
+      (rec (:+ x (fun (m) (rec (:+ y (* n m)))))))
+    ((f 2).x u.v).y))
 
 ;; ending
 (summary)

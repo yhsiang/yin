@@ -29,6 +29,36 @@
            ...)
          (void))]))
 
+(: flip ((Any Any -> Any) -> (Any Any -> Any)))
+(define (flip f)
+  (lambda (x y)
+    (f y x)))
+
+(: yfoldl (All (a b) ((a b -> a) a (Listof b) -> a)))
+(define (yfoldl f x ls)
+  (cond
+   [(null? ls) x]
+   [else
+    (yfoldl f (f x (first ls)) (rest ls))]))
+
+(: start-with ((U String Symbol) Char -> Boolean))
+(define (start-with s c)
+  (cond
+   [(symbol? s)
+    (equal? c (string-ref (symbol->string s) 0))]
+   [(string? s)
+    (equal? c (string-ref s 0))]))
+
+(: symbol-split (Symbol String -> (Listof Symbol)))
+(define (symbol-split sym sep)
+  (map string->symbol
+       (string-split (symbol->string sym) sep)))
+
+(: symbol-append (Symbol Symbol -> Symbol))
+(define (symbol-append s1 s2)
+  (string->symbol
+   (string-append (symbol->string s1) 
+                  (symbol->string s2))))
 
 (define (op? x)
   (memq x '(+ - * / < <= >= > = eq?)))
@@ -41,7 +71,7 @@
   (U Const
      Sym
      Var
-     Attribute
+     Attr
      Fun
      App
      RecordDef
@@ -72,11 +102,12 @@
          #:transparent)
 (struct: Var ([name : Symbol])
          #:transparent)
-(struct: Attribute ([value : Node]
-                    [attr : Var])
+(struct: Attr ([value : Node]
+               [attr : Var])
          #:transparent)
-(struct: SAttribute ([value : Any]
-                     [attr : Any])
+;; intermediate structure used for parsing Attr
+(struct: SAttr ([value : Any]
+                [attr : Any])
          #:transparent)
 (struct: Fun ([param : Node]
               [body : Seq])
@@ -136,133 +167,93 @@
        (eq? ':+ (car x))))
 
 
-;; parse and unparse into record types
-(: parse (Any -> Node))
-(define (parse sexp)
-  (let ([sexp (parse-attr sexp)])
-   (match sexp
-     [(? number? x) (Const x)]
-     [(? string? x) (Const x)]
-     [(? symbol? x)
-      (Var x)]
-     [(SAttribute value (? symbol? attr))
-      (Attribute (parse value) (Var attr))]
-     [`(quote ,(? symbol? x)) (Sym x)]
-     [`(fn (,params ...) ,body ...)
-      (Fun (parse `(rec ,@params)) (Seq (map parse body)))]
-     [(list (? op? op) e1 e2)
-      (Op (Var op) (parse e1) (parse e2))]
-     [`(if ,test ,then ,else)
-      (If (parse test) (parse then) (parse else))]
-     [`(begin ,statements ...)
-      (Seq (map parse statements))]
-     [`(return ,value)
-      (Return (parse value))]
-     [`(defn (,f ,params ...) ,body ...)
-      (Def (parse f) (parse `(fn ,params ,@body)))]
-     [`(:+ ,pattern ,value)
-      (Def (parse pattern) (parse value))]
-     [`(<- ,pattern ,value)
-      (Assign (parse pattern) (parse value))]
-     [`(rec ,fields ...)
-      (RecordDef (Var '_) (map parse fields))]
-     [`(vec ,elems ...)
-      (VectorDef (map parse elems))]
-     [`(import ,origin (,(? symbol? names) ...))
-      (Import (parse origin) (map Var (cast names (Listof Symbol))))]
-     ;; application has no keywords, must stay last
-     [`(,f ,args ...)
-      (cond
-       [(andmap def-form? args)
-        (App (parse f) (parse `(rec ,@args)))]
-       [(andmap (negate def-form?) args)
-        (App (parse f) (parse `(vec ,@args)))]
-       [else
-        (abort 'parse
-               "application must either be all keyword args"
-               " or all positional args, no mixture please")])]
-     )))
-
-
-(: dot-symbol? (Any -> Boolean))
-(define (dot-symbol? sym)
-  (and (symbol? sym)
-       (equal? #\. (string-ref (symbol->string sym) 0))))
-
-
+;; preprocess and group attribute accesses
+;; (f x).y => (SAttr (f x) y)
 (: parse-attr (Any -> Any))
 (define (parse-attr x)
   (cond
    [(symbol? x)
-     (let ([segs (map string->symbol
-                      (string-split (symbol->string x) "."))])
-       (cond
-        [(= 1 (length segs))
-         (first segs)]
-        [else
-         (let: loop ([segs : (Listof Any) (rest segs)]
-                     [value : Any (first segs)])
-           (cond
-            [(null? segs)
-             value]
-            [else
-             (loop (rest segs)
-                   (SAttribute value (first segs)))]))]))]
-   [(null? x) '()]
+    (let ([segs (symbol-split x ".")])
+      (yfoldl SAttr (first segs) (rest segs)))]
+   [(null? x) 
+    '()]
    [(list? x)
-    (let loop ([result (parse-attr (first x))]
+    (let loop ([head (parse-attr (first x))]
                [tail (rest x)])
       (cond
        [(null? tail)
-        (list result)]
-       [(dot-symbol? (first tail))
-        (let ([attr (parse-attr (first tail))])
-          (cond
-           [(or (SAttribute? attr)
-                (symbol? attr))
-            (loop (combine-attr result attr)
-                  (rest tail))]
-           [else
-            (abort 'parse-attr "attr is not symbol or attr: " attr)]))]
+        (list head)]
+       [(and (symbol? (first tail))
+             (start-with (first tail) #\.))
+        (let* ([segs (symbol-split (first tail) ".")]
+               [head+ (yfoldl SAttr head segs)])
+          (loop head+ (rest tail)))]
        [else
-        (cons result
+        (cons head
               (loop (parse-attr (first tail))
                     (rest tail)))]))]
    [else x]))
 
 
-(: combine-attr (Any (U SAttribute Symbol) -> SAttribute))
-(define (combine-attr a1 a2)
-  (match a2
-    [(SAttribute value2 attr2)
-     (cond
-      [(symbol? value2)
-       (SAttribute (SAttribute a1 value2) attr2)]
-      [else
-       (abort 'combine-attr
-              "illegal intermediate attribute: " value2)])]
-    [(SAttribute value2 attr2)
-     (cond
-      [(symbol? value2)
-       (SAttribute (SAttribute a1 value2) attr2)]
-      [else
-       (abort 'combine-attr
-              "illegal intermediate attribute: " value2)])]
-    [(? symbol? attr2)
-     (SAttribute a1 attr2)]))
+;; parse into record types
+(: parse (Any -> Node))
+(define (parse sexp)
+  (let ([sexp (parse-attr sexp)])
+    (match sexp
+      [(? number? x) (Const x)]
+      [(? string? x) (Const x)]
+      [(? symbol? x)
+       (Var x)]
+      [(SAttr value (? symbol? attr))
+       (Attr (parse value) (Var attr))]
+      [`(quote ,(? symbol? x)) (Sym x)]
+      [`(fun (,params ...) ,body ...)
+       (Fun (parse `(rec ,@params)) (Seq (map parse body)))]
+      [(list (? op? op) e1 e2)
+       (Op (Var op) (parse e1) (parse e2))]
+      [`(if ,test ,then ,else)
+       (If (parse test) (parse then) (parse else))]
+      [`(begin ,statements ...)
+       (Seq (map parse statements))]
+      [`(return ,value)
+       (Return (parse value))]
+      [`(defun (,f ,params ...) ,body ...)
+       (Def (parse f) (parse `(fun ,params ,@body)))]
+      [`(:+ ,pattern ,value)
+       (Def (parse pattern) (parse value))]
+      [`(<- ,pattern ,value)
+       (Assign (parse pattern) (parse value))]
+      [`(rec ,fields ...)
+       (RecordDef (Var '_) (map parse fields))]
+      [`(vec ,elems ...)
+       (VectorDef (map parse elems))]
+      [`(import ,origin (,(? symbol? names) ...))
+       (Import (parse origin) (map Var (cast names (Listof Symbol))))]
+      ;; application has no keywords, must stay last
+      [`(,f ,args ...)
+       (cond
+        [(andmap def-form? args)
+         (App (parse f) (parse `(rec ,@args)))]
+        [(andmap (negate def-form?) args)
+         (App (parse f) (parse `(vec ,@args)))]
+        [else
+         (abort 'parse
+                "application must either be all keyword args"
+                " or all positional args, no mixture please")])]
+      )))
 
 
+;; unparse from records
 (: unparse (Any -> Any))
 (define (unparse t)
   (match t
     [(Const obj) obj]
     [(Var name) name]
-    [(Attribute value attr)
-     (let ([e `(,(unparse value) ,(unparse attr))])
-       e)]
+    [(Attr value attr)
+     `(attr ,(unparse value) ,(unparse attr))]
     [(Sym name) name]
     [(Fun x body)
-     `(fn ,(unparse x) ,(unparse body))]
+     `(fun ,(unparse x) ,(unparse body))]
     [(App e1 e2)
      `(,(unparse e1) ,(unparse e2))]
     [(Op op e1 e2)
@@ -275,7 +266,7 @@
                            `(:+ ,(unparse k) ,(unparse v))))])
        `(rec ,(unparse name) ,@fs))]
     [(VectorDef elems)
-     `(vecdef ,@(map unparse elems))]
+     `(vec ,@(map unparse elems))]
     [(Vector elems)
      `(vec ,@(map unparse elems))]
     [(Import origin names)
@@ -299,6 +290,8 @@
      (unparse fun)]
     [other other]
     ))
+
+;; (unparse (parse '((f 1).y 2)))
 
 
 ;; --------------- symbol table (environment) ---------------
@@ -396,23 +389,23 @@
      (let ([v1 (interp1 e1 env)]
            [v2 (interp1 e2 env)])
        (cond
-         [(eq? (Var-name op) 'eq?)
-          (eq? v1 v2)]
-         [(and (real? v1) (real? v2))
-          (case (Var-name op)
-            [(+) (+ v1 v2)]
-            [(-) (- v1 v2)]
-            [(*) (* v1 v2)]
-            [(/) (/ v1 v2)]
-            [(>) (> v1 v2)]
-            [(<) (< v1 v2)]
-            [(>=) (>= v1 v2)]
-            [(<=) (<= v1 v2)]
-            [(=) (= v1 v2)]
-            [else
-             (abort 'interp "undefined operator on numbers: " op)])]
-         [else
-          (abort 'interp "can only operate on numbers, but got: " v1 "," v2)]))]
+        [(eq? (Var-name op) 'eq?)
+         (eq? v1 v2)]
+        [(and (real? v1) (real? v2))
+         (case (Var-name op)
+           [(+) (+ v1 v2)]
+           [(-) (- v1 v2)]
+           [(*) (* v1 v2)]
+           [(/) (/ v1 v2)]
+           [(>) (> v1 v2)]
+           [(<) (< v1 v2)]
+           [(>=) (>= v1 v2)]
+           [(<=) (<= v1 v2)]
+           [(=) (= v1 v2)]
+           [else
+            (abort 'interp "undefined operator on numbers: " op)])]
+        [else
+         (abort 'interp "can only operate on numbers, but got: " v1 "," v2)]))]
     [(If test then else)
      (let ([tv (interp1 test env)])
        (if tv
@@ -456,13 +449,13 @@
     [(VectorDef elems)
      (let ([res (map (lambda: ([x : Node]) (interp1 x env)) elems)])
        (Vector res))]
-    [(Attribute value attr)
+    [(Attr value attr)
      (let ([r (interp1 value env)])
        (cond
-         [(Record? r)
-          (record-ref r attr)]
-         [else
-          (abort 'interp "trying to access fields of non-record: " r)]))]
+        [(Record? r)
+         (record-ref r attr)]
+        [else
+         (abort 'interp "trying to access fields of non-record: " r)]))]
     [(Import origin names)
      (let ([r (interp1 origin env)])
        (cond
@@ -608,11 +601,11 @@
 (: find-name (Node -> Var))
 (define (find-name exp)
   (match exp
-   [(and vx (Var x)) vx]
-   [(Def (and vx (Var x)) value)
-    vx]
-   [other
-    (abort 'find-name "only accepts Var and Def, but got: " exp)]))
+    [(and vx (Var x)) vx]
+    [(Def (and vx (Var x)) value)
+     vx]
+    [other
+     (abort 'find-name "only accepts Var and Def, but got: " exp)]))
 
 
 (: new-record (RecordDef Env Boolean -> Record))
@@ -624,7 +617,7 @@
          (match f
            [(Var x)
             (when (not (eq? x '_))
-                  (hash-set! table x #f))]
+              (hash-set! table x #f))]
            [(Def (Var x) value)
             (cond
              [(eq? x '_) (void)]
