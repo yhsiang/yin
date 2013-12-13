@@ -4,6 +4,8 @@
 
 (define *view* #f)
 (define *counter* 1)
+(define *failed* '())
+
 (define-syntax test
   (syntax-rules ()
     [(_ name expected exp)
@@ -12,19 +14,30 @@
       [else
        (begin
          (printf "test ~a: ~a" *counter* name)
-         (set! *counter* (+ 1 *counter*))
          (let ([result (view exp)])
            (cond
             [(equal? result expected)
              (printf "~n[\033[92mpass\033[0m]~n")]
             [else
+             (set! *failed*
+                   (append *failed* (list (list name expected exp))))
              (printf "~n[\033[91mfail\033[0m]~n")
              (printf "\033[92mexpected\033[0m:~n")
              (pretty-print expected)
              (printf "\033[91mactual\033[0m:~n")
              (pretty-print result)
              (printf "\033[93minput\033[0m:~n")
-             (pretty-print exp)])))])]))
+             (pretty-print exp)]))
+         (set! *counter* (+ 1 *counter*)))])]))
+
+(define (summary)
+ (let ([nfailed (length *failed*)])
+   (cond
+    [(= 0 nfailed)
+     (printf "all tests passed")]
+    [else
+     (printf "~a tests failed~n" nfailed)
+     (pretty-print *failed*)])))
 
 
 ;; ------------------ parser tests ------------------
@@ -535,3 +548,37 @@
       (rec (:+ x (rec (:+ y (rec (:+ z 42)))))))
     (:+ r1 (f))
     r1.x.y.z))
+
+(test
+ "field acess after application - level 1"
+ 6
+ '(begin
+    (defn (f y) (rec (:+ x (* y 2))))
+    (f 3).x))
+
+(test
+ "field acess after application - level 2"
+ 6
+ '(begin
+    (defn (f n) (rec (:+ x (rec (:+ y (* n 2))))))
+    (f 3).x.y))
+
+(test
+ "complex field acess - func inside rec, returns rec"
+ 6
+ '(begin
+    (:+ r1 (rec
+            (defn (f n) (rec (:+ x (* n 2))))))
+    (r1.f 3).x))
+
+(test
+ "complex field access - func returns rec, contains func returns rec"
+ 6
+ '(begin
+    (defn (f n)
+      (rec (:+ x (fn (m) (rec (:+ y (* n m)))))))
+    ((f 2).x 3).y))
+
+
+;; ending
+(summary)
