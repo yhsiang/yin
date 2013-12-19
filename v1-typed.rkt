@@ -217,8 +217,6 @@
        (Seq (map parse statements))]
       [`(return ,value)
        (Return (parse value))]
-      [`(defun (,f ,params ...) ,body ...)
-       (Def (parse f) (parse `(fun ,params ,@body)))]
       [`(:+ ,pattern ,value)
        (Def (parse pattern) (parse value))]
       [`(<- ,pattern ,value)

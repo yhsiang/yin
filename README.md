@@ -2,26 +2,79 @@
 
 Copyright (C) 2013 Yin Wang. All rights reserved.
 
-The Y Programming Language is designed to be a private language for Yin Wang
-(thus the name). Although built on cutting-edge technologies, it is NOT allowed
-to be used by anybody else except Yin, either commercially or not. Nor is Yin
-responsible for the language's design, implementation quality or features. This
-language is designed to satsify nobody but Yin's needs. It will not be
-influenced nor controlled by any external force. Yin reserves the rights to
-change the language, at any time and in any way he likes that may break any
-existing code. It will not be guaranteed to be portable and may only work on
-Yin's computer. Although the code is opensource, it is fully copyrighted and
-non-free. You will be charged by enormous amount if you use it for commercial
-purposes.
+The Y Programming Language is in its design stage. Although its implementation
+code is opensource, it is currently non-free and cannot be used by anybody
+except Yin Wang. This arrangement is for the purpose of keeping the design of
+language free from second-party influence and concerns from breaking legacy
+code.
 
-Why Yin wants such a language? Because he wants it to be fun. Users destroy the
-fun and popularity prevent the languages from improving. This includes some of
-the highly-respected functional programming languages. They all suffer from
-their marketing hypes and trying to become "mainstream". They don't see their
-own shortcomings and once there are users, it becomes hard to fix their
-problems. The Y Language completely prevents these from happening by allowing
-only one person, its creator, to use it. You may understand this better by
-looking at the following quote from Alan Perlis:
+
+
+### Design Goals
+
+Simplicity, convenience, safety and performance are the major goals of Y's
+design.
+
+
+
+### Implemented Features
+
+Although only accumulated a total of less than 30 hours of development time, Y
+already includes the following features:
+
+* first-class functions with positional and keyword arguments
+* a powerful and universal pattern matching facility
+* a convenient way of creating structured data
+
+
+
+### To be implmented
+
+The following is a list of things I'm thinking of implementing. I have already
+implemented most of them elsewhere, but still have some design choices to make.
+
+
+* highly accurate but flexible type system
+
+The type system may require the programmers to write minimal amount of type
+annotations, but it will not force the programmers to get out of their ways just
+to make the type system happy. Despite of the flexibility, the type system will
+be very accurate and will not let any type errors to pass through the check. No
+null pointer exceptions can ever happen. The type system will eventually be
+highly refined, into the granularity of distinguishing values of numbers. Simple
+theorem prover's capabilities may be provided.
+
+
+* compilation into machine code
+
+A compiler is not the proirity at this moment, but Y has efficiency of
+compilation into existing hardware in mind. The compiler should be fast and
+generate high-performance code.
+
+
+* runtime system that runs on bare metal
+
+Y will not be restricted by the current architecture or operating system
+designs. Eventually Y's runtime system will become an operating system itself
+and run on bare hardware, exploiting the concurrency. I'm also open to
+possibilities of converting Y programs into hardware directly and let it serve
+as a hardware description language (HDL).
+
+
+
+### Philosophy
+
+Y will be designed not by piling features upon features, but by removing
+weakness. But Y will also try to provide necessary facilities to make
+programming convenient and productive.
+
+Y will be free of "enthusiasts" and religion. Scientific methods will be used
+throughout. Bad designs will be removed no matter who and where the ideas come
+from. No authorities will be respected, including me.
+
+The following quote from Alan J. Perlis best describes the motivation behind
+this approach.
+
 
 > "I think that it’s extraordinarily important that we in computer science keep
 > fun in computing. When it started out it was an awful lot of fun. Of course

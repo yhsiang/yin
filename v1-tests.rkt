@@ -66,37 +66,37 @@
  "function with no arguments"
  1
  '(begin
-    (defun (f) 1)
+    (:+ f (fun () 1))
     (f)))
 
 (test
  "single positional arg"
  1
  '(begin
-    (defun (f x) x)
+    (:+ f (fun (x) x))
     (f 1)))
 
 (test
  "function positional param single keyword arg"
  1
  '(begin
-    (defun (f x) x)
+    (:+ f (fun (x) x))
     (f (:+ x 1))))
 
 (test
  "function with multiple positional args"
  '(vec 3 5)
  '(begin
-    (defun (f x y)
-      (vec x y))
+    (:+ f (fun (x y)
+               (vec x y)))
     (f 3 5)))
 
 (test
  "function mutiple positional param with keyword args same order"
  '(vec 2 3 5)
  '(begin
-    (defun (f x y z)
-      (vec x y z))
+    (:+ f (fun (x y z)
+               (vec x y z)))
     (f (:+ x 2)
        (:+ y 3)
        (:+ z 5))))
@@ -105,8 +105,8 @@
  "function mutiple positional param with keyword args (different order)"
  '(vec 2 3 5)
  '(begin
-    (defun (f x y z)
-      (vec x y z))
+    (:+ f (fun (x y z)
+               (vec x y z)))
     (f (:+ y 3)
        (:+ z 5)
        (:+ x 2))))
@@ -115,8 +115,8 @@
  "function mutiple keyword params with keyword args (full)"
  '(vec 2 3 5)
  '(begin
-    (defun (f x (:+ y 42) (:+ z 7))
-      (vec x y z))
+    (:+ f (fun (x (:+ y 42) (:+ z 7))
+               (vec x y z)))
     (f (:+ y 3)
        (:+ z 5)
        (:+ x 2))))
@@ -125,8 +125,8 @@
  "function mutiple keyword params with keyword args (missing z)"
  '(vec 2 5 7)
  '(begin
-    (defun (f x (:+ y 3) (:+ z 7))
-      (vec x y z))
+    (:+ f (fun (x (:+ y 3) (:+ z 7))
+               (vec x y z)))
     (f (:+ y 5)
        (:+ x 2))))
 
@@ -134,16 +134,16 @@
  "mixed parameter full keyword args"
  6
  '(begin
-    (defun (f x (:+ y 1))
-      (* x y))
+    (:+ f (fun (x (:+ y 1))
+               (* x y)))
     (f (:+ x 2) (:+ y 3))))
 
 (test
  "mixed parameters default keyword arg for y"
  2
  '(begin
-    (defun (f x (:+ y 1))
-      (* x y))
+    (:+ f (fun (x (:+ y 1))
+               (* x y)))
     (f (:+ x 2))))
 
 (test
@@ -219,9 +219,9 @@
  '(begin
     (:+ r1 (rec (:+ x 1)
                 (:+ y 2)))
-    (defun (f z)
-      (import r1 (y))
-      (* y z))
+    (:+ f (fun (z)
+               (import r1 (y))
+               (* y z)))
     (f 3)))
 
 (test
@@ -259,10 +259,8 @@
  '(begin
     (:+ x 1)
     (if (< x 2)
-        (begin
-          (:+ g (fun (y) (* y 2))))
-        (begin
-          (:+ g (fun (y) (/ y 2)))))
+        (:+ g (fun (y) (* y 2)))
+        (:+ g (fun (y) (/ y 2))))
     (g 4)))
 
 (test
@@ -271,10 +269,8 @@
  '(begin
     (:+ x 5)
     (if (< x 2)
-        (begin
-          (:+ g (fun (y) (* y 2))))
-        (begin
-          (:+ g (fun (y) (/ y 2)))))
+        (:+ g (fun (y) (* y 2)))
+        (:+ g (fun (y) (/ y 2))))
     (g 4)))
 
 (test
@@ -283,10 +279,8 @@
  '(begin
     (:+ x 1)
     (if (< x 2)
-        (begin
-          (defun (g y) (* y 2)))
-        (begin
-          (defun (g y) (/ y 2))))
+        (:+ g (fun (y) (* y 2)))
+        (:+ g (fun (y) (/ y 2))))
     (g 4)))
 
 (test
@@ -295,10 +289,8 @@
  '(begin
     (:+ x 5)
     (if (< x 2)
-        (begin
-          (defun (g y) (* y 2)))
-        (begin
-          (defun (g y) (/ y 2))))
+        (:+ g (fun (y) (* y 2)))
+        (:+ g (fun (y) (/ y 2))))
     (g 4)))
 
 (test
@@ -318,9 +310,9 @@
  "mutural recursion (even 9 = false)"
  'false
  '(begin
-    (defun (not x) (if (eq? x true) false true))
-    (defun (even x) (if (= x 0) true (odd (- x 1))))
-    (defun (odd x) (if (= x 0) false (even (- x 1))))
+    (:+ not (fun (x) (if (eq? x true) false true)))
+    (:+ even (fun (x) (if (= x 0) true (odd (- x 1)))))
+    (:+ odd (fun (x) (if (= x 0) false (even (- x 1)))))
     (even 9)))
 
 (test
@@ -394,7 +386,7 @@
  "function field pass to function and apply"
  10
  '(begin
-    (defun (bar x) (x.foo 5))
+    (:+ bar (fun (x) (x.foo 5)))
     (bar (rec (:+ foo (fun (y) (* y 2)))))))
 
 ;; ----------------- pattern binding ------------------
@@ -488,11 +480,11 @@
     (vec x y)))
 
 (test
- "function parameter destrcuturing binding (positional only)"
+ "function parameter destrcuturing binding (vector)"
  '(vec 1 2 3)
  '(begin
-    (defun (f (vec x (vec y z)))
-      (vec x y z))
+    (:+ f (fun ((vec x (vec y z)))
+               (vec x y z)))
     (f (vec 1 (vec 2 3)))))
 
 (test
@@ -519,7 +511,7 @@
  "destructuring bind into record from function return"
  '(vec 2 3)
  '(begin
-    (defun (f x) (rec (:+ a 2) (:+ b 3)))
+    (:+ f (fun (x) (rec (:+ a 2) (:+ b 3))))
     (:+ (rec (:+ b bar) (:+ a foo))
         (f 1))
     (vec foo bar)))
@@ -529,7 +521,7 @@
  '(vec 2 3)
  '(begin
     (:+ r1 (rec (:+ u 2) (:+ v 3)))
-    (defun (f x) (rec (:+ a x.u) (:+ b x.v)))
+    (:+ f (fun (x) (rec (:+ a x.u) (:+ b x.v))))
     (:+ (rec (:+ b bar) (:+ a foo))
         (f r1))
     (vec foo bar)))
@@ -545,8 +537,8 @@
  "attribute reference - 3 levels from function"
  42
  '(begin
-    (defun (f)
-      (rec (:+ x (rec (:+ y (rec (:+ z 42)))))))
+    (:+ f (fun ()
+               (rec (:+ x (rec (:+ y (rec (:+ z 42))))))))
     (:+ r1 (f))
     r1.x.y.z))
 
@@ -554,21 +546,21 @@
  "field acess after application - level 1"
  6
  '(begin
-    (defun (f y) (rec (:+ x (* y 2))))
+    (:+ f (fun (y) (rec (:+ x (* y 2)))))
     (f 3).x))
 
 (test
  "field acess after application - level 2"
  6
  '(begin
-    (defun (f n) (rec (:+ x (rec (:+ y (* n 2))))))
+    (:+ f (fun (n) (rec (:+ x (rec (:+ y (* n 2)))))))
     (f 3).x.y))
 
 (test
  "field acess after application - level 3"
  6
  '(begin
-    (defun (f n) (rec (:+ x (rec (:+ y (rec (:+ z (* n 2))))))))
+    (:+ f (fun (n) (rec (:+ x (rec (:+ y (rec (:+ z (* n 2)))))))))
     (f 3).x.y.z))
 
 (test
@@ -576,15 +568,15 @@
  6
  '(begin
     (:+ r1 (rec
-            (defun (f n) (rec (:+ x (* n 2))))))
+            (:+ f (fun (n) (rec (:+ x (* n 2)))))))
     (r1.f 3).x))
 
 (test
  "complex field access - func returns rec, contains func returns rec"
  6
  '(begin
-    (defun (f n)
-      (rec (:+ x (fun (m) (rec (:+ y (* n m)))))))
+    (:+ f (fun (n)
+               (rec (:+ x (fun (m) (rec (:+ y (* n m))))))))
     ((f 2).x 3).y))
 
 (test
@@ -592,8 +584,8 @@
  6
  '(begin
     (:+ u (rec (:+ v 3)))
-    (defun (f n)
-      (rec (:+ x (fun (m) (rec (:+ y (* n m)))))))
+    (:+ f (fun (n)
+               (rec (:+ x (fun (m) (rec (:+ y (* n m))))))))
     ((f 2).x u.v).y))
 
 ;; ending
