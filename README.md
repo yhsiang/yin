@@ -5,19 +5,18 @@ Copyright (C) 2013 Yin Wang. All rights reserved.
 The Y Programming Language is in its design stage. Although its implementation
 code is opensource, it is currently non-free and cannot be used by anybody
 except Yin Wang. This arrangement is for the purpose of keeping the design of
-language free from second-party influence and concerns from breaking legacy
-code.
+language free of concerns from breaking legacy code.
 
 
 
-### Design Goals
+### design goals
 
 Simplicity, convenience, safety and performance are the major goals of Y's
 design.
 
 
 
-### Implemented Features
+### implemented features
 
 Although only accumulated a total of less than 30 hours of development time, Y
 already includes the following features:
@@ -28,33 +27,35 @@ already includes the following features:
 
 
 
-### To be implmented
+### to be implemented
 
 The following is a list of things I'm thinking of implementing. I have already
 implemented most of them elsewhere, but still have some design choices to make.
 
 
-* highly accurate but flexible type system
+* a highly accurate but flexible type system
 
-The type system may require the programmers to write minimal amount of type
+  The type system may require the programmers to write minimal amount of type
 annotations, but it will not force the programmers to get out of their ways just
 to make the type system happy. Despite of the flexibility, the type system will
-be very accurate and will not let any type errors to pass through the check. No
-null pointer exceptions can ever happen. The type system will eventually be
+be completely sound and will not let any type error to pass through the check.
+No null pointer exceptions can ever happen. The type system will eventually be
 highly refined, into the granularity of distinguishing values of numbers. Simple
 theorem prover's capabilities may be provided.
 
 
-* compilation into machine code
+* a dynamic compiler into machine code
 
-A compiler is not the proirity at this moment, but Y has efficiency of
+  A compiler is not the proirity at this moment, but Y has efficiency of
 compilation into existing hardware in mind. The compiler should be fast and
-generate high-performance code.
+generate high-performance code. For safety needs, distribution of Y code will
+not be machine code, but in some verifiable intermediate format. This format
+will be translated into machine code at runtime.
 
 
-* runtime system that runs on bare metal
+* a runtime system that runs on bare metal
 
-Y will not be restricted by the current architecture or operating system
+  Y will not be restricted by the current architecture or operating system
 designs. Eventually Y's runtime system will become an operating system itself
 and run on bare hardware, exploiting the concurrency. I'm also open to
 possibilities of converting Y programs into hardware directly and let it serve
@@ -62,7 +63,7 @@ as a hardware description language (HDL).
 
 
 
-### Philosophy
+### philosophy
 
 Y will be designed not by piling features upon features, but by removing
 weakness. But Y will also try to provide necessary facilities to make
