@@ -437,7 +437,9 @@
               (record-set! r attr v)
               'void]
              [else
-              (abort 'interp "trying to set fields of non-record: " r)]))]))]
+              (abort 'interp "trying to set fields of non-record: " r)]))]
+         [other
+          (abort 'interp "trying to assign to non-assignables: " other)]))]
     [(Seq statements)
      (let loop ([statements statements])
        (let ([s0 (first statements)]

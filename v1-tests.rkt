@@ -685,13 +685,32 @@
 
 
 (test
- "set attribute - from function"
+ "set attribute - in record constructed from function"
  42
  '(begin
     (:+ f (fun (v) (rec (:+ x v))))
     (:+ r1 (f 2))
     (<- r1.x 42)
     r1.x))
+
+
+(test
+ "set attribute - in record constructed from function directly, should have no effect on next call, which constructs a new record"
+ 2
+ '(begin
+    (:+ f (fun (v) (rec (:+ x v))))
+    (<- (f 2).x 42)
+    (f 2).x))
+
+
+(test
+ "set attribute - in outside record returned from function, directly"
+ 42
+ '(begin
+    (:+ r (rec (:+ x 2)))
+    (:+ f (fun (v) r))
+    (<- (f 2).x 42)
+    r.x))
 
 
 (test
