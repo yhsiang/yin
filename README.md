@@ -11,8 +11,7 @@ language free of concerns from breaking legacy code.
 
 ### design goals
 
-Simplicity, convenience, safety and performance are the major goals of Y's
-design.
+simple, intuitive, convenient, safe and fast
 
 
 
@@ -23,7 +22,7 @@ already includes the following features:
 
 * first-class functions with positional and keyword arguments
 * a powerful and universal pattern matching facility
-* a convenient way of creating structured data
+* a convenient way of creating structured data without having to declare types
 
 
 

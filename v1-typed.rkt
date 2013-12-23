@@ -419,7 +419,7 @@
          [(Var x)
           (cond
            [(eq? x '_)
-            (abort 'assign "underscore can't be used in assignments")]
+            (abort 'assign "wildcard can't be used in assignments")]
            [else
             (let ([env-def (find-defining-env x env)])
               (cond
@@ -429,7 +429,15 @@
                [else
                 (abort 'assign
                        "lhs of assignment if not bound: "
-                       (unparse lhs))]))])]))]
+                       (unparse lhs))]))])]
+         [(Attr value attr)
+          (let ([r (interp1 value env)])
+            (cond
+             [(Record? r)
+              (record-set! r attr v)
+              'void]
+             [else
+              (abort 'interp "trying to set fields of non-record: " r)]))]))]
     [(Seq statements)
      (let loop ([statements statements])
        (let ([s0 (first statements)]
@@ -453,7 +461,7 @@
         [(Record? r)
          (record-ref r attr)]
         [else
-         (abort 'interp "trying to access fields of non-record: " r)]))]
+         (abort 'interp "trying to get fields of non-record: " r)]))]
     [(Import origin names)
      (let ([r (interp1 origin env)])
        (cond
@@ -469,6 +477,10 @@
 (: record-ref (Record Var -> Value))
 (define (record-ref record attr)
   (hash-ref (Record-table record) (Var-name attr)))
+
+(: record-set! (Record Var Value -> Void))
+(define (record-set! record attr value)
+  (hash-set! (Record-table record) (Var-name attr) value))
 
 
 ;; general pattern binder

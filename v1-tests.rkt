@@ -6,6 +6,7 @@
 (define *counter* 1)
 (define *failed* '())
 
+
 (define-syntax test
   (syntax-rules ()
     [(_ name expected exp)
@@ -29,6 +30,7 @@
              (printf "\033[93minput\033[0m:~n")
              (pretty-print exp)]))
          (set! *counter* (+ 1 *counter*)))])]))
+
 
 (define (summary)
   (let ([nfailed (length *failed*)])
@@ -62,12 +64,14 @@
  '(begin
     1))
 
+
 (test
  "function with no arguments"
  1
  '(begin
     (:+ f (fun () 1))
     (f)))
+
 
 (test
  "single positional arg"
@@ -76,12 +80,14 @@
     (:+ f (fun (x) x))
     (f 1)))
 
+
 (test
  "function positional param single keyword arg"
  1
  '(begin
     (:+ f (fun (x) x))
     (f (:+ x 1))))
+
 
 (test
  "function with multiple positional args"
@@ -90,6 +96,7 @@
     (:+ f (fun (x y)
                (vec x y)))
     (f 3 5)))
+
 
 (test
  "function mutiple positional param with keyword args same order"
@@ -101,6 +108,7 @@
        (:+ y 3)
        (:+ z 5))))
 
+
 (test
  "function mutiple positional param with keyword args (different order)"
  '(vec 2 3 5)
@@ -110,6 +118,7 @@
     (f (:+ y 3)
        (:+ z 5)
        (:+ x 2))))
+
 
 (test
  "function mutiple keyword params with keyword args (full)"
@@ -121,6 +130,7 @@
        (:+ z 5)
        (:+ x 2))))
 
+
 (test
  "function mutiple keyword params with keyword args (missing z)"
  '(vec 2 5 7)
@@ -130,6 +140,7 @@
     (f (:+ y 5)
        (:+ x 2))))
 
+
 (test
  "mixed parameter full keyword args"
  6
@@ -138,6 +149,7 @@
                (* x y)))
     (f (:+ x 2) (:+ y 3))))
 
+
 (test
  "mixed parameters default keyword arg for y"
  2
@@ -145,6 +157,7 @@
     (:+ f (fun (x (:+ y 1))
                (* x y)))
     (f (:+ x 2))))
+
 
 (test
  "function access field of arbitrary record arg"
@@ -165,6 +178,7 @@
         (<- x "false"))
     x))
 
+
 (test
  "assignment in true branch"
  "false"
@@ -175,6 +189,7 @@
         (<- x "false"))
     x))
 
+
 (test
  "import from record simple"
  1
@@ -182,6 +197,7 @@
     (:+ r1 (rec (:+ x 1) (:+ y 2)))
     (import r1 (x))
     x))
+
 
 (test
  "import from record nested"
@@ -192,6 +208,7 @@
     (import r2.y (x))
     x))
 
+
 (test
  "import from record nested"
  1
@@ -201,6 +218,7 @@
     (import r2 (y))
     (import y (x))
     x))
+
 
 (test
  "import function and fields"
@@ -213,6 +231,7 @@
     (import r2 (f z))
     (f x y z)))
 
+
 (test
  "import inside function"
  6
@@ -224,6 +243,7 @@
                (* y z)))
     (f 3)))
 
+
 (test
  "return in middle"
  3
@@ -232,6 +252,7 @@
     (:+ y 2)
     (return (+ x y))
     10))
+
 
 (test
  "defs to same var in different branches"
@@ -243,6 +264,7 @@
         (:+ s "no"))
     s))
 
+
 (test
  "defs to same var in different branches"
  "no"
@@ -252,6 +274,7 @@
         (:+ s "yes")
         (:+ s "no"))
     s))
+
 
 (test
  "defs to same func name in different branches (true)"
@@ -263,6 +286,7 @@
         (:+ g (fun (y) (/ y 2))))
     (g 4)))
 
+
 (test
  "defs to same func name in different branches (false)"
  2
@@ -272,6 +296,7 @@
         (:+ g (fun (y) (* y 2)))
         (:+ g (fun (y) (/ y 2))))
     (g 4)))
+
 
 (test
  "defs to same func name in different branches (func syntax, true)"
@@ -283,6 +308,7 @@
         (:+ g (fun (y) (/ y 2))))
     (g 4)))
 
+
 (test
  "defs to same func name in different branches (func syntax, false)"
  2
@@ -292,6 +318,7 @@
         (:+ g (fun (y) (* y 2)))
         (:+ g (fun (y) (/ y 2))))
     (g 4)))
+
 
 (test
  "assignment inside function into environment"
@@ -314,6 +341,7 @@
     (:+ even (fun (x) (if (= x 0) true (odd (- x 1)))))
     (:+ odd (fun (x) (if (= x 0) false (even (- x 1)))))
     (even 9)))
+
 
 (test
  "mutural recursion (even 100 = true)"
@@ -340,6 +368,7 @@
     (:+ fact (fun (x) (if (= x 0) 1 (* x (fact (- x 1))))))
     (fact 5)))
 
+
 (test
  "conditional (simple)"
  "<"
@@ -347,6 +376,7 @@
     (:+ x 2)
     (:+ f (fun (x) (* x 2)))
     (if (< (f x) 5) "<" ">=")))
+
 
 (test
  "conditional (simple)"
@@ -356,15 +386,18 @@
     (:+ f (fun (x) (* x 2)))
     (if (< (f x) 5) "<" ">=")))
 
+
 (test
  "comparison operator"
  "no"
  '(if (> 1 2) "yes" "no"))
 
+
 (test
  "comparison operator"
  "yes"
  '(if (< 1 2) "yes" "no"))
+
 
 (test
  "function goes through identity function"
@@ -375,6 +408,7 @@
     (:+ fg (f g))
     (fg 3)))
 
+
 (test
  "function stored in record field"
  10
@@ -382,12 +416,14 @@
     (:+ r1 (rec (:+ x (fun (y) (* y 2)))))
     (r1.x 5)))
 
+
 (test
  "function field pass to function and apply"
  10
  '(begin
     (:+ bar (fun (x) (x.foo 5)))
     (bar (rec (:+ foo (fun (y) (* y 2)))))))
+
 
 ;; ----------------- pattern binding ------------------
 (test
@@ -397,6 +433,7 @@
     (:+ (rec (:+ x foo) (:+ y bar))
         (rec (:+ y 5) (:+ x 2)))
     (vec foo bar)))
+
 
 (test
  "pattern binding, keyword, nested"
@@ -411,6 +448,7 @@
              (:+ x 2)))
     (vec foo bar baz)))
 
+
 (test
  "pattern binding, vector, simple"
  '(vec 2 3 5)
@@ -418,12 +456,14 @@
     (:+ (vec x y z) (vec 2 3 5))
     (vec x y z)))
 
+
 (test
  "pattern binding, vector, nested"
  '(vec 2 3 5 7)
  '(begin
     (:+ (vec x y (vec u v)) (vec 2 3 (vec 5 7)))
     (vec x y u v)))
+
 
 (test
  "pattern binding, vector, nested, with wildcards"
@@ -437,6 +477,7 @@
              (vec 7 8 9)))
     (vec x y z)))
 
+
 (test
  "pattern binding, vector, nested, with wildcards"
  '(vec 1 3 5 7 9)
@@ -448,6 +489,7 @@
              (vec 4 5 6)
              (vec 7 8 9)))
     (vec a b c d e)))
+
 
 (test
  "pattern binding, vector, nested"
@@ -461,6 +503,7 @@
              (vec 7 8 9)))
     (vec x y z u v w a b c)))
 
+
 (test
  "pattern binding, record and vector, nested"
  '(vec 2 3 5 7 11)
@@ -471,6 +514,7 @@
              (:+ w 11)))
     (vec x y u v foo)))
 
+
 (test
  "positionally bind vector into record"
  '(vec 3 5)
@@ -478,6 +522,7 @@
     (:+ (rec (:+ x 1) (:+ y 2))
         (vec 3 5))
     (vec x y)))
+
 
 (test
  "function parameter destrcuturing binding (vector)"
@@ -487,6 +532,7 @@
                (vec x y z)))
     (f (vec 1 (vec 2 3)))))
 
+
 (test
  "hyper-nested destructuring binding test 1"
  '(vec 2 3 5)
@@ -494,6 +540,7 @@
     (:+ (rec (:+ u (vec x (rec (:+ w (vec y z))))))
         (rec (:+ u (vec 2 (rec (:+ w (vec 3 5)))))))
     (vec x y z)))
+
 
 (test
  "hyper-nested destructuring binding test 2"
@@ -507,6 +554,7 @@
              (:+ w 7)))
     (vec x y z t foo)))
 
+
 (test
  "destructuring bind into record from function return"
  '(vec 2 3)
@@ -516,15 +564,26 @@
         (f 1))
     (vec foo bar)))
 
+
 (test
- "destructuring bind into record from function return from parameter"
+ "destructuring bind into vector from function return"
  '(vec 2 3)
  '(begin
-    (:+ r1 (rec (:+ u 2) (:+ v 3)))
-    (:+ f (fun (x) (rec (:+ a x.u) (:+ b x.v))))
-    (:+ (rec (:+ b bar) (:+ a foo))
-        (f r1))
+    (:+ f (fun (x) (vec 2 3)))
+    (:+ (vec foo bar)
+        (f 1))
     (vec foo bar)))
+
+
+(test
+ "destructuring bind into vector from function return - nested"
+ '(vec 2 3 5)
+ '(begin
+    (:+ f (fun (x) (vec 2 (vec 3 5))))
+    (:+ (vec foo (vec bar baz))
+        (f 1))
+    (vec foo bar baz)))
+
 
 (test
  "attribute reference - 3 levels simple"
@@ -532,6 +591,7 @@
  '(begin
     (:+ r1 (rec (:+ x (rec (:+ y (rec (:+ z 42)))))))
     r1.x.y.z))
+
 
 (test
  "attribute reference - 3 levels from function"
@@ -542,12 +602,14 @@
     (:+ r1 (f))
     r1.x.y.z))
 
+
 (test
  "field acess after application - level 1"
  6
  '(begin
     (:+ f (fun (y) (rec (:+ x (* y 2)))))
     (f 3).x))
+
 
 (test
  "field acess after application - level 2"
@@ -556,12 +618,14 @@
     (:+ f (fun (n) (rec (:+ x (rec (:+ y (* n 2)))))))
     (f 3).x.y))
 
+
 (test
  "field acess after application - level 3"
  6
  '(begin
     (:+ f (fun (n) (rec (:+ x (rec (:+ y (rec (:+ z (* n 2)))))))))
     (f 3).x.y.z))
+
 
 (test
  "complex field acess - func inside rec, returns rec"
@@ -571,6 +635,7 @@
             (:+ f (fun (n) (rec (:+ x (* n 2)))))))
     (r1.f 3).x))
 
+
 (test
  "complex field access - func returns rec, contains func returns rec"
  6
@@ -578,6 +643,7 @@
     (:+ f (fun (n)
                (rec (:+ x (fun (m) (rec (:+ y (* n m))))))))
     ((f 2).x 3).y))
+
 
 (test
  "complex field access - func applies to field, returns rec, contains func returns rec"
@@ -587,6 +653,56 @@
     (:+ f (fun (n)
                (rec (:+ x (fun (m) (rec (:+ y (* n m))))))))
     ((f 2).x u.v).y))
+
+
+(test
+ "set attribute - level 1"
+ 42
+ '(begin
+    (:+ r1 (rec (:+ x 1)))
+    (<- r1.x 42)
+    r1.x))
+
+
+(test
+ "set attribute - level 2"
+ 42
+ '(begin
+    (:+ r1 (rec (:+ x (rec (:+ y 1)))))
+    (<- r1.x.y 42)
+    r1.x.y))
+
+
+(test
+ "set attribute - level 2 after pattern binding"
+ 42
+ '(begin
+    (:+ r1 (rec (:+ x (rec (:+ y 1)))))
+    (:+ (rec (:+ x r2))
+        r1)
+    (<- r2.y 42)
+    r1.x.y))
+
+
+(test
+ "set attribute - from function"
+ 42
+ '(begin
+    (:+ f (fun (v) (rec (:+ x v))))
+    (:+ r1 (f 2))
+    (<- r1.x 42)
+    r1.x))
+
+
+(test
+ "set attribute - in function"
+ 42
+ '(begin
+    (:+ f (fun (r v) (<- r.x v)))
+    (:+ r1 (rec (:+ x 1)))
+    (f r1 42)
+    r1.x))
+
 
 ;; ending
 (summary)
