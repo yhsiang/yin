@@ -164,7 +164,7 @@
 (define (def-form? x)
   (and (list? x)
        (= 3 (length x))
-       (eq? ':+ (car x))))
+       (eq? ': (car x))))
 
 
 ;; preprocess and group attribute accesses
@@ -213,11 +213,11 @@
        (Op (Var op) (parse e1) (parse e2))]
       [`(if ,test ,then ,else)
        (If (parse test) (parse then) (parse else))]
-      [`(begin ,statements ...)
+      [`(seq ,statements ...)
        (Seq (map parse statements))]
       [`(return ,value)
        (Return (parse value))]
-      [`(:+ ,pattern ,value)
+      [`(: ,pattern ,value)
        (Def (parse pattern) (parse value))]
       [`(<- ,pattern ,value)
        (Assign (parse pattern) (parse value))]
@@ -261,7 +261,7 @@
     [(Record name fields table)
      (let ([fs (hash-map table
                          (lambda: ([k : Symbol] [v : Value])
-                           `(:+ ,(unparse k) ,(unparse v))))])
+                           `(: ,(unparse k) ,(unparse v))))])
        `(rec ,(unparse name) ,@fs))]
     [(VectorDef elems)
      `(vec ,@(map unparse elems))]
@@ -270,7 +270,7 @@
     [(Import origin names)
      `(import ,(unparse origin) ,(map unparse names))]
     [(Def pattern value)
-     `(:+ ,(unparse pattern) ,(unparse value))]
+     `(: ,(unparse pattern) ,(unparse value))]
     [(Assign pattern value)
      `(<- ,(unparse pattern) ,(unparse value))]
     [(Seq statements)
@@ -279,7 +279,7 @@
         [(= 1 (length sts))
          sts]
         [else
-         `(begin ,@sts)]))]
+         `(seq ,@sts)]))]
     [(Return value)
      `(return ,(unparse value))]
     [(If test then else)
