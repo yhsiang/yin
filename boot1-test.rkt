@@ -1,6 +1,6 @@
 #lang typed/racket
 
-(require "v1-typed.rkt")
+(require "boot1.rkt")
 
 (define *view* #f)
 (define *counter* 1)

@@ -1,4 +1,6 @@
-;; The Y Programming Language (Version 1)
+;; The Yin Programming Language 
+;; bootstrapper #1
+
 
 #lang typed/racket
 
@@ -34,6 +36,7 @@
   (lambda (x y)
     (f y x)))
 
+;; foldl of Racket has a strange flipped argument order
 (: yfoldl (All (a b) ((a b -> a) a (Listof b) -> a)))
 (define (yfoldl f x ls)
   (cond
