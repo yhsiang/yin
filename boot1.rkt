@@ -638,18 +638,17 @@
 
 
 (: new-record (RecordDef Env Boolean -> Record))
-(define (new-record desc env pattern?)
-  (match desc
+(define (new-record def env pattern?)
+  (match def
     [(RecordDef name fields)
      (let: ([table : (HashTable Symbol Value) (make-hasheq)])
-       (for ([f (RecordDef-fields desc)])
+       (for ([f fields])
          (match f
            [(Var x)
             (when (not (eq? x '_))
               (hash-set! table x #f))]
            [(Def (Var x) value)
             (cond
-             [(eq? x '_) (void)]
              [pattern?
               (hash-set! table x value)]
              [else
