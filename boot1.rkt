@@ -231,7 +231,11 @@
       [`(return ,value)
        (Return (parse value))]
       [`(: ,pattern ,value)
-       (Def (parse pattern) (parse value))]
+       (cond
+        [(eq? pattern '_)
+         (abort 'parse "_ is not allowed as a field name: " sexp)]
+        [else
+         (Def (parse pattern) (parse value))])]
       [`(<- ,pattern ,value)
        (Assign (parse pattern) (parse value))]
       [`(rec ,fields ...)
