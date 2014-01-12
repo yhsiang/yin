@@ -37,12 +37,22 @@
     (f y x)))
 
 ;; foldl of Racket has a strange flipped argument order
+;; (yfoldl - 0 '(1 2 3 4))
 (: yfoldl (All (a b) ((a b -> a) a (Listof b) -> a)))
 (define (yfoldl f x ls)
   (cond
    [(null? ls) x]
    [else
     (yfoldl f (f x (first ls)) (rest ls))]))
+
+;; more natural order of arguments for foldr
+;; (yfoldr - '(1 2 3 4) 0)
+(: yfoldr (All (a b) ((a b -> b) (Listof a) b -> b)))
+(define (yfoldr f ls x)
+  (cond
+   [(null? ls) x]
+   [else
+    (f (first ls) (yfoldr f (rest ls) x))]))
 
 (: start-with ((U String Symbol) Char -> Boolean))
 (define (start-with s c)
