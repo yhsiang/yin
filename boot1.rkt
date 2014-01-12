@@ -398,7 +398,7 @@
        (match v1
          [(Closure (FunValue pattern body) env1)
           (let ([env+ (env-extend env1)])
-            (bind-params pattern v2 env+)
+            (bind pattern v2 env+ #t)
             (interp1 body env+))]))]
     [(Op op e1 e2)
      (let ([v1 (interp1 e1 env)]
@@ -428,7 +428,7 @@
            (interp1 else env)))]
     [(Def pattern value)
      (let ([v (interp1 value env)])
-       (bind pattern v env)
+       (bind pattern v env #f)
        'void)]
     [(Assign lhs value)
      (let ([v (interp1 value env)])
@@ -504,11 +504,11 @@
 
 ;; general pattern binder
 ;; can be arbitrarily nested
-(: bind ((U Node Value) Value Env -> Void))
-(define (bind v1 v2 env)
+(: bind ((U Node Value) Value Env Boolean -> Void))
+(define (bind v1 v2 env param?)
   (match (list v1 v2)
     [(list (and r1 (RecordDef name1 fields1)) v2)
-     (bind (new-record r1 env #t) v2 env)]
+     (bind (new-record r1 env #t) v2 env param?)]
     ;; records
     [(list (Record name1 fields1 table1)
            (Record name2 fields2 table2))
@@ -516,9 +516,19 @@
       table1
       (lambda: ([k1 : Symbol] [v1 : Value])
         (let ([v2 (hash-ref table2 k1 hash-none)])
+
+          ;; for bind-params
           (cond
+           [param?
+            (cond
+             [v2
+              (env-put! env k1 v2)]
+             [v1
+              (env-put! env k1 v1)]
+             [else
+              (abort 'bind-params "unbound key in rhs: " k1)])]
            [v2
-            (bind v1 v2 env)]
+            (bind v1 v2 env param?)]
            [else
             (abort 'bind "unbound key in rhs: " k1)]))))]
     ;; vectors
@@ -528,7 +538,7 @@
       [(= (length names) (length values))
        (for ([name names]
              [value values])
-         (bind name value env))]
+         (bind name value env param?))]
       [else
        (abort 'bind
               "incorrect number of arguments\n"
@@ -540,7 +550,7 @@
       [(= (length fields1) (length elems))
        (for ([name fields1]
              [value elems])
-         (bind name value env))]
+         (bind name value env param?))]
       [else
        (abort 'bind
               "incorrect number of arguments\n"
@@ -548,7 +558,7 @@
               " got: " (length elems))])]
     ;; base case
     [(list (Def x y) v2)
-     (bind x v2 env)]
+     (bind x v2 env param?)]
     [(list (Var x) v2)
      (cond
       [(eq? x '_) (void)]     ;; non-binding wild cards
@@ -557,70 +567,6 @@
          (cond
           [existing
            (abort 'bind
-                  "redefining: " x
-                  " was defined as: " (unparse existing))]
-          [else
-           (env-put! env x v2)]))])]))
-
-
-;; parameter binder for functions
-;; only slightly different from bind
-;; but separate it out in order to be clear
-(: bind-params ((U Node Value) Value Env -> Void))
-(define (bind-params v1 v2 env)
-  (match (list v1 v2)
-    [(list (and r1 (RecordDef name1 fields1))
-           (Record name2 fields2 table2))
-     (bind-params (new-record r1 env #t) v2 env)]
-    ;; records
-    [(list (Record name1 fields1 table1)
-           (Record name2 fields2 table2))
-     (hash-for-each
-      table1
-      (lambda: ([k1 : Symbol] [v1 : Value])
-        (let ([v2 (hash-ref table2 k1 hash-none)])
-          (cond
-           [v2
-            (env-put! env k1 v2)]
-           [v1
-            (env-put! env k1 v1)]
-           [else
-            (abort 'bind-params "unbound key in rhs: " k1)]))))]
-    ;; vectors
-    [(list (VectorDef names)
-           (Vector values))
-     (cond
-      [(= (length names) (length values))
-       (for ([name names]
-             [value values])
-         (bind-params name value env))]
-      [else
-       (abort 'bind-params
-              "incorrect number of arguments\n"
-              " expected: " (length names)
-              " got: " (length values))])]
-    ;; record <- vector, positional assignment
-    [(list (Record name1 fields1 table1)
-           (Vector elems))
-     (cond
-      [(= (length fields1) (length elems))
-       (for ([f fields1]
-             [e elems])
-         (bind-params f e env))]
-      [else
-       (abort 'bind-params
-              "incorrect number of arguments\n"
-              " expected: " (length fields1)
-              " got: " (length elems))])]
-    ;; base case
-    [(list (Var x) v2)
-     (cond
-      [(eq? x '_) (void)]      ;; non-binding wild cards
-      [else
-       (let ([existing (lookup-local x env)])
-         (cond
-          [existing
-           (abort 'bind-params
                   "redefining: " x
                   " was defined as: " (unparse existing))]
           [else
