@@ -507,27 +507,20 @@
 (: bind ((U Node Value) Value Env Boolean -> Void))
 (define (bind v1 v2 env param?)
   (match (list v1 v2)
-    [(list (and r1 (RecordDef name1 fields1)) v2)
+    [(list (and r1 (RecordDef _ _)) v2)
      (bind (new-record r1 env #t) v2 env param?)]
     ;; records
     [(list (Record name1 fields1 table1)
            (Record name2 fields2 table2))
-     (hash-for-each
-      table1
+     (hash-for-each table1
       (lambda: ([k1 : Symbol] [v1 : Value])
         (let ([v2 (hash-ref table2 k1 hash-none)])
-
-          ;; for bind-params
           (cond
-           [param?
-            (cond
-             [v2
-              (env-put! env k1 v2)]
-             [v1
-              (env-put! env k1 v1)]
-             [else
-              (abort 'bind-params "unbound key in rhs: " k1)])]
-           [v2
+           [(and param? v2)             ;; param binding
+            (env-put! env k1 v2)]
+           [(and param? v1)             ;; default param
+            (env-put! env k1 v1)]
+           [v2                          ;; usual structure binding
             (bind v1 v2 env param?)]
            [else
             (abort 'bind "unbound key in rhs: " k1)]))))]
