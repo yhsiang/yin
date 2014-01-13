@@ -371,8 +371,8 @@
   (interp1 (parse exp) (env0)))
 
 
-(: view (Any -> Any))
-(define (view exp)
+(: evaluate (Any -> Any))
+(define (evaluate exp)
   (unparse (interp exp)))
 
 
@@ -520,8 +520,8 @@
             (env-put! env k1 v2)]
            [(and param? v1)             ;; default param
             (env-put! env k1 v1)]
-           [v2                          ;; usual structure binding
-            (bind v1 v2 env param?)]
+           [v2                          ;; non-param binding
+            (bind v1 v2 env #f)]
            [else
             (abort 'bind "unbound key in rhs: " k1)]))))]
     ;; vectors
@@ -531,7 +531,7 @@
       [(= (length names) (length values))
        (for ([name names]
              [value values])
-         (bind name value env param?))]
+         (bind name value env #f))]
       [else
        (abort 'bind
               "incorrect number of arguments\n"
@@ -543,7 +543,7 @@
       [(= (length fields1) (length elems))
        (for ([name fields1]
              [value elems])
-         (bind name value env param?))]
+         (bind name value env #f))]
       [else
        (abort 'bind
               "incorrect number of arguments\n"
@@ -551,7 +551,7 @@
               " got: " (length elems))])]
     ;; base case
     [(list (Def x y) v2)
-     (bind x v2 env param?)]
+     (bind x v2 env #f)]
     [(list (Var x) v2)
      (cond
       [(eq? x '_) (void)]     ;; non-binding wild cards

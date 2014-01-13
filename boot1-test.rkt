@@ -2,7 +2,7 @@
 
 (require "boot1.rkt")
 
-(define *view* #f)
+(define *evaluate* #f)
 (define *counter* 1)
 (define *failed* '())
 
@@ -11,11 +11,11 @@
   (syntax-rules ()
     [(_ name expected exp)
      (cond
-      [*view* (view exp)]
+      [*evaluate* (evaluate exp)]
       [else
        (begin
          (printf "test ~a: ~a" *counter* name)
-         (let ([result (view exp)])
+         (let ([result (evaluate exp)])
            (cond
             [(equal? result expected)
              (printf "~n[\033[92mpass\033[0m]~n")]
@@ -157,6 +157,51 @@
    (: f (fun (x (: y 1))
           (* x y)))
    (f (: x 2))))
+
+
+(test
+ "destructure bind in argument - vec"
+ '(vec 2 3 5 7)
+ '(seq
+   (: f (fun (x y (vec u v))
+          (vec x y u v)))
+   (f 2 3 (vec 5 7))))
+
+
+(test
+ "destructure bind in argument - rec in vec"
+ '(vec 2 3 5 7 9)
+ '(seq
+   (: f (fun (x y (vec z (vec u v)))
+          (vec x y z u v)))
+   (f 2 3 (vec 5 (vec 7 9)))))
+
+
+(test
+ "destructure bind in argument - rec in vec"
+ '(vec 2 3 5 7 9)
+ '(seq
+   (: f (fun (x y (vec z (rec (: a u) (: b v))))
+          (vec x y z u v)))
+   (f 2 3 (vec 5 (rec (: b 9) (: a 7))))))
+
+
+(test
+ "destructure bind in argument - vec in rec in vec"
+ '(vec 2 3 5 7 9 11)
+ '(seq
+   (: f (fun (x y (vec z (rec (: b u) (: a (vec v w)))))
+          (vec x y z u v w)))
+   (f 2 3 (vec 5 (rec (: a (vec 9 11)) (: b 7))))))
+
+
+(test
+ "destructe bind - same as previous but not as arguments"
+ '(vec 2 3 5 7 9 11)
+ '(seq
+   (: (vec x y (vec z (rec (: b u) (: a (vec v w)))))
+      (vec 2 3 (vec 5 (rec (: a (vec 9 11)) (: b 7)))))
+   (vec x y z u v w)))
 
 
 (test
