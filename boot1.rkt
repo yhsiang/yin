@@ -537,17 +537,19 @@
               "incorrect number of arguments\n"
               " expected: " (length names)
               " got: " (length values))])]
-    [(list (Record name1 fields1 table1)
+    ;; positionally bind vector into record
+    ;; necessary for positional arguments
+    [(list (Record name fields table)
            (Vector elems))
      (cond
-      [(= (length fields1) (length elems))
-       (for ([name fields1]
+      [(= (length fields) (length elems))
+       (for ([f fields]
              [value elems])
-         (bind name value env #f))]
+         (bind f value env #f))]
       [else
        (abort 'bind
               "incorrect number of arguments\n"
-              " expected: " (length fields1)
+              " expected: " (length fields)
               " got: " (length elems))])]
     ;; base case
     [(list (Def x y) v2)
