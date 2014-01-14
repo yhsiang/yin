@@ -469,7 +469,7 @@
           [else
            (interp1 s0 env)
            (loop ss)])))]
-    [(and r (RecordDef (Var name) fields))
+    [(? RecordDef? r)
      (new-record r env #f)]
     [(VectorDef elems)
      (let ([res (map (lambda: ([x : Node]) (interp1 x env)) elems)])
@@ -507,7 +507,7 @@
 (: bind ((U Node Value) Value Env Boolean -> Void))
 (define (bind v1 v2 env param?)
   (match (list v1 v2)
-    [(list (and r1 (RecordDef _ _)) v2)
+    [(list (? RecordDef? r1) v2)
      (bind (new-record r1 env #t) v2 env param?)]
     ;; records
     [(list (Record name1 fields1 table1)
@@ -571,8 +571,8 @@
 (: find-name (Node -> Var))
 (define (find-name exp)
   (match exp
-    [(and vx (Var x)) vx]
-    [(Def (and vx (Var x)) value)
+    [(? Var? vx) vx]
+    [(Def (? Var? vx) value)
      vx]
     [other
      (abort 'find-name "only accepts Var and Def, but got: " exp)]))
