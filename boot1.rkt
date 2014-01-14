@@ -1,4 +1,4 @@
-;; The Yin Programming Language 
+;; The Yin Programming Language
 ;; bootstrapper #1
 
 
@@ -70,7 +70,7 @@
 (: symbol-append (Symbol Symbol -> Symbol))
 (define (symbol-append s1 s2)
   (string->symbol
-   (string-append (symbol->string s1) 
+   (string-append (symbol->string s1)
                   (symbol->string s2))))
 
 (define (op? x)
@@ -188,7 +188,7 @@
    [(symbol? x)
     (let ([segs (symbol-split x ".")])
       (yfoldl SAttr (first segs) (rest segs)))]
-   [(null? x) 
+   [(null? x)
     '()]
    [(list? x)
     (let loop ([head (parse-attr (first x))]
