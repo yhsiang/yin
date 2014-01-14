@@ -390,8 +390,8 @@
           [(not val)
            (abort 'interp "unbound variable: " name)]
           [else val]))])]
-    [(Fun x body)
-     (Closure (FunValue (interp1 x env) body) env)]
+    [(Fun (? RecordDef? r) body)
+     (Closure (FunValue (new-record r env #f) body) env)]
     [(App e1 e2)
      (let ([v1 (interp1 e1 env)]
            [v2 (interp1 e2 env)])
