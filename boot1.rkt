@@ -392,7 +392,7 @@
            (abort 'interp "unbound variable: " name)]
           [else val]))])]
     [(Fun (? RecordDef? r) body)
-     (Closure (FunValue (new-record r env #t) body) env)]
+     (Closure (FunValue (new-param r env) body) env)]
     [(App e1 e2)
      (let ([v1 (interp1 e1 env)]
            [v2 (interp1 e2 env)])
@@ -585,22 +585,26 @@
      (let: ([table : (HashTable Symbol Value) (make-hasheq)])
        (for ([f fields])
          (match f
-           [(Var x)
-            (cond
-             [pattern?
-              (when (not (eq? x '_))
-                (hash-set! table x #f))]
-             [else
-              (abort 'new-record "not allowed: " f)])]
            [(Def (Var x) value)
             (cond
              [pattern?
-              (cond
-               [(or (Var? value) (RecordDef? value) (VectorDef? value))
-                (hash-set! table x value)]
-               [else
-                (hash-set! table x (interp1 value env))])]
+              (hash-set! table x value)]
              [else
               (hash-set! table x (interp1 value env))])]
+           [other (void)]))
+       (Record name fields table))]))
+
+
+(: new-param (RecordDef Env -> Record))
+(define (new-param def env)
+  (match def
+    [(RecordDef name fields)
+     (let: ([table : (HashTable Symbol Value) (make-hasheq)])
+       (for ([f fields])
+         (match f
+           [(Var x)
+            (hash-set! table x #f)]
+           [(Def (Var x) value)
+            (hash-set! table x (interp1 value env))]
            [other (void)]))
        (Record name fields table))]))

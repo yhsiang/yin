@@ -90,6 +90,14 @@
 
 
 (test
+ "default argument in expression"
+ '(vec 2 8)
+ '(seq
+   (: f (fun ((: x (vec 2 (+ 3 5)))) x))
+   (f)))
+
+
+(test
  "single positional arg into keyword arg"
  1
  '(seq
