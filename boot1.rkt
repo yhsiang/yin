@@ -27,7 +27,7 @@
     [(_ args ...)
      (if *debug*
          (begin
-           (printf "~s = ~s~n" 'args args)
+           (printf "~s = ~s~n" 'args (unparse args))
            ...)
          (void))]))
 
