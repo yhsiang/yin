@@ -585,6 +585,83 @@
    (vec x y u v foo)))
 
 
+;; ---------------- pattern assignment -----------------
+(test
+ "pattern assign, swap 2 variables"
+ '(vec 2 3)
+ '(seq
+   (: x 3)
+   (: y 2)
+   (<- (vec x y)
+       (vec y x))
+   (vec x y)))
+
+
+(test
+ "pattern assign, swap 3 variables"
+ '(vec 2 3 5)
+ '(seq
+   (: x 5)
+   (: y 2)
+   (: z 3)
+   (<- (vec x y z)
+       (vec y z x))
+   (vec x y z)))
+
+
+(test
+ "pattern assign, swap 3 variables, nested"
+ '(vec 2 3 5)
+ '(seq
+   (: x 5)
+   (: y 2)
+   (: z 3)
+   (<- (vec x (vec y z))
+       (vec y (vec z x)))
+   (vec x y z)))
+
+
+(test
+ "pattern assign, swap 2 variables, record"
+ '(vec 2 3)
+ '(seq
+   (: x 3)
+   (: y 2)
+   (<- (rec (: a x) (: b y))
+       (rec (: b x) (: a y)))
+   (vec x y)))
+
+
+(test
+ "pattern assign, swap 3 variables, record"
+ '(vec 2 3 5)
+ '(seq
+   (: x 5)
+   (: y 2)
+   (: z 3)
+
+   (<- (rec (: a x) (: b y) (: c z))
+       (rec (: c x) (: a y) (: b z)))
+
+   (vec x y z)))
+
+
+(test
+ "pattern assign, swap 4 variables, record & vec"
+ '(vec 4 3 2 1)
+ '(seq
+   (: x 1)
+   (: y 2)
+   (: u 3)
+   (: v 4)
+
+   (<- (rec (: a (vec x y)) (: b (vec u v)))
+       (rec (: b (vec y x)) (: a (vec v u))))
+
+   (vec x y u v)))
+
+
+
 (test
  "positionally bind vector into record"
  '(vec 3 5)

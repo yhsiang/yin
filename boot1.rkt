@@ -456,6 +456,8 @@
               (record-set! r attr v)]
              [else
               (abort 'interp "trying to set fields of non-record: " r)]))]
+         [(or (? VectorDef? lhs) (? RecordDef? lhs))
+          (bind lhs (interp1 value env) env #f)]
          [other
           (abort 'interp "trying to assign to non-assignables: " other)]))]
     [(Seq statements)
@@ -558,14 +560,16 @@
      (cond
       [(eq? x '_) (void)]     ;; non-binding wild cards
       [else
-       (let ([existing (lookup-local x env)])
-         (cond
-          [existing
-           (abort 'bind
-                  "redefining: " x
-                  " was defined as: " (unparse existing))]
-          [else
-           (env-put! env x v2)]))])]))
+       (env-put! env x v2)
+       ;; (let ([existing (lookup-local x env)])
+       ;;   (cond
+       ;;    [existing
+       ;;     (abort 'bind
+       ;;            "redefining: " x
+       ;;            " was defined as: " (unparse existing))]
+       ;;    [else
+       ;;     (env-put! env x v2)]))
+       ])]))
 
 
 (: find-name (Node -> Var))
