@@ -82,6 +82,22 @@
 
 
 (test
+ "default value without actual arg"
+ 0
+ '(seq
+   (: f (fun ((: x 0)) x))
+   (f)))
+
+
+(test
+ "single positional arg into keyword arg"
+ 1
+ '(seq
+   (: f (fun ((: x 0)) x))
+   (f 1)))
+
+
+(test
  "function positional param single keyword arg"
  1
  '(seq
@@ -487,8 +503,7 @@
    (: (rec (: x foo)
            (: y (rec (: u bar)
                      (: v baz))))
-      (rec a
-           (: y (rec (: v 5)
+      (rec (: y (rec (: v 5)
                      (: u 3)))
            (: x 2)))
    (vec foo bar baz)))
@@ -498,7 +513,7 @@
  "pattern binding, vector, simple"
  '(vec 2 3 5)
  '(seq
-   (: (vec x y z) 
+   (: (vec x y z)
       (vec 2 3 5))
    (vec x y z)))
 
@@ -507,7 +522,7 @@
  "pattern binding, vector, nested"
  '(vec 2 3 5 7)
  '(seq
-   (: (vec x y (vec u v)) 
+   (: (vec x y (vec u v))
       (vec 2 3 (vec 5 7)))
    (vec x y u v)))
 
@@ -772,4 +787,3 @@
 
 ;; ending
 (summary)
-

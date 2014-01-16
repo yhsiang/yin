@@ -391,7 +391,7 @@
            (abort 'interp "unbound variable: " name)]
           [else val]))])]
     [(Fun (? RecordDef? r) body)
-     (Closure (FunValue (new-record r env #f) body) env)]
+     (Closure (FunValue (new-record r env #t) body) env)]
     [(App e1 e2)
      (let ([v1 (interp1 e1 env)]
            [v2 (interp1 e2 env)])
@@ -427,8 +427,11 @@
            (interp1 then env)
            (interp1 else env)))]
     [(Def pattern value)
-     (let ([v (interp1 value env)])
-       (bind pattern v env #f)
+     (let ([p (if (RecordDef? pattern)
+                  (new-record pattern env #t)
+                  pattern)]
+           [v (interp1 value env)])
+       (bind p v env #f)
        'void)]
     [(Assign lhs value)
      (let ([v (interp1 value env)])
@@ -586,14 +589,21 @@
        (for ([f fields])
          (match f
            [(Var x)
-            (when (not (eq? x '_))
-              (hash-set! table x #f))]
+            (cond
+             [pattern?
+              (when (not (eq? x '_))
+                (hash-set! table x #f))]
+             [else
+              (abort 'new-record "not allowed: " f)])]
            [(Def (Var x) value)
             (cond
              [pattern?
-              (hash-set! table x value)]
+              (cond
+               [(or (Var? value) (RecordDef? value) (VectorDef? value))
+                (hash-set! table x value)]
+               [else
+                (hash-set! table x (interp1 value env))])]
              [else
-              (let ([v (interp1 value env)])
-                (hash-set! table x v))])]
+              (hash-set! table x (interp1 value env))])]
            [other (void)]))
        (Record name fields table))]))
