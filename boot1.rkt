@@ -102,12 +102,13 @@
      Closure
      Record
      Vector
-     Symbol
      Number
+     Symbol
      String
      Boolean
      False
-     Node))
+     Node
+     Void))
 
 (struct: Const ([obj : (U Symbol Number String)])
          #:transparent)
@@ -431,8 +432,7 @@
                   (new-record pattern env #t)
                   pattern)]
            [v (interp1 value env)])
-       (bind p v env #f)
-       'void)]
+       (bind p v env #f))]
     [(Assign lhs value)
      (let ([v (interp1 value env)])
        (match lhs
@@ -444,8 +444,7 @@
             (let ([env-def (find-defining-env x env)])
               (cond
                [env-def
-                (env-put! env-def x v)
-                'void]
+                (env-put! env-def x v)]
                [else
                 (abort 'assign
                        "lhs of assignment if not bound: "
@@ -454,8 +453,7 @@
           (let ([r (interp1 value env)])
             (cond
              [(Record? r)
-              (record-set! r attr v)
-              'void]
+              (record-set! r attr v)]
              [else
               (abort 'interp "trying to set fields of non-record: " r)]))]
          [other
@@ -489,8 +487,7 @@
        (cond
         [(Record? r)
          (for ([name names])
-           (env-put! env (Var-name name) (record-ref r name)))
-         'void]
+           (env-put! env (Var-name name) (record-ref r name)))]
         [else
          (abort 'interp "trying to import from non-record: " r)]))]
     ))
