@@ -193,6 +193,15 @@
 
 
 (test
+ "destructure bind in argument - vec, nested"
+ '(vec 1 2 3)
+ '(seq
+   (: f (fun ((vec x (vec y z)))
+          (vec x y z)))
+   (f (vec 1 (vec 2 3)))))
+
+
+(test
  "destructure bind in argument - rec in vec"
  '(vec 2 3 5 7 9)
  '(seq
@@ -669,15 +678,6 @@
    (: (rec (: x 1) (: y 2))
       (vec 3 5))
    (vec x y)))
-
-
-(test
- "function parameter destrcuturing binding (vector)"
- '(vec 1 2 3)
- '(seq
-   (: f (fun ((vec x (vec y z)))
-          (vec x y z)))
-   (f (vec 1 (vec 2 3)))))
 
 
 (test
