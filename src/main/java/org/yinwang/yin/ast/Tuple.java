@@ -3,9 +3,7 @@ package org.yinwang.yin.ast;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by yinwang on 1/17/14.
- */
+
 class Tuple extends Sexp {
     public List<Sexp> tokens = new ArrayList<>();
 

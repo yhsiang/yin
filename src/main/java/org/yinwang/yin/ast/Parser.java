@@ -39,7 +39,6 @@ public class Parser {
 
     @Nullable
     private Token nextToken() {
-
         // skip spaces
         while (position < text.length() &&
                 Character.isWhitespace(text.charAt(position)))
@@ -98,7 +97,6 @@ public class Parser {
 
 
     public Sexp nextSexp() {
-
         Token startToken = nextToken();
         if (startToken == null) {
             return null;

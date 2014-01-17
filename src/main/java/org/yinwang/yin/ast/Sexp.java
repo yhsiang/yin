@@ -1,8 +1,6 @@
 package org.yinwang.yin.ast;
 
-/**
- * Created by yinwang on 1/17/14.
- */
+
 abstract class Sexp {
     public String file;
     public int start;

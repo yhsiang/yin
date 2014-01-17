@@ -1,14 +1,28 @@
 package org.yinwang.yin.ast;
 
-/**
- * Created by yinwang on 1/17/14.
- */
+
 class Token extends Sexp {
-    public TokenType type;
+
+
+    static enum TokenType {
+        OPENPAREN,
+        CLOSEPAREN,
+        STRING,
+        NUMBER,
+        IDENT
+    }
+
+
     public String content;
+    public TokenType type;
 
 
-    public Token(TokenType type, String content, String file, int start, int end) {
+    public Token(TokenType type,
+                 String content,
+                 String file,
+                 int start,
+                 int end)
+    {
         super(file, start, end);
         this.type = type;
         this.content = content;
@@ -23,12 +37,4 @@ class Token extends Sexp {
         }
     }
 
-
-    static enum TokenType {
-        OPENPAREN,
-        CLOSEPAREN,
-        STRING,
-        NUMBER,
-        IDENT
-    }
 }
