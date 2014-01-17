@@ -106,7 +106,6 @@
      Symbol
      String
      Boolean
-     False
      Node
      Void))
 
@@ -176,9 +175,9 @@
 ;; helper
 (: def-form? (Any -> Boolean))
 (define (def-form? x)
-  (and (list? x)
-       (= 3 (length x))
-       (eq? ': (car x))))
+  (match x
+    [(list ': _ _) #t]
+    [other #f]))
 
 
 ;; preprocess and group attribute accesses
@@ -245,7 +244,7 @@
        (VectorDef (map parse elems))]
       [`(import ,origin (,(? symbol? names) ...))
        (Import (parse origin) (map Var (cast names (Listof Symbol))))]
-      ;; application has no keywords, must stay last
+      ;; application has no keywords, must stay last to avoid conflict
       [`(,f ,args ...)
        (cond
         [(andmap def-form? args)
@@ -255,7 +254,7 @@
         [else
          (abort 'parse
                 "application must either be all keyword args"
-                " or all positional args, no mixture please")])]
+                " or all positional args, but got: " args)])]
       )))
 
 
@@ -505,7 +504,6 @@
 
 
 ;; general pattern binder
-;; can be arbitrarily nested
 (: bind ((U Node Value) Value Env Symbol -> Void))
 (define (bind v1 v2 env kind)
   (let ([kind2 (if (eq? kind 'param) 'def kind)])
