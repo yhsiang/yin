@@ -1,84 +1,16 @@
-package org.yinwang.yin;
+package org.yinwang.yin.ast;
 
 
 import org.jetbrains.annotations.Nullable;
+import org.yinwang.yin._;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
 public class Parser {
-
-    abstract class Sexp {
-        public String file;
-        public int start;
-        public int end;
-
-
-        protected Sexp(String file, int start, int end) {
-            this.file = file;
-            this.start = start;
-            this.end = end;
-        }
-    }
-
-
-    enum TokenType {
-        OPENPAREN,
-        CLOSEPAREN,
-        STRING,
-        NUMBER,
-        IDENT
-    }
-
-
-    class Token extends Sexp {
-        public TokenType type;
-        public String content;
-
-
-        public Token(TokenType type, String content, String file, int start, int end) {
-            super(file, start, end);
-            this.type = type;
-            this.content = content;
-        }
-
-
-        public String toString() {
-            if (type == TokenType.STRING) {
-                return "\"" + content + "\"";
-            } else {
-                return content;
-            }
-        }
-    }
-
-
-    class Tuple extends Sexp {
-        public List<Sexp> tokens = new ArrayList<>();
-
-
-        Tuple(List<Sexp> tokens, String file, int start, int end) {
-            super(file, start, end);
-            this.tokens = tokens;
-        }
-
-
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-
-            for (int i = 0; i < tokens.size(); i++) {
-                sb.append(tokens.get(i).toString());
-                if (i != tokens.size() - 1) {
-                    sb.append(" ");
-                }
-            }
-
-            return "(" + sb.toString() + ")";
-        }
-    }
-
 
     public String file;
     public String text;
@@ -125,7 +57,7 @@ public class Parser {
         // delimiters
         if (isDelimiter(cur)) {
             position++;
-            return new Token(TokenType.OPENPAREN, Character.toString(cur), file, position - 1, position);
+            return new Token(Token.TokenType.OPENPAREN, Character.toString(cur), file, position - 1, position);
         }
 
         if (text.charAt(position) == '"') {
@@ -133,7 +65,8 @@ public class Parser {
             int start = position;
 
             while (position < text.length() &&
-                    !(text.charAt(position) == '"' && text.charAt(position-1)!='\\')) {
+                    !(text.charAt(position) == '"' && text.charAt(position - 1) != '\\'))
+            {
                 position++;
             }
 
@@ -145,7 +78,7 @@ public class Parser {
             position++; // skip "
 
             String content = text.substring(start, end);
-            return new Token(TokenType.STRING, content, file, start, end);
+            return new Token(Token.TokenType.STRING, content, file, start, end);
         }
 
 
@@ -160,7 +93,7 @@ public class Parser {
         }
 
         String content = text.substring(start, position);
-        return new Token(TokenType.IDENT, content, file, start, position);
+        return new Token(Token.TokenType.IDENT, content, file, start, position);
     }
 
 

@@ -10,10 +10,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collection;
 
-class _ {
+public class _ {
 
     @Nullable
-    static String readFile(@NotNull String path) {
+    public static String readFile(@NotNull String path) {
         try {
             byte[] encoded = Files.readAllBytes(Paths.get(path));
             return Charset.forName("UTF-8").decode(ByteBuffer.wrap(encoded)).toString();
@@ -23,12 +23,12 @@ class _ {
     }
 
 
-    static void msg(String m) {
+    public static void msg(String m) {
         System.out.println(m);
     }
 
 
-    static void abort(String m) {
+    public static void abort(String m) {
         System.err.println(m);
         System.err.flush();
         Thread.dumpStack();
@@ -37,7 +37,7 @@ class _ {
 
 
     @NotNull
-    static public String joinWithSep(@NotNull Collection<? extends Object> ls, String sep) {
+    public static String joinWithSep(@NotNull Collection<? extends Object> ls, String sep) {
         StringBuilder sb = new StringBuilder();
         int i = 0;
         for (Object s : ls) {
