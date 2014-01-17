@@ -24,20 +24,34 @@ public class Parser {
     }
 
 
+    enum TokenType {
+        OPENPAREN,
+        CLOSEPAREN,
+        STRING,
+        NUMBER,
+        IDENT
+    }
+
+
     class Token extends Sexp {
+        public TokenType type;
         public String content;
 
 
-        public Token(String content, String file, int start, int end) {
+        public Token(TokenType type, String content, String file, int start, int end) {
             super(file, start, end);
+            this.type = type;
             this.content = content;
         }
 
 
         public String toString() {
-            return content;
+            if (type == TokenType.STRING) {
+                return "\"" + content + "\"";
+            } else {
+                return content;
+            }
         }
-
     }
 
 
@@ -111,8 +125,29 @@ public class Parser {
         // delimiters
         if (isDelimiter(cur)) {
             position++;
-            return new Token(Character.toString(cur), file, position - 1, position);
+            return new Token(TokenType.OPENPAREN, Character.toString(cur), file, position - 1, position);
         }
+
+        if (text.charAt(position) == '"') {
+            position++; // skip "
+            int start = position;
+
+            while (position < text.length() &&
+                    !(text.charAt(position) == '"' && text.charAt(position-1)!='\\')) {
+                position++;
+            }
+
+            if (position >= text.length()) {
+                _.abort("runaway string from: " + start);
+            }
+
+            int end = position;
+            position++; // skip "
+
+            String content = text.substring(start, end);
+            return new Token(TokenType.STRING, content, file, start, end);
+        }
+
 
         // find consequtive token
         int start = position;
@@ -125,7 +160,7 @@ public class Parser {
         }
 
         String content = text.substring(start, position);
-        return new Token(content, file, start, position);
+        return new Token(TokenType.IDENT, content, file, start, position);
     }
 
 
