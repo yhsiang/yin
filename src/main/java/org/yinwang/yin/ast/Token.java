@@ -5,8 +5,7 @@ class Token extends Sexp {
 
 
     static enum TokenType {
-        OPENPAREN,
-        CLOSEPAREN,
+        DELIMITER,
         STRING,
         NUMBER,
         IDENT

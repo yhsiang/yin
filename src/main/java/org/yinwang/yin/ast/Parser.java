@@ -4,10 +4,7 @@ package org.yinwang.yin.ast;
 import org.jetbrains.annotations.Nullable;
 import org.yinwang.yin._;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 public class Parser {
@@ -15,28 +12,64 @@ public class Parser {
     public String file;
     public String text;
     public int position;
-    public Set<Character> delims = new HashSet<>();
+    public final Set<String> allDelims = new HashSet<>();
+    public final Map<String, String> match = new HashMap<>();
 
 
     public Parser(String file) {
         this.file = file;
         this.text = _.readFile(file);
         this.position = 0;
-
-        delims.add('(');
-        delims.add(')');
-        delims.add('{');
-        delims.add('}');
-        delims.add('[');
-        delims.add(']');
     }
 
 
-    private boolean isDelimiter(char c) {
-        return delims.contains(c);
+    public void addDelimiterPair(String open, String close) {
+        allDelims.add(open);
+        allDelims.add(close);
+        match.put(open, close);
     }
 
 
+    public boolean isDelimiter(String c) {
+        return allDelims.contains(c);
+    }
+
+
+    public boolean isDelimiter(char c) {
+        return allDelims.contains(Character.toString(c));
+    }
+
+
+    public boolean isOpen(String c) {
+        return match.keySet().contains(c);
+    }
+
+
+    public boolean isClose(String c) {
+        return match.values().contains(c);
+    }
+
+
+    public String matchDelim(String open) {
+        return match.get(open);
+    }
+
+
+    public boolean isMatch(String open, String close) {
+        String matched = match.get(open);
+        if (matched != null && matched.equals(close)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
+     * lexer
+     *
+     * @return a token or null if file ends
+     */
     @Nullable
     private Token nextToken() {
         // skip spaces
@@ -56,9 +89,10 @@ public class Parser {
         // delimiters
         if (isDelimiter(cur)) {
             position++;
-            return new Token(Token.TokenType.OPENPAREN, Character.toString(cur), file, position - 1, position);
+            return new Token(Token.TokenType.DELIMITER, Character.toString(cur), file, position - 1, position);
         }
 
+        // string
         if (text.charAt(position) == '"') {
             position++; // skip "
             int start = position;
@@ -88,7 +122,9 @@ public class Parser {
                 !isDelimiter(cur))
         {
             position++;
-            cur = text.charAt(position);
+            if (position < text.length()) {
+                cur = text.charAt(position);
+            }
         }
 
         String content = text.substring(start, position);
@@ -96,18 +132,27 @@ public class Parser {
     }
 
 
+    /**
+     * parser
+     *
+     * @return a Sexp or null if file ends
+     */
     public Sexp nextSexp() {
         Token startToken = nextToken();
         if (startToken == null) {
             return null;
         }
 
-        if (startToken.content.equals("(")) {
+        String open = startToken.content;
+        String close = null;
+
+        if (isOpen(open)) {
             String file = startToken.file;
 
             List<Sexp> tokens = new ArrayList<>();
             Sexp nextToken = nextSexp();
-            while (!(nextToken instanceof Token && ((Token) nextToken).content.equals(")"))) {
+            while (!(nextToken instanceof Token && isMatch(open, ((Token) nextToken).content))) {
+
                 if (nextToken == null) {
                     _.abort("unclosed paren at: " + startToken.start);
                 } else {
@@ -115,30 +160,23 @@ public class Parser {
                     nextToken = nextSexp();
                 }
             }
-            return new Tuple(tokens, file, startToken.start, nextToken.end);
-
+            close = ((Token) nextToken).content;
+            return new Tuple(tokens, open, close, file, startToken.start, nextToken.end);
         } else {
             return startToken;
         }
-
     }
 
 
     public static void main(String[] args) {
         Parser p = new Parser(args[0]);
-        _.msg(p.text);
-
-//        Token t = p.nextToken();
-//        while (t != null) {
-//            _.msg("token: " + t);
-//            t = p.nextToken();
-//        }
+        p.addDelimiterPair("(", ")");
+        p.addDelimiterPair("{", "}");
 
         Sexp s = p.nextSexp();
         while (s != null) {
             _.msg("sexp: " + s);
             s = p.nextSexp();
         }
-
     }
 }
