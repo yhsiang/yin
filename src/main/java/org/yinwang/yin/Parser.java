@@ -23,6 +23,7 @@ public class Parser {
         }
     }
 
+
     class Token extends Sexp {
         public String content;
 
@@ -130,31 +131,28 @@ public class Parser {
 
     public Sexp nextSexp() {
 
-        Token token = nextToken();
-        if (token == null) {
+        Token startToken = nextToken();
+        if (startToken == null) {
             return null;
         }
 
-        if (token.content.equals("(")) {
-            String file = token.file;
-            int start = token.start;
-            int end = token.end;
+        if (startToken.content.equals("(")) {
+            String file = startToken.file;
 
             List<Sexp> tokens = new ArrayList<>();
-            Sexp o = nextSexp();
-            while (!(o instanceof Token && ((Token) o).content.equals(")"))) {
-                if (o == null) {
-                    _.abort("unclosed paranthese at: " + token);
+            Sexp nextToken = nextSexp();
+            while (!(nextToken instanceof Token && ((Token) nextToken).content.equals(")"))) {
+                if (nextToken == null) {
+                    _.abort("unclosed paren at: " + startToken.start);
                 } else {
-                    tokens.add(o);
-                    end = o.end;
-                    o = nextSexp();
+                    tokens.add(nextToken);
+                    nextToken = nextSexp();
                 }
             }
-            return new Tuple(tokens, file, start, end);
+            return new Tuple(tokens, file, startToken.start, nextToken.end);
 
         } else {
-            return token;
+            return startToken;
         }
 
     }

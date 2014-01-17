@@ -29,7 +29,8 @@ class _ {
 
 
     static void abort(String m) {
-        System.out.println(m);
+        System.err.println(m);
+        System.err.flush();
         Thread.dumpStack();
         System.exit(1);
     }
