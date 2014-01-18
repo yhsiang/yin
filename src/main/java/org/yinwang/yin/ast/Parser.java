@@ -149,29 +149,29 @@ public class Parser {
      * @return a Sexp or null if file ends
      */
     public Sexp nextSexp() {
-        Token startToken = nextToken();
+        Token begin = nextToken();
 
         // end of file
-        if (startToken == null) {
+        if (begin == null) {
             return null;
         }
 
         // try to get matched (...)
-        if (isOpen(startToken.content)) {
-            String file = startToken.file;
+        if (isOpen(begin.content)) {
             List<Sexp> tokens = new ArrayList<>();
-            Sexp next = nextSexp();
-            while (!matchDelim(startToken, next)) {
-                if (next == null) {
-                    _.abort("unclosed paren at: " + startToken.start);
+            Sexp iter = nextSexp();
+
+            while (!matchDelim(begin, iter)) {
+                if (iter == null) {
+                    _.abort("unclosed delimeter " + begin.content + " at: " + begin.start);
                 } else {
-                    tokens.add(next);
-                    next = nextSexp();
+                    tokens.add(iter);
+                    iter = nextSexp();
                 }
             }
-            return new Tuple(tokens, startToken.content, ((Token) next).content, file, startToken.start, next.end);
+            return new Tuple(tokens, begin.content, ((Token) iter).content, begin.file, begin.start, iter.end);
         } else {
-            return startToken;
+            return begin;
         }
     }
 
