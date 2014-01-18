@@ -15,46 +15,30 @@ public class IntNum extends Token {
         this.content = content;
 
         int sign;
-        String valueContent;
-
         if (content.startsWith("+")) {
             sign = 1;
-            valueContent = content.substring(1);
+            content = content.substring(1);
         } else if (content.startsWith("-")) {
             sign = -1;
-            valueContent = content.substring(1);
+            content = content.substring(1);
         } else {
             sign = 1;
-            valueContent = content;
         }
 
-        if (valueContent.startsWith("0b")) {
+        if (content.endsWith("b") || content.endsWith("B")) {
             base = 2;
-            valueContent = valueContent.substring(2);
-        } else if (valueContent.startsWith("0x")) {
+            content = content.substring(0, content.length() - 1);
+        } else if (content.endsWith("h") || content.endsWith("H")) {
             base = 16;
-            valueContent = valueContent.substring(2);
-        } else if (content.startsWith("0") && content.length() >= 2) {
+            content = content.substring(0, content.length() - 1);
+        } else if (content.endsWith("o") || content.endsWith("O")) {
             base = 8;
-            valueContent = valueContent.substring(1);
+            content = content.substring(0, content.length() - 1);
         } else {
             base = 10;
         }
 
-        this.value = parseValue(valueContent, base, sign);
-    }
-
-
-    public static String prefix(int base) {
-        if (base == 2) {
-            return "0b";
-        } else if (base == 8) {
-            return "0";
-        } else if (base == 16) {
-            return "0x";
-        } else {
-            return "";
-        }
+        this.value = parseValue(content, base, sign);
     }
 
 
