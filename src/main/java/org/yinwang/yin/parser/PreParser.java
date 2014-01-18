@@ -276,7 +276,7 @@ public class PreParser {
             elements.add(s);
             s = nextSexp();
         }
-        return new Tuple(elements, null, null, file, 0, text.length(), 0, 0);
+        return new Block(elements, file, 0, text.length(), 0, 0);
     }
 
 

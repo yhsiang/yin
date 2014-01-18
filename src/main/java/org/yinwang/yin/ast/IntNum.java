@@ -65,7 +65,7 @@ public class IntNum extends Node {
 
 
     public String toString() {
-        return content + "=" + value;
+        return content;
     }
 
 }
