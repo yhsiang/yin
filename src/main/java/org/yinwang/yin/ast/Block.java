@@ -16,12 +16,12 @@ public class Block extends Node {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("(seq");
+        sb.append("(seq ");
 
         for (int i = 0; i < statements.size(); i++) {
             sb.append(statements.get(i).toString());
             if (i != statements.size() - 1) {
-                sb.append("\n");
+                sb.append(" ");
             }
         }
 
