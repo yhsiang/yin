@@ -7,25 +7,28 @@ import org.yinwang.yin._;
 import java.util.*;
 
 
-public class SexpParser {
+public class PreParser {
 
     public static final char RADIX_PREFIX = '#';
 
     public String file;
     public String text;
-    public int position;
+
+    // current offset indicators
+    public int offset;
     public int line;
     public int col;
-    public Token.TokenType context;
-    public final Set<String> allDelims = new HashSet<>();
-    public final Map<String, String> match = new HashMap<>();
-    public final Set<String> specialChar = new HashSet<>();
+
+    // all delimeters
+    public final Set<String> delims = new HashSet<>();
+    // map open delimeters to their matched closing ones
+    public final Map<String, String> delimMap = new HashMap<>();
 
 
-    public SexpParser(String file) {
+    public PreParser(String file) {
         this.file = _.unifyPath(file);
         this.text = _.readFile(file);
-        this.position = 0;
+        this.offset = 0;
         this.line = 0;
         this.col = 0;
 
@@ -37,86 +40,58 @@ public class SexpParser {
         addDelimiterPair("{", "}");
         addDelimiterPair("[", "]");
         addDelimiter(".");
-        addSpecialChar("\\");
-        addSpecialChar("\"");
     }
 
 
     public void forward() {
-        if (text.charAt(position) == '\n') {
+        if (text.charAt(offset) == '\n') {
             line++;
             col = 0;
-            position++;
+            offset++;
         } else {
             col++;
-            position++;
+            offset++;
         }
     }
 
 
     public void addDelimiterPair(String open, String close) {
-        allDelims.add(open);
-        allDelims.add(close);
-        match.put(open, close);
+        delims.add(open);
+        delims.add(close);
+        delimMap.put(open, close);
     }
 
 
     public void addDelimiter(String delim) {
-        allDelims.add(delim);
+        delims.add(delim);
     }
 
 
     public boolean isDelimiter(char c) {
-        if (c == '.' && context == Token.TokenType.NUMBER) {
-            return false;
-        } else {
-            return allDelims.contains(Character.toString(c));
-        }
+        return delims.contains(Character.toString(c));
     }
 
 
-    public void addSpecialChar(String c) {
-        specialChar.add(c);
-    }
-
-
-    public boolean isLegalChar(char c, Token.TokenType context) {
-        if (context == Token.TokenType.NUMBER) {
-            return Character.toString(c).matches("[0-9e\\+\\-]");
-        } else if (context == Token.TokenType.IDENT) {
-            return !specialChar.contains(Character.toString(c));
-        } else {
-            _.abort("illegal context: " + context);
-            return false;
-        }
-    }
-
-
-    public boolean isOpen(Sexp c) {
+    public boolean isOpen(Node c) {
         if (c instanceof Token) {
-            return match.keySet().contains(((Token) c).content);
+            return delimMap.keySet().contains(((Token) c).content);
         } else {
             return false;
         }
     }
 
 
-    public boolean isClose(Sexp c) {
+    public boolean isClose(Node c) {
         if (c instanceof Token) {
-            return match.values().contains(((Token) c).content);
+            return delimMap.values().contains(((Token) c).content);
         } else {
             return false;
         }
-    }
-
-
-    public String matchDelim(String open) {
-        return match.get(open);
     }
 
 
     public boolean matchString(String open, String close) {
-        String matched = match.get(open);
+        String matched = delimMap.get(open);
         if (matched != null && matched.equals(close)) {
             return true;
         } else {
@@ -125,7 +100,7 @@ public class SexpParser {
     }
 
 
-    public boolean matchDelim(Sexp open, Sexp close) {
+    public boolean matchDelim(Node open, Node close) {
         return (open instanceof Token &&
                 close instanceof Token &&
                 matchString(((Token) open).content, ((Token) close).content));
@@ -143,59 +118,59 @@ public class SexpParser {
      * @return a token or null if file ends
      */
     @Nullable
-    private Sexp nextToken() {
+    private Node nextToken() {
         // skip spaces
-        while (position < text.length() &&
-                Character.isWhitespace(text.charAt(position)))
+        while (offset < text.length() &&
+                Character.isWhitespace(text.charAt(offset)))
         {
             forward();
         }
 
         // end of file
-        if (position >= text.length()) {
+        if (offset >= text.length()) {
             return null;
         }
 
-        char cur = text.charAt(position);
+        char cur = text.charAt(offset);
 
         // delimiters
         if (isDelimiter(cur)) {
-            Token ret = new Token(Token.TokenType.DELIMITER, Character.toString(cur), file, position, position + 1,
+            Token ret = new Token(TokenType.DELIMITER, Character.toString(cur), file, offset, offset + 1,
                     line, col);
             forward();
             return ret;
         }
 
         // string
-        if (text.charAt(position) == '"' && (position == 0 || text.charAt(position - 1) != '\\')) {
-            int start = position;
+        if (text.charAt(offset) == '"' && (offset == 0 || text.charAt(offset - 1) != '\\')) {
+            int start = offset;
             int startLine = line;
             int startCol = col;
             forward();   // skip "
 
-            while (position < text.length() &&
-                    !(text.charAt(position) == '"' && text.charAt(position - 1) != '\\'))
+            while (offset < text.length() &&
+                    !(text.charAt(offset) == '"' && text.charAt(offset - 1) != '\\'))
             {
-                if (text.charAt(position) == '\n') {
+                if (text.charAt(offset) == '\n') {
                     _.abort(file + ":" + startLine + ":" + startCol + ": runaway string");
                 }
                 forward();
             }
 
-            if (position >= text.length()) {
+            if (offset >= text.length()) {
                 _.abort(file + ":" + startLine + ":" + startCol + ": runaway string");
             }
 
             forward(); // skip "
-            int end = position;
+            int end = offset;
 
             String content = text.substring(start + 1, end - 1);
-            return new Token(Token.TokenType.STRING, content, file, start, end, startLine, startCol);
+            return new Token(TokenType.STRING, content, file, start, end, startLine, startCol);
         }
 
 
         // find consequtive token
-        int start = position;
+        int start = offset;
         int startLine = line;
         int startCol = col;
 
@@ -203,23 +178,23 @@ public class SexpParser {
                 ((text.charAt(start) == '+' || text.charAt(start) == '-')
                         && isNumberPrefix(text.charAt(start + 1))))
         {
-            while (position < text.length() &&
+            while (offset < text.length() &&
                     !Character.isWhitespace(cur) &&
                     !(isDelimiter(cur) && cur != '.'))
             {
                 forward();
-                if (position < text.length()) {
-                    cur = text.charAt(position);
+                if (offset < text.length()) {
+                    cur = text.charAt(offset);
                 }
             }
 
-            String content = text.substring(start, position);
-            IntNum n = IntNum.parse(content, file, start, position, startLine, startCol);
+            String content = text.substring(start, offset);
+            IntNum n = IntNum.parse(content, file, start, offset, startLine, startCol);
 
             if (n != null) {
                 return n;
             } else {
-                FloatNum n2 = FloatNum.parse(content, file, start, position, startLine, startCol);
+                FloatNum n2 = FloatNum.parse(content, file, start, offset, startLine, startCol);
                 if (n2 != null) {
                     return n2;
                 } else {
@@ -228,18 +203,18 @@ public class SexpParser {
                 }
             }
         } else {
-            while (position < text.length() &&
+            while (offset < text.length() &&
                     !Character.isWhitespace(cur) &&
                     !isDelimiter(cur))
             {
                 forward();
-                if (position < text.length()) {
-                    cur = text.charAt(position);
+                if (offset < text.length()) {
+                    cur = text.charAt(offset);
                 }
             }
 
-            String content = text.substring(start, position);
-            return new Token(context, content, file, start, position, startLine, startCol);
+            String content = text.substring(start, offset);
+            return new Token(TokenType.IDENT, content, file, start, offset, startLine, startCol);
         }
     }
 
@@ -247,10 +222,10 @@ public class SexpParser {
     /**
      * parser
      *
-     * @return a Sexp or null if file ends
+     * @return a Node or null if file ends
      */
-    public Sexp nextSexp(int depth) {
-        Sexp begin = nextToken();
+    public Node nextNode(int depth) {
+        Node begin = nextToken();
 
         // end of file
         if (begin == null) {
@@ -261,8 +236,8 @@ public class SexpParser {
             _.abort(begin.getFileLineCol() + " unmatched closing delimeter " + begin);
             return null;
         } else if (isOpen(begin)) {   // try to get matched (...)
-            List<Sexp> tokens = new ArrayList<>();
-            Sexp iter = nextSexp(depth + 1);
+            List<Node> tokens = new ArrayList<>();
+            Node iter = nextNode(depth + 1);
 
             while (!matchDelim(begin, iter)) {
                 if (iter == null) {
@@ -273,7 +248,7 @@ public class SexpParser {
                     return null;
                 } else {
                     tokens.add(iter);
-                    iter = nextSexp(depth + 1);
+                    iter = nextNode(depth + 1);
                 }
             }
             return new Tuple(tokens, begin, iter, begin.file, begin.start, iter.end, begin.line, begin.col);
@@ -284,15 +259,15 @@ public class SexpParser {
 
 
     // wrapper for the actual parser
-    public Sexp nextSexp() {
-        return nextSexp(0);
+    public Node nextSexp() {
+        return nextNode(0);
     }
 
 
-    // parse file into a Sexp
-    public Sexp parse() {
-        List<Sexp> elements = new ArrayList<>();
-        Sexp s = nextSexp();
+    // parse file into a Node
+    public Node parse() {
+        List<Node> elements = new ArrayList<>();
+        Node s = nextSexp();
         while (s != null) {
             elements.add(s);
             s = nextSexp();
@@ -302,7 +277,7 @@ public class SexpParser {
 
 
     public static void main(String[] args) {
-        SexpParser p = new SexpParser(args[0]);
+        PreParser p = new PreParser(args[0]);
         _.msg("tree: " + p.parse());
     }
 }

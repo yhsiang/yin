@@ -3,7 +3,7 @@ package org.yinwang.yin.parser;
 
 import java.math.BigInteger;
 
-public class IntNum extends Sexp {
+public class IntNum extends Node {
 
     public String content;
     public BigInteger value;

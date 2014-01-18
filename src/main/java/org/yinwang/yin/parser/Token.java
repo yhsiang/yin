@@ -1,15 +1,7 @@
 package org.yinwang.yin.parser;
 
 
-class Token extends Sexp {
-
-
-    static enum TokenType {
-        DELIMITER,
-        STRING,
-        NUMBER,
-        IDENT
-    }
+class Token extends Node {
 
 
     public String content;

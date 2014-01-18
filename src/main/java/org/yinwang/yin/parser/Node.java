@@ -4,7 +4,7 @@ package org.yinwang.yin.parser;
 /**
  * Sexy expression (S-expression)
  */
-abstract class Sexp {
+abstract class Node {
     public String file;
     public int start;
     public int end;
@@ -12,7 +12,7 @@ abstract class Sexp {
     public int col;
 
 
-    protected Sexp(String file, int start, int end, int line, int col) {
+    protected Node(String file, int start, int end, int line, int col) {
         this.file = file;
         this.start = start;
         this.end = end;

@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-class Tuple extends Sexp {
-    public List<Sexp> tokens = new ArrayList<>();
-    public Sexp open;
-    public Sexp close;
+class Tuple extends Node {
+    public List<Node> tokens = new ArrayList<>();
+    public Node open;
+    public Node close;
 
 
-    public Tuple(List<Sexp> tokens, Sexp open, Sexp close, String file, int start, int end, int line, int col) {
+    public Tuple(List<Node> tokens, Node open, Node close, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.tokens = tokens;
         this.open = open;

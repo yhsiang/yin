@@ -1,7 +1,7 @@
 package org.yinwang.yin.parser;
 
 
-public class FloatNum extends Sexp {
+public class FloatNum extends Node {
 
     public String content;
     public double value;
