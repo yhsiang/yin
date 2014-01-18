@@ -8,6 +8,10 @@ import org.yinwang.yin.ast.*;
 import java.util.*;
 
 
+/**
+ * first phase parser
+ * parse into S-expression like format
+ */
 public class PreParser {
 
     public static final char RADIX_PREFIX = '#';
@@ -74,8 +78,8 @@ public class PreParser {
 
 
     public boolean isOpen(Node c) {
-        if (c instanceof Token) {
-            return delimMap.keySet().contains(((Token) c).content);
+        if (c instanceof Delimeter) {
+            return delimMap.keySet().contains(((Delimeter) c).shape);
         } else {
             return false;
         }
@@ -83,8 +87,8 @@ public class PreParser {
 
 
     public boolean isClose(Node c) {
-        if (c instanceof Token) {
-            return delimMap.values().contains(((Token) c).content);
+        if (c instanceof Delimeter) {
+            return delimMap.values().contains(((Delimeter) c).shape);
         } else {
             return false;
         }
@@ -102,9 +106,9 @@ public class PreParser {
 
 
     public boolean matchDelim(Node open, Node close) {
-        return (open instanceof Token &&
-                close instanceof Token &&
-                matchString(((Token) open).content, ((Token) close).content));
+        return (open instanceof Delimeter &&
+                close instanceof Delimeter &&
+                matchString(((Delimeter) open).shape, ((Delimeter) close).shape));
     }
 
 
