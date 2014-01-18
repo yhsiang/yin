@@ -218,7 +218,11 @@ public class PreParser {
             }
 
             String content = text.substring(start, offset);
-            return new Name(content, file, start, offset, startLine, startCol);
+            if (content.startsWith(":")) {
+                return new Keyword(content.substring(1), file, start, offset, startLine, startCol);
+            } else {
+                return new Name(content, file, start, offset, startLine, startCol);
+            }
         }
     }
 
