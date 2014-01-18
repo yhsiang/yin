@@ -20,4 +20,9 @@ abstract class Sexp {
         this.col = col;
     }
 
+
+    public String getFileLineCol() {
+        return file + ":" + line + ":" + col;
+    }
+
 }

@@ -17,6 +17,7 @@ public class SexpParser {
     public Token.TokenType context;
     public final Set<String> allDelims = new HashSet<>();
     public final Map<String, String> match = new HashMap<>();
+    public final Set<String> specialChar = new HashSet<>();
 
 
     public SexpParser(String file) {
@@ -34,6 +35,8 @@ public class SexpParser {
         addDelimiterPair("{", "}");
         addDelimiterPair("[", "]");
         addDelimiter(".");
+        addSpecialChar("\\");
+        addSpecialChar("\"");
     }
 
 
@@ -61,16 +64,28 @@ public class SexpParser {
     }
 
 
-    public boolean isDelimiter(String c) {
-        return allDelims.contains(c);
-    }
-
-
     public boolean isDelimiter(char c) {
         if (c == '.' && context == Token.TokenType.NUMBER) {
             return false;
         } else {
             return allDelims.contains(Character.toString(c));
+        }
+    }
+
+
+    public void addSpecialChar(String c) {
+        specialChar.add(c);
+    }
+
+
+    public boolean isLegalChar(char c, Token.TokenType context) {
+        if (context == Token.TokenType.NUMBER) {
+            return Character.toString(c).matches("[0-9e\\+\\-]");
+        } else if (context == Token.TokenType.IDENT) {
+            return !specialChar.contains(Character.toString(c));
+        } else {
+            _.abort("illegal context: " + context);
+            return false;
         }
     }
 
@@ -168,25 +183,49 @@ public class SexpParser {
         int start = position;
         int startLine = line;
         int startCol = col;
-        if (Character.isDigit(text.charAt(start))) {
-            context = Token.TokenType.NUMBER;
-        } else {
-            context = Token.TokenType.IDENT;
-        }
 
-        while (position < text.length() &&
-                !Character.isWhitespace(cur) &&
-                !isDelimiter(cur) &&
-                cur != '"')
+        if (Character.isDigit(text.charAt(start)) ||
+                ((text.charAt(start) == '+' || text.charAt(start) == '-')
+                        && Character.isDigit(text.charAt(start + 1))))
         {
-            forward();
-            if (position < text.length()) {
-                cur = text.charAt(position);
+            while (position < text.length() &&
+                    !Character.isWhitespace(cur) &&
+                    !(isDelimiter(cur) && cur != '.'))
+            {
+                forward();
+                if (position < text.length()) {
+                    cur = text.charAt(position);
+                }
             }
-        }
 
-        String content = text.substring(start, position);
-        return new Token(context, content, file, start, position, startLine, startCol);
+            String content = text.substring(start, position);
+            IntNum n = IntNum.parse(content, file, start, position, startLine, startCol);
+
+            if (n != null) {
+                return n;
+            } else {
+                FloatNum n2 = FloatNum.parse(content, file, start, position, startLine, startCol);
+                if (n2 != null) {
+                    return n2;
+                } else {
+                    _.abort("illegal number format: " + content);
+                    return null;
+                }
+            }
+        } else {
+            while (position < text.length() &&
+                    !Character.isWhitespace(cur) &&
+                    !isDelimiter(cur))
+            {
+                forward();
+                if (position < text.length()) {
+                    cur = text.charAt(position);
+                }
+            }
+
+            String content = text.substring(start, position);
+            return new Token(context, content, file, start, position, startLine, startCol);
+        }
     }
 
 
