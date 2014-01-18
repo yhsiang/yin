@@ -7,7 +7,7 @@ import org.yinwang.yin._;
 import java.util.*;
 
 
-public class Parser {
+public class SexpParser {
 
     public String file;
     public String text;
@@ -19,7 +19,7 @@ public class Parser {
     public final Map<String, String> match = new HashMap<>();
 
 
-    public Parser(String file) {
+    public SexpParser(String file) {
         this.file = _.unifyPath(file);
         this.text = _.readFile(file);
         this.position = 0;
@@ -137,11 +137,11 @@ public class Parser {
         }
 
         // string
-        if (text.charAt(position) == '"') {
-            forward();   // skip "
+        if (text.charAt(position) == '"' && text.charAt(position - 1) != '\\') {
             int start = position;
             int startLine = line;
             int startCol = col;
+            forward();   // skip "
 
             while (position < text.length() &&
                     !(text.charAt(position) == '"' && text.charAt(position - 1) != '\\'))
@@ -153,10 +153,10 @@ public class Parser {
                 _.abort(file + ":" + startLine + ":" + startCol + ": runaway string");
             }
 
-            int end = position;
             forward(); // skip "
+            int end = position;
 
-            String content = text.substring(start, end);
+            String content = text.substring(start + 1, end - 1);
             return new Token(Token.TokenType.STRING, content, file, start, end, startLine, startCol);
         }
 
@@ -232,6 +232,7 @@ public class Parser {
     }
 
 
+    // parse file into a Sexp
     public Sexp parse() {
         List<Sexp> elements = new ArrayList<>();
         Sexp s = nextSexp();
@@ -244,7 +245,7 @@ public class Parser {
 
 
     public static void main(String[] args) {
-        Parser p = new Parser(args[0]);
+        SexpParser p = new SexpParser(args[0]);
         _.msg("tree: " + p.parse());
     }
 }
