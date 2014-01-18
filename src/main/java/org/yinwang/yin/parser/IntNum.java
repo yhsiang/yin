@@ -25,15 +25,18 @@ public class IntNum extends Token {
             sign = 1;
         }
 
-        if (content.endsWith("b") || content.endsWith("B")) {
+        if (content.startsWith("#b")) {
             base = 2;
-            content = content.substring(0, content.length() - 1);
-        } else if (content.endsWith("h") || content.endsWith("H")) {
-            base = 16;
-            content = content.substring(0, content.length() - 1);
-        } else if (content.endsWith("o") || content.endsWith("O")) {
+            content = content.substring(2);
+        } else if (content.startsWith("#o")) {
             base = 8;
-            content = content.substring(0, content.length() - 1);
+            content = content.substring(2);
+        } else if (content.startsWith("#x")) {
+            base = 16;
+            content = content.substring(2);
+        } else if (content.startsWith("#d")) {
+            base = 10;
+            content = content.substring(2);
         } else {
             base = 10;
         }

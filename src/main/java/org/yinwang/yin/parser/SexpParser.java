@@ -9,6 +9,8 @@ import java.util.*;
 
 public class SexpParser {
 
+    public static final char RADIX_PREFIX = '#';
+
     public String file;
     public String text;
     public int position;
@@ -122,6 +124,11 @@ public class SexpParser {
     }
 
 
+    public boolean isNumberPrefix(char c) {
+        return Character.isDigit(c) || c == RADIX_PREFIX;
+    }
+
+
     /**
      * lexer
      *
@@ -184,9 +191,9 @@ public class SexpParser {
         int startLine = line;
         int startCol = col;
 
-        if (Character.isDigit(text.charAt(start)) ||
+        if (isNumberPrefix(text.charAt(start)) ||
                 ((text.charAt(start) == '+' || text.charAt(start) == '-')
-                        && Character.isDigit(text.charAt(start + 1))))
+                        && isNumberPrefix(text.charAt(start + 1))))
         {
             while (position < text.length() &&
                     !Character.isWhitespace(cur) &&
