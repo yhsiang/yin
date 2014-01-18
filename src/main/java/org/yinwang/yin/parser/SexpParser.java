@@ -137,7 +137,7 @@ public class SexpParser {
         }
 
         // string
-        if (text.charAt(position) == '"' && text.charAt(position - 1) != '\\') {
+        if (text.charAt(position) == '"' && (position == 0 || text.charAt(position - 1) != '\\')) {
             int start = position;
             int startLine = line;
             int startCol = col;
@@ -146,6 +146,9 @@ public class SexpParser {
             while (position < text.length() &&
                     !(text.charAt(position) == '"' && text.charAt(position - 1) != '\\'))
             {
+                if (text.charAt(position) == '\n') {
+                    _.abort(file + ":" + startLine + ":" + startCol + ": runaway string");
+                }
                 forward();
             }
 
@@ -173,7 +176,8 @@ public class SexpParser {
 
         while (position < text.length() &&
                 !Character.isWhitespace(cur) &&
-                !isDelimiter(cur))
+                !isDelimiter(cur) &&
+                cur != '"')
         {
             forward();
             if (position < text.length()) {
