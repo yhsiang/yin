@@ -1,4 +1,4 @@
-package org.yinwang.yin.ast;
+package org.yinwang.yin.parser;
 
 
 class Token extends Sexp {
@@ -30,9 +30,9 @@ class Token extends Sexp {
 
     public String toString() {
         if (type == TokenType.STRING) {
-            return "\"" + content + "\"";
+            return "\"" + content + "\""; // + ":" + type;
         } else {
-            return content;
+            return content; // + ":" + type;
         }
     }
 

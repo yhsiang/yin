@@ -1,4 +1,4 @@
-package org.yinwang.yin.ast;
+package org.yinwang.yin.parser;
 
 
 /**

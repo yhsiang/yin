@@ -1,4 +1,4 @@
-package org.yinwang.yin.ast;
+package org.yinwang.yin.parser;
 
 
 import org.jetbrains.annotations.Nullable;
@@ -218,7 +218,7 @@ public class Parser {
                     iter = nextSexp(depth + 1);
                 }
             }
-            return new Tuple(tokens, begin.content, ((Token) iter).content, begin.file, begin.start, iter.end,
+            return new Tuple(tokens, begin, ((Token) iter), begin.file, begin.start, iter.end,
                     begin.line, begin.col);
         } else {
             return begin;
@@ -239,7 +239,7 @@ public class Parser {
             elements.add(s);
             s = nextSexp();
         }
-        return new Tuple(elements, "[", "]", file, 0, text.length(), 0, 0);
+        return new Tuple(elements, null, null, file, 0, text.length(), 0, 0);
     }
 
 

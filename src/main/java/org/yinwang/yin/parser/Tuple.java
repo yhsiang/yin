@@ -1,4 +1,4 @@
-package org.yinwang.yin.ast;
+package org.yinwang.yin.parser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,11 +6,11 @@ import java.util.List;
 
 class Tuple extends Sexp {
     public List<Sexp> tokens = new ArrayList<>();
-    public String open;
-    public String close;
+    public Token open;
+    public Token close;
 
 
-    Tuple(List<Sexp> tokens, String open, String close, String file, int start, int end, int line, int col) {
+    public Tuple(List<Sexp> tokens, Token open, Token close, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.tokens = tokens;
         this.open = open;
@@ -28,6 +28,6 @@ class Tuple extends Sexp {
             }
         }
 
-        return open + sb.toString() + close;
+        return (open == null ? "" : open) + sb.toString() + (close == null ? "" : close);
     }
 }
