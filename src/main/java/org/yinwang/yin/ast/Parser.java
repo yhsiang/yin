@@ -14,6 +14,7 @@ public class Parser {
     public int position;
     public int line;
     public int col;
+    public Token.TokenType context;
     public final Set<String> allDelims = new HashSet<>();
     public final Map<String, String> match = new HashMap<>();
 
@@ -66,7 +67,11 @@ public class Parser {
 
 
     public boolean isDelimiter(char c) {
-        return allDelims.contains(Character.toString(c));
+        if (c == '.' && context == Token.TokenType.NUMBER) {
+            return false;
+        } else {
+            return allDelims.contains(Character.toString(c));
+        }
     }
 
 
@@ -160,6 +165,11 @@ public class Parser {
         int start = position;
         int startLine = line;
         int startCol = col;
+        if (Character.isDigit(text.charAt(start))) {
+            context = Token.TokenType.NUMBER;
+        } else {
+            context = Token.TokenType.IDENT;
+        }
 
         while (position < text.length() &&
                 !Character.isWhitespace(cur) &&
@@ -172,7 +182,7 @@ public class Parser {
         }
 
         String content = text.substring(start, position);
-        return new Token(Token.TokenType.IDENT, content, file, start, position, startLine, startCol);
+        return new Token(context, content, file, start, position, startLine, startCol);
     }
 
 
