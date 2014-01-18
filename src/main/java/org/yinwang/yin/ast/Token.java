@@ -16,13 +16,8 @@ class Token extends Sexp {
     public TokenType type;
 
 
-    public Token(TokenType type,
-                 String content,
-                 String file,
-                 int start,
-                 int end)
-    {
-        super(file, start, end);
+    public Token(TokenType type, String content, String file, int start, int end, int line, int col) {
+        super(file, start, end, line, col);
         this.type = type;
         this.content = content;
     }
@@ -32,7 +27,7 @@ class Token extends Sexp {
         if (type == TokenType.STRING) {
             return "\"" + content + "\"";
         } else {
-            return content;
+            return content + "@" + line + ":" + col;
         }
     }
 

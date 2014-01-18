@@ -10,8 +10,8 @@ class Tuple extends Sexp {
     public String close;
 
 
-    Tuple(List<Sexp> tokens, String open, String close, String file, int start, int end) {
-        super(file, start, end);
+    Tuple(List<Sexp> tokens, String open, String close, String file, int start, int end, int line, int col) {
+        super(file, start, end, line, col);
         this.tokens = tokens;
         this.open = open;
         this.close = close;
