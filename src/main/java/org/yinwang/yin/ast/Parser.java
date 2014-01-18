@@ -150,7 +150,7 @@ public class Parser {
             }
 
             if (position >= text.length()) {
-                _.abort("runaway string from: " + start);
+                _.abort(file + ":" + startLine + ":" + startCol + ": runaway string");
             }
 
             int end = position;
