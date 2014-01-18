@@ -92,13 +92,21 @@ public class SexpParser {
     }
 
 
-    public boolean isOpen(String c) {
-        return match.keySet().contains(c);
+    public boolean isOpen(Sexp c) {
+        if (c instanceof Token) {
+            return match.keySet().contains(((Token) c).content);
+        } else {
+            return false;
+        }
     }
 
 
-    public boolean isClose(String c) {
-        return match.values().contains(c);
+    public boolean isClose(Sexp c) {
+        if (c instanceof Token) {
+            return match.values().contains(((Token) c).content);
+        } else {
+            return false;
+        }
     }
 
 
@@ -135,7 +143,7 @@ public class SexpParser {
      * @return a token or null if file ends
      */
     @Nullable
-    private Token nextToken() {
+    private Sexp nextToken() {
         // skip spaces
         while (position < text.length() &&
                 Character.isWhitespace(text.charAt(position)))
@@ -242,34 +250,33 @@ public class SexpParser {
      * @return a Sexp or null if file ends
      */
     public Sexp nextSexp(int depth) {
-        Token begin = nextToken();
+        Sexp begin = nextToken();
 
         // end of file
         if (begin == null) {
             return null;
         }
 
-        if (depth == 0 && isClose(begin.content)) {
-            _.abort(begin.getFileLineCol() + " unmatched closing delimeter " + begin.content);
+        if (depth == 0 && isClose(begin)) {
+            _.abort(begin.getFileLineCol() + " unmatched closing delimeter " + begin);
             return null;
-        } else if (isOpen(begin.content)) {   // try to get matched (...)
+        } else if (isOpen(begin)) {   // try to get matched (...)
             List<Sexp> tokens = new ArrayList<>();
             Sexp iter = nextSexp(depth + 1);
 
             while (!matchDelim(begin, iter)) {
                 if (iter == null) {
-                    _.abort(begin.getFileLineCol() + ": unclosed delimeter " + begin.content);
+                    _.abort(begin.getFileLineCol() + ": unclosed delimeter " + begin);
                     return null;
-                } else if (iter instanceof Token && isClose(((Token) iter).content)) {
-                    _.abort(((Token) iter).getFileLineCol() + " unmatched closing delimeter " + ((Token) iter).content);
+                } else if (isClose(iter)) {
+                    _.abort(iter.getFileLineCol() + " unmatched closing delimeter " + iter);
                     return null;
                 } else {
                     tokens.add(iter);
                     iter = nextSexp(depth + 1);
                 }
             }
-            return new Tuple(tokens, begin, ((Token) iter), begin.file, begin.start, iter.end,
-                    begin.line, begin.col);
+            return new Tuple(tokens, begin, iter, begin.file, begin.start, iter.end, begin.line, begin.col);
         } else {
             return begin;
         }

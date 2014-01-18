@@ -6,11 +6,11 @@ import java.util.List;
 
 class Tuple extends Sexp {
     public List<Sexp> tokens = new ArrayList<>();
-    public Token open;
-    public Token close;
+    public Sexp open;
+    public Sexp close;
 
 
-    public Tuple(List<Sexp> tokens, Token open, Token close, String file, int start, int end, int line, int col) {
+    public Tuple(List<Sexp> tokens, Sexp open, Sexp close, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.tokens = tokens;
         this.open = open;

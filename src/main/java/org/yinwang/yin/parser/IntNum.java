@@ -3,7 +3,7 @@ package org.yinwang.yin.parser;
 
 import java.math.BigInteger;
 
-public class IntNum extends Token {
+public class IntNum extends Sexp {
 
     public String content;
     public BigInteger value;
@@ -11,7 +11,7 @@ public class IntNum extends Token {
 
 
     public IntNum(String content, String file, int start, int end, int line, int col) {
-        super(TokenType.NUMBER, content, file, start, end, line, col);
+        super(file, start, end, line, col);
         this.content = content;
 
         int sign;
