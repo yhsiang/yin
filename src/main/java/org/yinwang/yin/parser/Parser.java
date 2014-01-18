@@ -59,7 +59,11 @@ public class Parser {
                     }
                 }
 
-                return null;   // application
+                // application
+                Node func = parseNode(tuple.elements.get(0));
+                Node args = parseNode(tuple.elements.get(1));
+                return new Call(func, args, prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
+
             } else {   // application
                 return null;
             }
