@@ -59,13 +59,20 @@ public class Parser {
     }
 
 
-    public boolean isMatch(String open, String close) {
+    public boolean matchString(String open, String close) {
         String matched = match.get(open);
         if (matched != null && matched.equals(close)) {
             return true;
         } else {
             return false;
         }
+    }
+
+
+    public boolean matchDelim(Sexp open, Sexp close) {
+        return (open instanceof Token &&
+                close instanceof Token &&
+                matchString(((Token) open).content, ((Token) close).content));
     }
 
 
@@ -150,12 +157,11 @@ public class Parser {
         }
 
         // try to get matched (...)
-        String open = startToken.content;
-        if (isOpen(open)) {
+        if (isOpen(startToken.content)) {
             String file = startToken.file;
             List<Sexp> tokens = new ArrayList<>();
             Sexp next = nextSexp();
-            while (!(next instanceof Token && isMatch(open, ((Token) next).content))) {
+            while (!matchDelim(startToken, next)) {
                 if (next == null) {
                     _.abort("unclosed paren at: " + startToken.start);
                 } else {
@@ -163,8 +169,7 @@ public class Parser {
                     next = nextSexp();
                 }
             }
-            String close = ((Token) next).content;
-            return new Tuple(tokens, open, close, file, startToken.start, next.end);
+            return new Tuple(tokens, startToken.content, ((Token) next).content, file, startToken.start, next.end);
         } else {
             return startToken;
         }
