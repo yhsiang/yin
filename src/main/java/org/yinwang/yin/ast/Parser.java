@@ -191,7 +191,7 @@ public class Parser {
      *
      * @return a Sexp or null if file ends
      */
-    public Sexp nextSexp() {
+    public Sexp nextSexp(int depth) {
         Token begin = nextToken();
 
         // end of file
@@ -199,18 +199,23 @@ public class Parser {
             return null;
         }
 
-        // try to get matched (...)
-        if (isOpen(begin.content)) {
+        if (depth == 0 && isClose(begin.content)) {
+            _.abort(begin.getFileLineCol() + " unmatched closing delimeter " + begin.content);
+            return null;
+        } else if (isOpen(begin.content)) {   // try to get matched (...)
             List<Sexp> tokens = new ArrayList<>();
-            Sexp iter = nextSexp();
+            Sexp iter = nextSexp(depth + 1);
 
             while (!matchDelim(begin, iter)) {
                 if (iter == null) {
                     _.abort(begin.getFileLineCol() + ": unclosed delimeter " + begin.content);
                     return null;
+                } else if (iter instanceof Token && isClose(((Token) iter).content)) {
+                    _.abort(((Token) iter).getFileLineCol() + " unmatched closing delimeter " + ((Token) iter).content);
+                    return null;
                 } else {
                     tokens.add(iter);
-                    iter = nextSexp();
+                    iter = nextSexp(depth + 1);
                 }
             }
             return new Tuple(tokens, begin.content, ((Token) iter).content, begin.file, begin.start, iter.end,
@@ -218,6 +223,12 @@ public class Parser {
         } else {
             return begin;
         }
+    }
+
+
+    // wrapper for the actual parser
+    public Sexp nextSexp() {
+        return nextSexp(0);
     }
 
 
