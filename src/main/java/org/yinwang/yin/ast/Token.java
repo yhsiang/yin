@@ -23,11 +23,16 @@ class Token extends Sexp {
     }
 
 
+    public String getFileLineCol() {
+        return file + ":" + line + ":" + col;
+    }
+
+
     public String toString() {
         if (type == TokenType.STRING) {
             return "\"" + content + "\"";
         } else {
-            return content + "@" + line + ":" + col;
+            return content;
         }
     }
 

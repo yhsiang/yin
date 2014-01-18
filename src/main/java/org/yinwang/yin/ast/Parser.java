@@ -19,7 +19,7 @@ public class Parser {
 
 
     public Parser(String file) {
-        this.file = file;
+        this.file = _.unifyPath(file);
         this.text = _.readFile(file);
         this.position = 0;
         this.line = 0;
@@ -196,7 +196,7 @@ public class Parser {
 
             while (!matchDelim(begin, iter)) {
                 if (iter == null) {
-                    _.abort("unclosed delimeter " + begin.content + " at: " + begin.start);
+                    _.abort(begin.getFileLineCol() + ": unclosed delimeter " + begin.content);
                     return null;
                 } else {
                     tokens.add(iter);

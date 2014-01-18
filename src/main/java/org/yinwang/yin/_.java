@@ -3,6 +3,7 @@ package org.yinwang.yin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -48,6 +49,21 @@ public class _ {
             i++;
         }
         return sb.toString();
+    }
+
+
+    public static String unifyPath(String filename) {
+        return unifyPath(new File(filename));
+    }
+
+
+    public static String unifyPath(File file) {
+        try {
+            return file.getCanonicalPath();
+        } catch (Exception e) {
+            abort("Failed to get canonical path");
+            return "";
+        }
     }
 
 }
