@@ -164,6 +164,7 @@ public class Parser {
             while (!matchDelim(begin, iter)) {
                 if (iter == null) {
                     _.abort("unclosed delimeter " + begin.content + " at: " + begin.start);
+                    return null;
                 } else {
                     tokens.add(iter);
                     iter = nextSexp();
