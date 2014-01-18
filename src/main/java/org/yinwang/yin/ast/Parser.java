@@ -20,6 +20,10 @@ public class Parser {
         this.file = file;
         this.text = _.readFile(file);
         this.position = 0;
+
+        addDelimiterPair("(", ")");
+        addDelimiterPair("{", "}");
+        addDelimiterPair("[", "]");
     }
 
 
@@ -139,29 +143,28 @@ public class Parser {
      */
     public Sexp nextSexp() {
         Token startToken = nextToken();
+
+        // end of file
         if (startToken == null) {
             return null;
         }
 
+        // try to get matched (...)
         String open = startToken.content;
-        String close = null;
-
         if (isOpen(open)) {
             String file = startToken.file;
-
             List<Sexp> tokens = new ArrayList<>();
-            Sexp nextToken = nextSexp();
-            while (!(nextToken instanceof Token && isMatch(open, ((Token) nextToken).content))) {
-
-                if (nextToken == null) {
+            Sexp next = nextSexp();
+            while (!(next instanceof Token && isMatch(open, ((Token) next).content))) {
+                if (next == null) {
                     _.abort("unclosed paren at: " + startToken.start);
                 } else {
-                    tokens.add(nextToken);
-                    nextToken = nextSexp();
+                    tokens.add(next);
+                    next = nextSexp();
                 }
             }
-            close = ((Token) nextToken).content;
-            return new Tuple(tokens, open, close, file, startToken.start, nextToken.end);
+            String close = ((Token) next).content;
+            return new Tuple(tokens, open, close, file, startToken.start, next.end);
         } else {
             return startToken;
         }
@@ -170,8 +173,6 @@ public class Parser {
 
     public static void main(String[] args) {
         Parser p = new Parser(args[0]);
-        p.addDelimiterPair("(", ")");
-        p.addDelimiterPair("{", "}");
 
         Sexp s = p.nextSexp();
         while (s != null) {

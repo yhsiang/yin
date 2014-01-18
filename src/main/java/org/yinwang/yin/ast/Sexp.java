@@ -1,6 +1,9 @@
 package org.yinwang.yin.ast;
 
 
+/**
+ * Sexy expression (S-expression)
+ */
 abstract class Sexp {
     public String file;
     public int start;
