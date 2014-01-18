@@ -136,8 +136,7 @@ public class PreParser {
 
         // delimiters
         if (isDelimiter(cur)) {
-            Token ret = new Token(TokenType.DELIMITER, Character.toString(cur), file, offset, offset + 1,
-                    line, col);
+            Node ret = new Delimeter(Character.toString(cur), file, offset, offset + 1, line, col);
             forward();
             return ret;
         }
@@ -166,7 +165,7 @@ public class PreParser {
             int end = offset;
 
             String content = text.substring(start + 1, end - 1);
-            return new Token(TokenType.STRING, content, file, start, end, startLine, startCol);
+            return new Str(content, file, start, end, startLine, startCol);
         }
 
 
@@ -215,7 +214,7 @@ public class PreParser {
             }
 
             String content = text.substring(start, offset);
-            return new Token(TokenType.IDENT, content, file, start, offset, startLine, startCol);
+            return new Name(content, file, start, offset, startLine, startCol);
         }
     }
 
@@ -237,7 +236,7 @@ public class PreParser {
             _.abort(begin.getFileLineCol() + " unmatched closing delimeter " + begin);
             return null;
         } else if (isOpen(begin)) {   // try to get matched (...)
-            List<Node> tokens = new ArrayList<>();
+            List<Node> elements = new ArrayList<>();
             Node iter = nextNode(depth + 1);
 
             while (!matchDelim(begin, iter)) {
@@ -248,11 +247,11 @@ public class PreParser {
                     _.abort(iter.getFileLineCol() + " unmatched closing delimeter " + iter);
                     return null;
                 } else {
-                    tokens.add(iter);
+                    elements.add(iter);
                     iter = nextNode(depth + 1);
                 }
             }
-            return new Tuple(tokens, begin, iter, begin.file, begin.start, iter.end, begin.line, begin.col);
+            return new Tuple(elements, begin, iter, begin.file, begin.start, iter.end, begin.line, begin.col);
         } else {
             return begin;
         }
