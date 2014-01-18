@@ -1,7 +1,7 @@
-package org.yinwang.yin.parser;
+package org.yinwang.yin.ast;
 
 
-class Token extends Node {
+public class Token extends Node {
 
 
     public String content;

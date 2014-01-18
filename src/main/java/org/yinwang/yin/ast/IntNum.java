@@ -1,4 +1,4 @@
-package org.yinwang.yin.parser;
+package org.yinwang.yin.ast;
 
 
 import java.math.BigInteger;

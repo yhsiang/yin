@@ -1,10 +1,10 @@
-package org.yinwang.yin.parser;
+package org.yinwang.yin.ast;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-class Tuple extends Node {
+public class Tuple extends Node {
     public List<Node> tokens = new ArrayList<>();
     public Node open;
     public Node close;

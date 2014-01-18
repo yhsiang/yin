@@ -1,10 +1,7 @@
-package org.yinwang.yin.parser;
+package org.yinwang.yin.ast;
 
 
-/**
- * Sexy expression (S-expression)
- */
-abstract class Node {
+public abstract class Node {
     public String file;
     public int start;
     public int end;
