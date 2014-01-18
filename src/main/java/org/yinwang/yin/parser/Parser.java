@@ -23,7 +23,7 @@ public class Parser {
         }
 
         // most structures are encoded in a tuple
-        // (if t c a) (+ 1 2) ...
+        // (if t c a) (+ 1 2) (f x y) ...
         // decode them by their first elements
         if (prenode instanceof Tuple) {
             Tuple tuple = ((Tuple) prenode);
@@ -58,16 +58,11 @@ public class Parser {
                                 prenode.col);
                     }
                 }
-
-                // application
-                Node func = parseNode(tuple.elements.get(0));
-                Node args = parseNode(tuple.elements.get(1));
-                return new Call(func, args, prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
-
-            } else {   // application
-                return null;
             }
-
+            // application
+            Node func = parseNode(tuple.elements.get(0));
+            Node args = parseNode(tuple.elements.get(1));
+            return new Call(func, args, prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
         }
 
         // defaut return the node untouched
