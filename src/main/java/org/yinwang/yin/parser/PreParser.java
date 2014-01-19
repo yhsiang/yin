@@ -86,6 +86,15 @@ public class PreParser {
     }
 
 
+    public boolean delimType(Node c, String d) {
+        if (c instanceof Delimeter) {
+            return ((Delimeter) c).shape.equals(d);
+        } else {
+            return false;
+        }
+    }
+
+
     public boolean isClose(Node c) {
         if (c instanceof Delimeter) {
             return delimMap.values().contains(((Delimeter) c).shape);
@@ -259,7 +268,19 @@ public class PreParser {
                     iter = nextNode(depth + 1);
                 }
             }
-            return new Tuple(elements, begin, iter, begin.file, begin.start, iter.end, begin.line, begin.col);
+            if (delimType(begin, "(")) {
+                return new Tuple(elements, begin, iter, begin.file, begin.start, iter.end, begin.line, begin.col);
+            }
+            if (delimType(begin, "{")) {
+                try {
+                    return new RecordDef(elements, begin, iter, begin.file, begin.start, iter.end, begin.line,
+                            begin.col);
+                } catch (ParseError error) {
+                    _.abort(error.toString());
+                    return null;
+                }
+            }
+            return null;
         } else {
             return begin;
         }

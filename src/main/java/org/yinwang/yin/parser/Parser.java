@@ -24,7 +24,7 @@ public class Parser {
 
         // most structures are encoded in a tuple
         // (if t c a) (+ 1 2) (f x y) ...
-        // decode them by their first elements
+        // decode them by their first map
         if (prenode instanceof Tuple) {
             Tuple tuple = ((Tuple) prenode);
 
