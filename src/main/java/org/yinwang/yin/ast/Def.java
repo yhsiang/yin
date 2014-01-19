@@ -19,7 +19,7 @@ public class Def extends Node {
 
     public Value interp(Scope s) {
         Value valueValue = value.interp(s);
-        Binder.bind(pattern, valueValue, s);
+        Binder.def(pattern, valueValue, s);
         return Value.VOID;
     }
 
