@@ -1,6 +1,8 @@
 package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Constants;
+import org.yinwang.yin.Scope;
+import org.yinwang.yin.value.*;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,6 +34,11 @@ public class RecordLiteral extends Node {
                 throw new ParseError(key, "record initializer key is not a keyword: " + key);
             }
         }
+    }
+
+
+    public YinValue interp(Scope s) {
+        return null;
     }
 
 

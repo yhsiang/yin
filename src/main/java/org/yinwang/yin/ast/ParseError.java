@@ -11,15 +11,16 @@ public class ParseError extends Exception {
         this.location = location;
     }
 
+
     public ParseError(String msg) {
         this.msg = msg;
     }
 
 
     public String toString() {
-        if (location != null)
+        if (location != null) {
             return location.getFileLineCol() + ": " + msg;
-        else {
+        } else {
             return msg;
         }
     }

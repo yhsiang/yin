@@ -1,6 +1,9 @@
 package org.yinwang.yin.ast;
 
 
+import org.yinwang.yin.Scope;
+import org.yinwang.yin.value.*;
+
 public class Call extends Node {
     public Node func;
     public Parameter args;
@@ -10,6 +13,10 @@ public class Call extends Node {
         super(file, start, end, line, col);
         this.func = func;
         this.args = args;
+    }
+
+    public YinValue interp(Scope s) {
+        return null;
     }
 
 

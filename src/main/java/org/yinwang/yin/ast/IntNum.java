@@ -1,6 +1,9 @@
 package org.yinwang.yin.ast;
 
 
+import org.yinwang.yin.Scope;
+import org.yinwang.yin.value.*;
+
 import java.math.BigInteger;
 
 public class IntNum extends Node {
@@ -61,6 +64,11 @@ public class IntNum extends Node {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+
+    public YinValue interp(Scope s) {
+        return null;
     }
 
 

@@ -1,7 +1,10 @@
 package org.yinwang.yin.ast;
 
+import org.yinwang.yin.Scope;
+
 import java.util.ArrayList;
 import java.util.List;
+import org.yinwang.yin.value.*;
 
 
 public class Block extends Node {
@@ -11,6 +14,10 @@ public class Block extends Node {
     public Block(List<Node> statements, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.statements = statements;
+    }
+
+    public YinValue interp(Scope s) {
+        return null;
     }
 
 

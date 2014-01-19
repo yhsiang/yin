@@ -1,6 +1,9 @@
 package org.yinwang.yin.ast;
 
 
+import org.yinwang.yin.Scope;
+import org.yinwang.yin.value.*;
+
 public class FloatNum extends Node {
 
     public String content;
@@ -20,6 +23,11 @@ public class FloatNum extends Node {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+
+    public YinValue interp(Scope s) {
+        return null;
     }
 
 

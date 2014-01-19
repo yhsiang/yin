@@ -1,6 +1,8 @@
 package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Constants;
+import org.yinwang.yin.Scope;
+import org.yinwang.yin.value.*;
 
 public class Def extends Node {
     public Node pattern;
@@ -11,6 +13,10 @@ public class Def extends Node {
         super(file, start, end, line, col);
         this.pattern = pattern;
         this.value = value;
+    }
+
+    public YinValue interp(Scope s) {
+        return null;
     }
 
 

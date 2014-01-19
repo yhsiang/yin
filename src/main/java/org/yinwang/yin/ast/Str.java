@@ -1,6 +1,9 @@
 package org.yinwang.yin.ast;
 
 
+import org.yinwang.yin.Scope;
+import org.yinwang.yin.value.*;
+
 public class Str extends Node {
     public String value;
 
@@ -8,6 +11,11 @@ public class Str extends Node {
     public Str(String value, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.value = value;
+    }
+
+
+    public YinValue interp(Scope s) {
+        return null;
     }
 
 

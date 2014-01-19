@@ -1,5 +1,8 @@
 package org.yinwang.yin.ast;
 
+import org.yinwang.yin.Scope;
+import org.yinwang.yin.value.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +18,11 @@ public class Tuple extends Node {
         this.elements = elements;
         this.open = open;
         this.close = close;
+    }
+
+
+    public YinValue interp(Scope s) {
+        return null;
     }
 
 
