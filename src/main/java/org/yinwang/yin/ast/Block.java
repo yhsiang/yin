@@ -18,7 +18,10 @@ public class Block extends Node {
 
 
     public Value interp(Scope s) {
-        return statements.get(0).interp(s);
+        for (int i = 0; i < statements.size() - 1; i++) {
+            statements.get(i).interp(s);
+        }
+        return statements.get(statements.size() - 1).interp(s);
     }
 
 
