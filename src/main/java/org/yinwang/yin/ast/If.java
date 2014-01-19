@@ -1,5 +1,7 @@
 package org.yinwang.yin.ast;
 
+import org.yinwang.yin.Constants;
+
 public class If extends Node {
     public Node test;
     public Node then;
@@ -15,7 +17,7 @@ public class If extends Node {
 
 
     public String toString() {
-        return "(if " + test + " " + then + " " + orelse + ")";
+        return "(" + Constants.IF_KEYWORD + " " + test + " " + then + " " + orelse + ")";
     }
 
 }

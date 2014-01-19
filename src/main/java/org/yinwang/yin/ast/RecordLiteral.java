@@ -10,13 +10,9 @@ import java.util.Map;
 public class RecordLiteral extends Node {
 
     public Map<String, Node> map = new LinkedHashMap<>();
-    public Node open;
-    public Node close;
 
 
-    public RecordLiteral(List<Node> contents, Node open, Node close,
-                         String file, int start, int end, int line, int col) throws ParseError
-    {
+    public RecordLiteral(List<Node> contents, String file, int start, int end, int line, int col) throws ParseError {
         super(file, start, end, line, col);
 
         if (contents.size() % 2 != 0) {
@@ -36,9 +32,6 @@ public class RecordLiteral extends Node {
                 throw new ParseError(key, "record initializer key is not a keyword: " + key);
             }
         }
-
-        this.open = open;
-        this.close = close;
     }
 
 

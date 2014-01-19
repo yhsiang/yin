@@ -37,7 +37,7 @@ public class Parser {
 
             if (keyNode instanceof Name) {
                 String keyword = ((Name) keyNode).id;
-                if (keyword.equals("if")) {
+                if (keyword.equals(Constants.IF_KEYWORD)) {
                     if (tuple.elements.size() == 4) {
                         Node test = parseNode(tuple.elements.get(1));
                         Node conseq = parseNode(tuple.elements.get(2));
