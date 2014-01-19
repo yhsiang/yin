@@ -8,5 +8,3 @@ x
 
 (record A :x 1 :y 2)
 (A :x 5 :z 6)
-
-{:x 1 :y 2}

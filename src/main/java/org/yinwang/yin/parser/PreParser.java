@@ -280,19 +280,19 @@ public class PreParser {
     public Node parse() {
         List<Node> elements = new ArrayList<>();
         // synthetic block keyword
-        elements.add(synthesizeName(Constants.SEQ_KEYWORD));
+        elements.add(genName(Constants.SEQ_KEYWORD));
 
         Node s = nextSexp();
         while (s != null) {
             elements.add(s);
             s = nextSexp();
         }
-        return new Tuple(elements, synthesizeName(Constants.TUPLE_BEGIN), synthesizeName(Constants.TUPLE_END),
+        return new Tuple(elements, genName(Constants.TUPLE_BEGIN), genName(Constants.TUPLE_END),
                 file, 0, text.length(), 0, 0);
     }
 
 
-    public Name synthesizeName(String id) {
+    public Name genName(String id) {
         return new Name(id, file, 0, 0, 0, 0);
     }
 

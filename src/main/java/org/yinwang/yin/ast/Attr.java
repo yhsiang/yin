@@ -9,7 +9,7 @@ public class Attr extends Node {
     public Node attr;
 
 
-    public Attr(String file, int start, int end, int line, int col, Node value, Node attr) {
+    public Attr(Node value, Node attr, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.value = value;
         this.attr = attr;
@@ -20,4 +20,10 @@ public class Attr extends Node {
     public Value interp(Scope s) {
         return null;
     }
+
+
+    public String toString() {
+        return value + "." + attr;
+    }
+
 }

@@ -12,15 +12,24 @@ public class Parser {
     public static Node parse(String file) {
         PreParser p = new PreParser(file);
         Node prenode = p.parse();
-        return parseNode(prenode);
+        return groupAttr(prenode);
     }
 
 
     public static Node parseNode(Node prenode) {
+
+        // group attribute access first
+        prenode = groupAttr(prenode);
+
         // initial program is in a block
         if (prenode instanceof Block) {
             List<Node> parsed = parseList(((Block) prenode).statements);
             return new Block(parsed, prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
+        }
+
+        if (prenode instanceof Attr) {
+            Attr a = (Attr) prenode;
+            return new Attr(parseNode(a.value), parseNode(a.value), a.file, a.start, a.end, a.line, a.col);
         }
 
         // most structures are encoded in a tuple
@@ -149,6 +158,57 @@ public class Parser {
             parsed.add(parseNode(s));
         }
         return parsed;
+    }
+
+
+    public static Node groupAttr(Node prenode) {
+        if (prenode instanceof Tuple) {
+            Tuple t = (Tuple) prenode;
+            List<Node> elements = t.elements;
+            List<Node> newElems = new ArrayList<>();
+
+            Node keyword = elements.get(0);
+            if (delimType(keyword, ".")) {
+                _.abort(keyword, "illegal keyword .");
+                return null;
+            } else {
+                newElems.add(keyword);
+            }
+
+
+            Node grouped = elements.get(1);
+            if (delimType(grouped, ".")) {
+                _.abort(grouped, "illegal position for .");
+                return null;
+            }
+            grouped = groupAttr(grouped);
+
+            for (int i = 2; i < elements.size(); i++) {
+                Node n1 = elements.get(i);
+                if (delimType(n1, ".")) {
+                    if (i + 1 >= elements.size()) {
+                        _.abort(n1, "illegal position for .");
+                        return null;
+                    } else {
+                        Node n2 = elements.get(i + 1);
+                        if (n2 instanceof Name) {
+                            grouped = new Attr(grouped, n2, grouped.file, grouped.start, n2.end, grouped.line,
+                                    grouped.col);
+                            i++;   // skip
+                        } else {
+                            _.abort(n2, "illegal attribute: " + n2);
+                        }
+                    }
+                } else {
+                    newElems.add(grouped);
+                    grouped = n1;
+                }
+            }
+            newElems.add(grouped);
+            return new Tuple(newElems, t.open, t.close, t.file, t.start, t.end, t.line, t.col);
+        } else {
+            return prenode;
+        }
     }
 
 
