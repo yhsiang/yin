@@ -3,7 +3,6 @@ package org.yinwang.yin.parser;
 
 import org.jetbrains.annotations.Nullable;
 import org.yinwang.yin.Constants;
-import org.yinwang.yin.GeneralError;
 import org.yinwang.yin._;
 import org.yinwang.yin.ast.*;
 
@@ -32,7 +31,7 @@ public class PreParser {
     public final Map<String, String> delimMap = new HashMap<>();
 
 
-    public PreParser(String file) throws GeneralError {
+    public PreParser(String file) {
         this.file = _.unifyPath(file);
         this.text = _.readFile(file);
         this.offset = 0;
@@ -40,7 +39,7 @@ public class PreParser {
         this.col = 0;
 
         if (text == null) {
-            throw new GeneralError("failed to read file: " + file);
+            _.abort("failed to read file: " + file);
         }
 
         addDelimiterPair(Constants.TUPLE_BEGIN, Constants.TUPLE_END);
@@ -135,7 +134,7 @@ public class PreParser {
      * @return a token or null if file ends
      */
     @Nullable
-    private Node nextToken() throws GeneralError {
+    private Node nextToken() {
         // skip spaces
         while (offset < text.length() &&
                 Character.isWhitespace(text.charAt(offset)))
@@ -168,13 +167,15 @@ public class PreParser {
                     !(text.charAt(offset) == '"' && text.charAt(offset - 1) != '\\'))
             {
                 if (text.charAt(offset) == '\n') {
-                    throw new GeneralError(file + ":" + startLine + ":" + startCol + ": runaway string");
+                    _.abort(file + ":" + startLine + ":" + startCol + ": runaway string");
+                    return null;
                 }
                 forward();
             }
 
             if (offset >= text.length()) {
-                throw new GeneralError(file + ":" + startLine + ":" + startCol + ": runaway string");
+                _.abort(file + ":" + startLine + ":" + startCol + ": runaway string");
+                return null;
             }
 
             forward(); // skip "
@@ -206,10 +207,17 @@ public class PreParser {
 
             String content = text.substring(start, offset);
 
-            try {
-                return new IntNum(content, file, start, offset, startLine, startCol);
-            } catch (GeneralError e) {
-                return new FloatNum(content, file, start, offset, startLine, startCol);
+            IntNum intNum = IntNum.parse(content, file, start, offset, startLine, startCol);
+            if (intNum != null) {
+                return intNum;
+            } else {
+                FloatNum floatNum = FloatNum.parse(content, file, start, offset, startLine, startCol);
+                if (floatNum != null) {
+                    return floatNum;
+                } else {
+                    _.abort(file + ":" + startLine + ":" + startCol + " : incorrect number format: " + content);
+                    return null;
+                }
             }
         } else {
             while (offset < text.length() &&
@@ -237,7 +245,7 @@ public class PreParser {
      *
      * @return a Node or null if file ends
      */
-    public Node nextNode(int depth) throws GeneralError {
+    public Node nextNode(int depth) {
         Node begin = nextToken();
 
         // end of file
@@ -246,16 +254,19 @@ public class PreParser {
         }
 
         if (depth == 0 && isClose(begin)) {
-            throw new GeneralError(begin, "unmatched closing delimeter: " + begin);
+            _.abort(begin, "unmatched closing delimeter: " + begin);
+            return null;
         } else if (isOpen(begin)) {   // try to get matched (...)
             List<Node> elements = new ArrayList<>();
             Node iter = nextNode(depth + 1);
 
             while (!matchDelim(begin, iter)) {
                 if (iter == null) {
-                    throw new GeneralError(begin, "unclosed delimeter: " + begin);
+                    _.abort(begin, "unclosed delimeter: " + begin);
+                    return null;
                 } else if (isClose(iter)) {
-                    throw new GeneralError(iter, "unmatched closing delimeter: " + iter);
+                    _.abort(iter, "unmatched closing delimeter: " + iter);
+                    return null;
                 } else {
                     elements.add(iter);
                     iter = nextNode(depth + 1);
@@ -275,13 +286,13 @@ public class PreParser {
 
 
     // wrapper for the actual parser
-    public Node nextSexp() throws GeneralError {
+    public Node nextSexp() {
         return nextNode(0);
     }
 
 
     // parse file into a Node
-    public Node parse() throws GeneralError {
+    public Node parse() {
         List<Node> elements = new ArrayList<>();
         Node s = nextSexp();
         while (s != null) {
@@ -292,7 +303,7 @@ public class PreParser {
     }
 
 
-    public static void main(String[] args) throws GeneralError {
+    public static void main(String[] args) {
         PreParser p = new PreParser(args[0]);
         _.msg("tree: " + p.parse());
     }

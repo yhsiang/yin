@@ -1,7 +1,7 @@
 package org.yinwang.yin.ast;
 
 
-import org.yinwang.yin.GeneralError;
+import org.yinwang.yin._;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -14,7 +14,7 @@ public class Argument {
     public Map<String, Node> keywords = new LinkedHashMap<>();
 
 
-    public Argument(List<Node> elements) throws GeneralError {
+    public Argument(List<Node> elements) {
         boolean hasName = false;
         boolean hasKeyword = false;
 
@@ -29,7 +29,7 @@ public class Argument {
         }
 
         if (hasName && hasKeyword) {
-            throw new GeneralError(elements.get(0), "mix positional and keyword arguments not allowed");
+            _.abort(elements.get(0), "mix positional and keyword arguments not allowed");
         }
 
 
@@ -40,11 +40,11 @@ public class Argument {
             if (key instanceof Keyword) {
                 positional.add(((Keyword) key).asName());
                 if (i >= elements.size() - 1) {
-                    throw new GeneralError(key, "missing value for keyword: " + key);
+                    _.abort(key, "missing value for keyword: " + key);
                 } else {
                     Node value = elements.get(i + 1);
                     if (value instanceof Keyword) {
-                        throw new GeneralError(value, "keywords can't be used as values: " + value);
+                        _.abort(value, "keywords can't be used as values: " + value);
                     } else {
                         keywords.put(((Keyword) key).id, value);
                         i++;

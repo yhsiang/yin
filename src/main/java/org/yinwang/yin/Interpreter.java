@@ -15,13 +15,13 @@ public class Interpreter {
     }
 
 
-    public Value interp(String file) throws GeneralError {
+    public Value interp(String file) {
         Node program = Parser.parse(file);
         return program.interp(new Scope());
     }
 
 
-    public static void main(String[] args) throws GeneralError {
+    public static void main(String[] args) {
         Interpreter i = new Interpreter(args[0]);
         _.msg("result: " + i.interp(args[0]));
     }

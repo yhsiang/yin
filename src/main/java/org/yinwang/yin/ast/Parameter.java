@@ -1,7 +1,7 @@
 package org.yinwang.yin.ast;
 
 
-import org.yinwang.yin.GeneralError;
+import org.yinwang.yin._;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -15,7 +15,7 @@ public class Parameter {
     public Map<String, Node> keywords = new LinkedHashMap<>();
 
 
-    public Parameter(List<Node> elements) throws GeneralError {
+    public Parameter(List<Node> elements) {
         this.elements = elements;
 
         for (int i = 0; i < elements.size(); i++) {
@@ -25,11 +25,11 @@ public class Parameter {
             } else if (key instanceof Keyword) {
                 positional.add(((Keyword) key).asName());
                 if (i >= elements.size() - 1) {
-                    throw new GeneralError(key, "missing value for keyword: " + key);
+                    _.abort(key, "missing value for keyword: " + key);
                 } else {
                     Node value = elements.get(i + 1);
                     if (value instanceof Keyword) {
-                        throw new GeneralError(value, "keywords can't be used as values: " + value);
+                        _.abort(value, "keywords can't be used as values: " + value);
                     } else {
                         keywords.put(((Keyword) key).id, value);
                         i++;
@@ -37,7 +37,7 @@ public class Parameter {
                 }
             } else {
                 // parameter does not allow other things
-                throw new GeneralError(key, "illegal argument form: " + key);
+                _.abort(key, "illegal argument form: " + key);
             }
         }
     }

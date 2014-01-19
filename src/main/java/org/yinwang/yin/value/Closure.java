@@ -4,7 +4,6 @@ package org.yinwang.yin.value;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin.ast.Fun;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class Closure extends Value {

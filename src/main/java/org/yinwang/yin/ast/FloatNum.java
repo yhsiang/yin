@@ -1,7 +1,6 @@
 package org.yinwang.yin.ast;
 
 
-import org.yinwang.yin.GeneralError;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin.value.Value;
 
@@ -11,13 +10,19 @@ public class FloatNum extends Node {
     public double value;
 
 
-    public FloatNum(String content, String file, int start, int end, int line, int col) throws GeneralError {
+    public FloatNum(String content, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.content = content;
+        this.value = Double.parseDouble(content);
+
+    }
+
+
+    public static FloatNum parse(String content, String file, int start, int end, int line, int col) {
         try {
-            this.value = Double.parseDouble(content);
+            return new FloatNum(content, file, start, end, line, col);
         } catch (NumberFormatException e) {
-            throw new GeneralError(file + ":" + line + ":" + col + ": illegal number format: " + content);
+            return null;
         }
     }
 

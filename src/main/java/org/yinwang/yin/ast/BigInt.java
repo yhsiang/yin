@@ -1,7 +1,6 @@
 package org.yinwang.yin.ast;
 
 
-import org.yinwang.yin.GeneralError;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin.value.Value;
 
@@ -14,7 +13,7 @@ public class BigInt extends Node {
     public int base;
 
 
-    public BigInt(String content, String file, int start, int end, int line, int col) throws GeneralError {
+    public BigInt(String content, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.content = content;
 
@@ -45,14 +44,19 @@ public class BigInt extends Node {
             base = 10;
         }
 
+        BigInteger value1 = new BigInteger(content, base);
+        if (sign == -1) {
+            value1 = value1.negate();
+        }
+        this.value = value1;
+    }
+
+
+    public static BigInt parse(String content, String file, int start, int end, int line, int col) {
         try {
-            BigInteger value1 = new BigInteger(content, base);
-            if (sign == -1) {
-                value1 = value1.negate();
-            }
-            this.value = value1;
+            return new BigInt(content, file, start, end, line, col);
         } catch (NumberFormatException e) {
-            throw new GeneralError(file + ":" + line + ":" + col + ": illegal number format: " + content);
+            return null;
         }
     }
 

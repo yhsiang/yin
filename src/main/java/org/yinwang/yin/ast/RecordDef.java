@@ -1,8 +1,8 @@
 package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Constants;
-import org.yinwang.yin.GeneralError;
 import org.yinwang.yin.Scope;
+import org.yinwang.yin._;
 import org.yinwang.yin.value.Value;
 
 import java.util.LinkedHashMap;
@@ -18,14 +18,14 @@ public class RecordDef extends Node {
 
 
     public RecordDef(Name name, List<Name> parents, List<Node> contents,
-                     String file, int start, int end, int line, int col) throws GeneralError
+                     String file, int start, int end, int line, int col)
     {
         super(file, start, end, line, col);
         this.name = name;
         this.parents = parents;
 
         if (contents.size() % 2 != 0) {
-            throw new GeneralError(this, "record initializer must have even number of elements");
+            _.abort(this, "record initializer must have even number of elements");
         }
 
         for (int i = 0; i < contents.size(); i += 2) {
@@ -33,12 +33,12 @@ public class RecordDef extends Node {
             Node value = contents.get(i + 1);
             if (key instanceof Keyword) {
                 if (value instanceof Keyword) {
-                    throw new GeneralError(value, "keywords shouldn't be used as values: " + value);
+                    _.abort(value, "keywords shouldn't be used as values: " + value);
                 } else {
                     map.put(((Keyword) key).id, value);
                 }
             } else {
-                throw new GeneralError(key, "record initializer key is not a keyword: " + key);
+                _.abort(key, "record initializer key is not a keyword: " + key);
             }
         }
     }
