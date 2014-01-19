@@ -31,7 +31,7 @@ public class PreParser {
     public final Map<String, String> delimMap = new HashMap<>();
 
 
-    public PreParser(String file) {
+    public PreParser(String file) throws ParseError {
         this.file = _.unifyPath(file);
         this.text = _.readFile(file);
         this.offset = 0;
@@ -39,7 +39,7 @@ public class PreParser {
         this.col = 0;
 
         if (text == null) {
-            _.abort("failed to read file: " + file);
+            throw new ParseError("failed to read file: " + file);
         }
 
         addDelimiterPair(Constants.TUPLE_BEGIN, Constants.TUPLE_END);
@@ -134,7 +134,7 @@ public class PreParser {
      * @return a token or null if file ends
      */
     @Nullable
-    private Node nextToken() {
+    private Node nextToken() throws ParseError {
         // skip spaces
         while (offset < text.length() &&
                 Character.isWhitespace(text.charAt(offset)))
@@ -167,13 +167,13 @@ public class PreParser {
                     !(text.charAt(offset) == '"' && text.charAt(offset - 1) != '\\'))
             {
                 if (text.charAt(offset) == '\n') {
-                    _.abort(file + ":" + startLine + ":" + startCol + ": runaway string");
+                    throw new ParseError(file + ":" + startLine + ":" + startCol + ": runaway string");
                 }
                 forward();
             }
 
             if (offset >= text.length()) {
-                _.abort(file + ":" + startLine + ":" + startCol + ": runaway string");
+                throw new ParseError(file + ":" + startLine + ":" + startCol + ": runaway string");
             }
 
             forward(); // skip "
@@ -213,8 +213,8 @@ public class PreParser {
                 if (n2 != null) {
                     return n2;
                 } else {
-                    _.abort("illegal number format: " + content);
-                    return null;
+                    throw new ParseError(
+                            file + ":" + startLine + ":" + startCol + ": illegal number format: " + content);
                 }
             }
         } else {
@@ -243,7 +243,7 @@ public class PreParser {
      *
      * @return a Node or null if file ends
      */
-    public Node nextNode(int depth) {
+    public Node nextNode(int depth) throws ParseError {
         Node begin = nextToken();
 
         // end of file
@@ -252,19 +252,16 @@ public class PreParser {
         }
 
         if (depth == 0 && isClose(begin)) {
-            _.abort(begin.getFileLineCol() + " unmatched closing delimeter " + begin);
-            return null;
+            throw new ParseError(begin, "unmatched closing delimeter: " + begin);
         } else if (isOpen(begin)) {   // try to get matched (...)
             List<Node> elements = new ArrayList<>();
             Node iter = nextNode(depth + 1);
 
             while (!matchDelim(begin, iter)) {
                 if (iter == null) {
-                    _.abort(begin.getFileLineCol() + ": unclosed delimeter " + begin);
-                    return null;
+                    throw new ParseError(begin, "unclosed delimeter: " + begin);
                 } else if (isClose(iter)) {
-                    _.abort(iter.getFileLineCol() + " unmatched closing delimeter " + iter);
-                    return null;
+                    throw new ParseError(iter, "unmatched closing delimeter: " + iter);
                 } else {
                     elements.add(iter);
                     iter = nextNode(depth + 1);
@@ -274,13 +271,8 @@ public class PreParser {
                 return new Tuple(elements, begin, iter, begin.file, begin.start, iter.end, begin.line, begin.col);
             }
             if (delimType(begin, Constants.RECORD_BEGIN)) {
-                try {
-                    return new RecordDef(elements, begin, iter, begin.file, begin.start, iter.end, begin.line,
-                            begin.col);
-                } catch (ParseError error) {
-                    _.abort(error.toString());
-                    return null;
-                }
+                return new RecordDef(elements, begin, iter, begin.file, begin.start, iter.end, begin.line,
+                        begin.col);
             }
             return null;
         } else {
@@ -290,13 +282,13 @@ public class PreParser {
 
 
     // wrapper for the actual parser
-    public Node nextSexp() {
+    public Node nextSexp() throws ParseError {
         return nextNode(0);
     }
 
 
     // parse file into a Node
-    public Node parse() {
+    public Node parse() throws ParseError {
         List<Node> elements = new ArrayList<>();
         Node s = nextSexp();
         while (s != null) {
@@ -307,7 +299,7 @@ public class PreParser {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseError {
         PreParser p = new PreParser(args[0]);
         _.msg("tree: " + p.parse());
     }
