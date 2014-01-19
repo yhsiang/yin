@@ -8,14 +8,14 @@ import java.util.List;
 
 public class Parser {
 
-    public static Node parse(String file) {
+    public static Node parse(String file) throws ParseError {
         PreParser p = new PreParser(file);
         Node prenode = p.parse();
         return parseNode(prenode);
     }
 
 
-    public static Node parseNode(Node prenode) {
+    public static Node parseNode(Node prenode) throws ParseError {
         // initial program is in a block
         if (prenode instanceof Block) {
             List<Node> parsed = parseList(((Block) prenode).statements);
@@ -29,8 +29,7 @@ public class Parser {
             Tuple tuple = ((Tuple) prenode);
 
             if (tuple.elements.isEmpty()) {
-                _.abort(tuple.getFileLineCol() + ": syntax error");
-                return null;
+                throw new ParseError(tuple, "syntax error");
             }
 
             Node keyNode = tuple.elements.get(0);
@@ -49,19 +48,27 @@ public class Parser {
 
                 if (keyword.equals("fun")) {
                     if (tuple.elements.size() >= 3) {
-                        Node params = parseNode(tuple.elements.get(1));
-                        List<Node> statements = parseList(tuple.elements.subList(2, tuple.elements.size()));
-                        int start = statements.get(0).start;
-                        int end = statements.get(statements.size() - 1).end;
-                        Node body = new Block(statements, prenode.file, start, end, prenode.line, prenode.col);
-                        return new Fun(params, body, prenode.file, prenode.start, prenode.end, prenode.line,
-                                prenode.col);
+                        Node preParams = tuple.elements.get(1);
+                        if (preParams instanceof Tuple) {
+                            List<Node> parsedElems = parseList(((Tuple) preParams).elements);
+                            Parameter parameter = new Parameter(parsedElems);
+                            List<Node> statements = parseList(tuple.elements.subList(2, tuple.elements.size()));
+                            int start = statements.get(0).start;
+                            int end = statements.get(statements.size() - 1).end;
+                            Node body = new Block(statements, prenode.file, start, end, prenode.line, prenode.col);
+                            return new Fun(parameter, body, prenode.file, prenode.start, prenode.end, prenode.line,
+                                    prenode.col);
+                        } else {
+                            throw new ParseError(preParams, "incorrect format of parameters");
+                        }
+
                     }
                 }
             }
             // application
             Node func = parseNode(tuple.elements.get(0));
-            Node args = parseNode(tuple.elements.get(1));
+            List<Node> parsedArgs = parseList(tuple.elements.subList(1, tuple.elements.size()));
+            Parameter args = new Parameter(parsedArgs);
             return new Call(func, args, prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
         }
 
@@ -70,7 +77,7 @@ public class Parser {
     }
 
 
-    public static List<Node> parseList(List<Node> prenodes) {
+    public static List<Node> parseList(List<Node> prenodes) throws ParseError {
         List<Node> parsed = new ArrayList<>();
         for (Node s : prenodes) {
             parsed.add(parseNode(s));
@@ -79,9 +86,9 @@ public class Parser {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseError {
         Node tree = Parser.parse(args[0]);
-        _.msg("tree: " + tree);
+        _.msg(tree.toString());
     }
 
 }
