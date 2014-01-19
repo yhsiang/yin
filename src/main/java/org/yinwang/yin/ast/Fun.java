@@ -1,6 +1,8 @@
 package org.yinwang.yin.ast;
 
 
+import org.yinwang.yin.Constants;
+
 public class Fun extends Node {
     public Parameter params;
     public Node body;
@@ -14,7 +16,7 @@ public class Fun extends Node {
 
 
     public String toString() {
-        return "(fun (" + params + ") " + body + ")";
+        return "(" + Constants.FUN_KEYWORD+ " (" + params + ") " + body + ")";
     }
 
 }

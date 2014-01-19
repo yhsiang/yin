@@ -47,7 +47,7 @@ public class Parser {
                     }
                 }
 
-                if (keyword.equals("fun")) {
+                if (keyword.equals(Constants.FUN_KEYWORD)) {
                     if (tuple.elements.size() >= 3) {
                         Node preParams = tuple.elements.get(1);
                         if (preParams instanceof Tuple) {
