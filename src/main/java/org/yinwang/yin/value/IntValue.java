@@ -9,4 +9,8 @@ public class IntValue extends Value {
         this.value = value;
     }
 
+    public String toString() {
+        return Integer.toString(value);
+    }
+
 }

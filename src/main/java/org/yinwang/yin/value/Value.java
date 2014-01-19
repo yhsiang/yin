@@ -1,5 +1,5 @@
 package org.yinwang.yin.value;
 
 
-public abstract class VAlue {
+public abstract class Value {
 }

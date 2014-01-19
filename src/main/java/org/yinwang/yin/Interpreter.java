@@ -1,0 +1,30 @@
+package org.yinwang.yin;
+
+
+import org.yinwang.yin.ast.Node;
+import org.yinwang.yin.ast.ParseError;
+import org.yinwang.yin.parser.Parser;
+import org.yinwang.yin.value.Value;
+
+public class Interpreter {
+
+    String file;
+
+
+    public Interpreter(String file) {
+        this.file = file;
+    }
+
+
+    public Value interp(String file) throws ParseError {
+        Node program = Parser.parse(file);
+        return program.interp(new Scope());
+    }
+
+
+    public static void main(String[] args) throws ParseError {
+        Interpreter i = new Interpreter(args[0]);
+        _.msg("result: " + i.interp(args[0]));
+    }
+
+}

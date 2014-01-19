@@ -18,7 +18,7 @@ public class Block extends Node {
 
 
     public Value interp(Scope s) {
-        return null;
+        return statements.get(0).interp(s);
     }
 
 
