@@ -1,5 +1,6 @@
 package org.yinwang.yin.parser;
 
+import org.yinwang.yin.Constants;
 import org.yinwang.yin._;
 import org.yinwang.yin.ast.*;
 
@@ -61,7 +62,30 @@ public class Parser {
                         } else {
                             throw new ParseError(preParams, "incorrect format of parameters");
                         }
+                    } else {
+                        throw new ParseError(tuple, "syntax error in function definition");
+                    }
+                }
 
+                if (keyword.equals(Constants.DEF_KEYWORD)) {
+                    if (tuple.elements.size() == 3) {
+                        Node pattern = parseNode(tuple.elements.get(1));
+                        Node value = parseNode(tuple.elements.get(2));
+                        return new Def(pattern, value, prenode.file, prenode.start, prenode.end, prenode.line,
+                                prenode.col);
+                    } else {
+                        throw new ParseError(tuple, "incorrect format of definition");
+                    }
+                }
+
+                if (keyword.equals(Constants.ASSIGN_KEYWORD)) {
+                    if (tuple.elements.size() == 3) {
+                        Node pattern = parseNode(tuple.elements.get(1));
+                        Node value = parseNode(tuple.elements.get(2));
+                        return new Assign(pattern, value, prenode.file, prenode.start, prenode.end, prenode.line,
+                                prenode.col);
+                    } else {
+                        throw new ParseError(tuple, "incorrect format of definition");
                     }
                 }
             }

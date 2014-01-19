@@ -229,7 +229,7 @@ public class PreParser {
             }
 
             String content = text.substring(start, offset);
-            if (content.startsWith(":")) {
+            if (content.matches(":\\w.*")) {
                 return new Keyword(content.substring(1), file, start, offset, startLine, startCol);
             } else {
                 return new Name(content, file, start, offset, startLine, startCol);
