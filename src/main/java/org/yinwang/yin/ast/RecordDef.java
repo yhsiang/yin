@@ -1,5 +1,7 @@
 package org.yinwang.yin.ast;
 
+import org.yinwang.yin.Constants;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +40,7 @@ public class RecordDef extends Node {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("{");
+        sb.append(Constants.RECORD_BEGIN);
         boolean first = true;
         for (Map.Entry<String, Node> e : map.entrySet()) {
             if (!first) {
@@ -47,7 +49,7 @@ public class RecordDef extends Node {
             sb.append(":" + e.getKey() + " " + e.getValue());
             first = false;
         }
-        sb.append("}");
+        sb.append(Constants.RECORD_END);
         return sb.toString();
     }
 }

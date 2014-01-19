@@ -2,6 +2,7 @@ package org.yinwang.yin.parser;
 
 
 import org.jetbrains.annotations.Nullable;
+import org.yinwang.yin.Constants;
 import org.yinwang.yin._;
 import org.yinwang.yin.ast.*;
 
@@ -41,9 +42,10 @@ public class PreParser {
             _.abort("failed to read file: " + file);
         }
 
-        addDelimiterPair("(", ")");
-        addDelimiterPair("{", "}");
-        addDelimiterPair("[", "]");
+        addDelimiterPair(Constants.TUPLE_BEGIN, Constants.TUPLE_END);
+        addDelimiterPair(Constants.RECORD_BEGIN, Constants.RECORD_END);
+        addDelimiterPair(Constants.ARRAY_BEGIN, Constants.ARRAY_END);
+
         addDelimiter(".");
     }
 
@@ -268,10 +270,10 @@ public class PreParser {
                     iter = nextNode(depth + 1);
                 }
             }
-            if (delimType(begin, "(")) {
+            if (delimType(begin, Constants.TUPLE_BEGIN)) {
                 return new Tuple(elements, begin, iter, begin.file, begin.start, iter.end, begin.line, begin.col);
             }
-            if (delimType(begin, "{")) {
+            if (delimType(begin, Constants.RECORD_BEGIN)) {
                 try {
                     return new RecordDef(elements, begin, iter, begin.file, begin.start, iter.end, begin.line,
                             begin.col);
