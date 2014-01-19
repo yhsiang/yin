@@ -12,7 +12,7 @@ public class Parser {
     public static Node parse(String file) {
         PreParser p = new PreParser(file);
         Node prenode = p.parse();
-        return groupAttr(prenode);
+        return parseNode(prenode);
     }
 
 
@@ -29,7 +29,7 @@ public class Parser {
 
         if (prenode instanceof Attr) {
             Attr a = (Attr) prenode;
-            return new Attr(parseNode(a.value), parseNode(a.value), a.file, a.start, a.end, a.line, a.col);
+            return new Attr(parseNode(a.value), a.attr, a.file, a.start, a.end, a.line, a.col);
         }
 
         // most structures are encoded in a tuple
@@ -192,7 +192,7 @@ public class Parser {
                     } else {
                         Node n2 = elements.get(i + 1);
                         if (n2 instanceof Name) {
-                            grouped = new Attr(grouped, n2, grouped.file, grouped.start, n2.end, grouped.line,
+                            grouped = new Attr(grouped, (Name) n2, grouped.file, grouped.start, n2.end, grouped.line,
                                     grouped.col);
                             i++;   // skip
                         } else {
