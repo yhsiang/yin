@@ -204,18 +204,11 @@ public class PreParser {
             }
 
             String content = text.substring(start, offset);
-            IntNum n = IntNum.parse(content, file, start, offset, startLine, startCol);
 
-            if (n != null) {
-                return n;
-            } else {
-                FloatNum n2 = FloatNum.parse(content, file, start, offset, startLine, startCol);
-                if (n2 != null) {
-                    return n2;
-                } else {
-                    throw new ParseError(
-                            file + ":" + startLine + ":" + startCol + ": illegal number format: " + content);
-                }
+            try {
+                return new IntNum(content, file, start, offset, startLine, startCol);
+            } catch (ParseError e) {
+                return new FloatNum(content, file, start, offset, startLine, startCol);
             }
         } else {
             while (offset < text.length() &&

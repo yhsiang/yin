@@ -10,18 +10,13 @@ public class FloatNum extends Node {
     public double value;
 
 
-    public FloatNum(String content, String file, int start, int end, int line, int col) {
+    public FloatNum(String content, String file, int start, int end, int line, int col) throws ParseError {
         super(file, start, end, line, col);
         this.content = content;
-        this.value = Double.parseDouble(content);
-    }
-
-
-    public static FloatNum parse(String content, String file, int start, int end, int line, int col) {
         try {
-            return new FloatNum(content, file, start, end, line, col);
+            this.value = Double.parseDouble(content);
         } catch (NumberFormatException e) {
-            return null;
+            throw new ParseError(file + ":" + line + ":" + col + ": illegal number format: " + content);
         }
     }
 

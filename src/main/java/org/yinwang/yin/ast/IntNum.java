@@ -4,65 +4,19 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin.value.*;
 
-import java.math.BigInteger;
-
 public class IntNum extends Node {
 
     public String content;
-    public BigInteger value;
-    public int base;
+    public int value;
 
 
-    public IntNum(String content, String file, int start, int end, int line, int col) {
+    public IntNum(String content, String file, int start, int end, int line, int col) throws ParseError {
         super(file, start, end, line, col);
         this.content = content;
-
-        int sign;
-        if (content.startsWith("+")) {
-            sign = 1;
-            content = content.substring(1);
-        } else if (content.startsWith("-")) {
-            sign = -1;
-            content = content.substring(1);
-        } else {
-            sign = 1;
-        }
-
-        if (content.startsWith("#b")) {
-            base = 2;
-            content = content.substring(2);
-        } else if (content.startsWith("#o")) {
-            base = 8;
-            content = content.substring(2);
-        } else if (content.startsWith("#x")) {
-            base = 16;
-            content = content.substring(2);
-        } else if (content.startsWith("#d")) {
-            base = 10;
-            content = content.substring(2);
-        } else {
-            base = 10;
-        }
-
-        this.value = parseValue(content, base, sign);
-    }
-
-
-    public static BigInteger parseValue(String s, int base, int sign) {
-        BigInteger value = new BigInteger(s, base);
-        if (sign == -1) {
-            value = value.negate();
-        }
-
-        return value;
-    }
-
-
-    public static IntNum parse(String content, String file, int start, int end, int line, int col) {
         try {
-            return new IntNum(content, file, start, end, line, col);
+            this.value = Integer.parseInt(content);
         } catch (NumberFormatException e) {
-            return null;
+            throw new ParseError(file + ":" + line + ":" + col + ": illegal number format: " + content);
         }
     }
 
@@ -72,8 +26,9 @@ public class IntNum extends Node {
     }
 
 
+    @Override
     public String toString() {
-        return content;
+        return Integer.toString(value);
     }
 
 }
