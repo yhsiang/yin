@@ -124,7 +124,7 @@ public class Parser {
             // application
             Node func = parseNode(tuple.elements.get(0));
             List<Node> parsedArgs = parseList(tuple.elements.subList(1, tuple.elements.size()));
-            Parameter args = new Parameter(parsedArgs);
+            Argument args = new Argument(parsedArgs);
             return new Call(func, args, prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
         }
 

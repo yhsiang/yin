@@ -14,6 +14,11 @@ public class Keyword extends Node {
     }
 
 
+    public Name asName() {
+        return new Name(id, file, start, end, line, col);
+    }
+
+
     public Value interp(Scope s) {
         return null;
     }

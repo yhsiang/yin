@@ -8,21 +8,36 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Parameter {
-
+public class Argument {
     public List<Node> elements;
-    public List<Name> positional = new ArrayList<>();
+    public List<Node> positional = new ArrayList<>();
     public Map<String, Node> keywords = new LinkedHashMap<>();
 
 
-    public Parameter(List<Node> elements) throws GeneralError {
+    public Argument(List<Node> elements) throws GeneralError {
+        boolean hasName = false;
+        boolean hasKeyword = false;
+
+        for (int i = 0; i < elements.size(); i++) {
+            if (elements.get(i) instanceof Name) {
+                hasName = true;
+            }
+            if (elements.get(i) instanceof Keyword) {
+                hasKeyword = true;
+                i++;
+            }
+        }
+
+        if (hasName && hasKeyword) {
+            throw new GeneralError(elements.get(0), "mix positional and keyword arguments not allowed");
+        }
+
+
         this.elements = elements;
 
         for (int i = 0; i < elements.size(); i++) {
             Node key = elements.get(i);
-            if (key instanceof Name) {
-                positional.add((Name) key);
-            } else if (key instanceof Keyword) {
+            if (key instanceof Keyword) {
                 positional.add(((Keyword) key).asName());
                 if (i >= elements.size() - 1) {
                     throw new GeneralError(key, "missing value for keyword: " + key);
@@ -36,8 +51,7 @@ public class Parameter {
                     }
                 }
             } else {
-                // parameter does not allow other things
-                throw new GeneralError(key, "illegal argument form: " + key);
+                positional.add(key);
             }
         }
     }
