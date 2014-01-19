@@ -1,6 +1,7 @@
 package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Constants;
+import org.yinwang.yin.GeneralError;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin.value.Value;
 
@@ -14,11 +15,11 @@ public class RecordLiteral extends Node {
     public Map<String, Node> map = new LinkedHashMap<>();
 
 
-    public RecordLiteral(List<Node> contents, String file, int start, int end, int line, int col) throws ParseError {
+    public RecordLiteral(List<Node> contents, String file, int start, int end, int line, int col) throws GeneralError {
         super(file, start, end, line, col);
 
         if (contents.size() % 2 != 0) {
-            throw new ParseError(this, "record initializer must have even number of elements");
+            throw new GeneralError(this, "record initializer must have even number of elements");
         }
 
         for (int i = 0; i < contents.size(); i += 2) {
@@ -26,12 +27,12 @@ public class RecordLiteral extends Node {
             Node value = contents.get(i + 1);
             if (key instanceof Keyword) {
                 if (value instanceof Keyword) {
-                    throw new ParseError(value, "keywords shouldn't be used as values: " + value);
+                    throw new GeneralError(value, "keywords shouldn't be used as values: " + value);
                 } else {
                     map.put(((Keyword) key).id, value);
                 }
             } else {
-                throw new ParseError(key, "record initializer key is not a keyword: " + key);
+                throw new GeneralError(key, "record initializer key is not a keyword: " + key);
             }
         }
     }

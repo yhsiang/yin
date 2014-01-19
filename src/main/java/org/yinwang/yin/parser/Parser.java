@@ -1,6 +1,7 @@
 package org.yinwang.yin.parser;
 
 import org.yinwang.yin.Constants;
+import org.yinwang.yin.GeneralError;
 import org.yinwang.yin._;
 import org.yinwang.yin.ast.*;
 
@@ -9,14 +10,14 @@ import java.util.List;
 
 public class Parser {
 
-    public static Node parse(String file) throws ParseError {
+    public static Node parse(String file) throws GeneralError {
         PreParser p = new PreParser(file);
         Node prenode = p.parse();
         return parseNode(prenode);
     }
 
 
-    public static Node parseNode(Node prenode) throws ParseError {
+    public static Node parseNode(Node prenode) throws GeneralError {
         // initial program is in a block
         if (prenode instanceof Block) {
             List<Node> parsed = parseList(((Block) prenode).statements);
@@ -30,7 +31,7 @@ public class Parser {
             Tuple tuple = ((Tuple) prenode);
 
             if (tuple.elements.isEmpty()) {
-                throw new ParseError(tuple, "syntax error");
+                throw new GeneralError(tuple, "syntax error");
             }
 
             Node keyNode = tuple.elements.get(0);
@@ -60,10 +61,10 @@ public class Parser {
                             return new Fun(parameter, body, prenode.file, prenode.start, prenode.end, prenode.line,
                                     prenode.col);
                         } else {
-                            throw new ParseError(preParams, "incorrect format of parameters");
+                            throw new GeneralError(preParams, "incorrect format of parameters");
                         }
                     } else {
-                        throw new ParseError(tuple, "syntax error in function definition");
+                        throw new GeneralError(tuple, "syntax error in function definition");
                     }
                 }
 
@@ -74,7 +75,7 @@ public class Parser {
                         return new Def(pattern, value, prenode.file, prenode.start, prenode.end, prenode.line,
                                 prenode.col);
                     } else {
-                        throw new ParseError(tuple, "incorrect format of definition");
+                        throw new GeneralError(tuple, "incorrect format of definition");
                     }
                 }
 
@@ -85,7 +86,7 @@ public class Parser {
                         return new Assign(pattern, value, prenode.file, prenode.start, prenode.end, prenode.line,
                                 prenode.col);
                     } else {
-                        throw new ParseError(tuple, "incorrect format of definition");
+                        throw new GeneralError(tuple, "incorrect format of definition");
                     }
                 }
 
@@ -101,7 +102,7 @@ public class Parser {
                                     if (p instanceof Name) {
                                         parents.add((Name) p);
                                     } else {
-                                        throw new ParseError(p, "parents can only be names");
+                                        throw new GeneralError(p, "parents can only be names");
                                     }
                                 }
                                 List<Node> defs = parseList(tuple.elements.subList(3, tuple.elements.size()));
@@ -113,10 +114,10 @@ public class Parser {
                                         prenode.line, prenode.col);
                             }
                         } else {
-                            throw new ParseError(name, "syntax error in record name: " + name);
+                            throw new GeneralError(name, "syntax error in record name: " + name);
                         }
                     } else {
-                        throw new ParseError(tuple, "syntax error in record type definition");
+                        throw new GeneralError(tuple, "syntax error in record type definition");
                     }
                 }
             }
@@ -132,7 +133,7 @@ public class Parser {
     }
 
 
-    public static List<Node> parseList(List<Node> prenodes) throws ParseError {
+    public static List<Node> parseList(List<Node> prenodes) throws GeneralError {
         List<Node> parsed = new ArrayList<>();
         for (Node s : prenodes) {
             parsed.add(parseNode(s));
@@ -141,7 +142,7 @@ public class Parser {
     }
 
 
-    public static void main(String[] args) throws ParseError {
+    public static void main(String[] args) throws GeneralError {
         Node tree = Parser.parse(args[0]);
         _.msg(tree.toString());
     }

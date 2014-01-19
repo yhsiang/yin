@@ -2,6 +2,7 @@ package org.yinwang.yin.ast;
 
 
 import org.yinwang.yin.Scope;
+import org.yinwang.yin._;
 import org.yinwang.yin.value.Value;
 
 public class Name extends Node {
@@ -15,7 +16,13 @@ public class Name extends Node {
 
 
     public Value interp(Scope s) {
-        return null;
+        Value v = s.lookup(id);
+        if (v != null) {
+            return v;
+        } else {
+            _.abort(this, "unbound variable: " + id);
+            return Value.VOID;
+        }
     }
 
 

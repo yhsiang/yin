@@ -3,6 +3,7 @@ package org.yinwang.yin.parser;
 
 import org.jetbrains.annotations.Nullable;
 import org.yinwang.yin.Constants;
+import org.yinwang.yin.GeneralError;
 import org.yinwang.yin._;
 import org.yinwang.yin.ast.*;
 
@@ -31,7 +32,7 @@ public class PreParser {
     public final Map<String, String> delimMap = new HashMap<>();
 
 
-    public PreParser(String file) throws ParseError {
+    public PreParser(String file) throws GeneralError {
         this.file = _.unifyPath(file);
         this.text = _.readFile(file);
         this.offset = 0;
@@ -39,7 +40,7 @@ public class PreParser {
         this.col = 0;
 
         if (text == null) {
-            throw new ParseError("failed to read file: " + file);
+            throw new GeneralError("failed to read file: " + file);
         }
 
         addDelimiterPair(Constants.TUPLE_BEGIN, Constants.TUPLE_END);
@@ -134,7 +135,7 @@ public class PreParser {
      * @return a token or null if file ends
      */
     @Nullable
-    private Node nextToken() throws ParseError {
+    private Node nextToken() throws GeneralError {
         // skip spaces
         while (offset < text.length() &&
                 Character.isWhitespace(text.charAt(offset)))
@@ -167,13 +168,13 @@ public class PreParser {
                     !(text.charAt(offset) == '"' && text.charAt(offset - 1) != '\\'))
             {
                 if (text.charAt(offset) == '\n') {
-                    throw new ParseError(file + ":" + startLine + ":" + startCol + ": runaway string");
+                    throw new GeneralError(file + ":" + startLine + ":" + startCol + ": runaway string");
                 }
                 forward();
             }
 
             if (offset >= text.length()) {
-                throw new ParseError(file + ":" + startLine + ":" + startCol + ": runaway string");
+                throw new GeneralError(file + ":" + startLine + ":" + startCol + ": runaway string");
             }
 
             forward(); // skip "
@@ -207,7 +208,7 @@ public class PreParser {
 
             try {
                 return new IntNum(content, file, start, offset, startLine, startCol);
-            } catch (ParseError e) {
+            } catch (GeneralError e) {
                 return new FloatNum(content, file, start, offset, startLine, startCol);
             }
         } else {
@@ -236,7 +237,7 @@ public class PreParser {
      *
      * @return a Node or null if file ends
      */
-    public Node nextNode(int depth) throws ParseError {
+    public Node nextNode(int depth) throws GeneralError {
         Node begin = nextToken();
 
         // end of file
@@ -245,16 +246,16 @@ public class PreParser {
         }
 
         if (depth == 0 && isClose(begin)) {
-            throw new ParseError(begin, "unmatched closing delimeter: " + begin);
+            throw new GeneralError(begin, "unmatched closing delimeter: " + begin);
         } else if (isOpen(begin)) {   // try to get matched (...)
             List<Node> elements = new ArrayList<>();
             Node iter = nextNode(depth + 1);
 
             while (!matchDelim(begin, iter)) {
                 if (iter == null) {
-                    throw new ParseError(begin, "unclosed delimeter: " + begin);
+                    throw new GeneralError(begin, "unclosed delimeter: " + begin);
                 } else if (isClose(iter)) {
-                    throw new ParseError(iter, "unmatched closing delimeter: " + iter);
+                    throw new GeneralError(iter, "unmatched closing delimeter: " + iter);
                 } else {
                     elements.add(iter);
                     iter = nextNode(depth + 1);
@@ -274,13 +275,13 @@ public class PreParser {
 
 
     // wrapper for the actual parser
-    public Node nextSexp() throws ParseError {
+    public Node nextSexp() throws GeneralError {
         return nextNode(0);
     }
 
 
     // parse file into a Node
-    public Node parse() throws ParseError {
+    public Node parse() throws GeneralError {
         List<Node> elements = new ArrayList<>();
         Node s = nextSexp();
         while (s != null) {
@@ -291,7 +292,7 @@ public class PreParser {
     }
 
 
-    public static void main(String[] args) throws ParseError {
+    public static void main(String[] args) throws GeneralError {
         PreParser p = new PreParser(args[0]);
         _.msg("tree: " + p.parse());
     }

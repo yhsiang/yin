@@ -1,18 +1,20 @@
-package org.yinwang.yin.ast;
+package org.yinwang.yin;
 
 
-public class ParseError extends Exception {
+import org.yinwang.yin.ast.Node;
+
+public class GeneralError extends Exception {
     public String msg;
     public Node location;
 
 
-    public ParseError(Node location, String msg) {
+    public GeneralError(Node location, String msg) {
         this.msg = msg;
         this.location = location;
     }
 
 
-    public ParseError(String msg) {
+    public GeneralError(String msg) {
         this.msg = msg;
     }
 

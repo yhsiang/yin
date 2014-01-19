@@ -38,4 +38,8 @@ public class Scope {
         }
     }
 
+    public void put(String name, Value value) {
+        table.put(name, value);
+    }
+
 }

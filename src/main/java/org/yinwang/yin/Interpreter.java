@@ -2,7 +2,6 @@ package org.yinwang.yin;
 
 
 import org.yinwang.yin.ast.Node;
-import org.yinwang.yin.ast.ParseError;
 import org.yinwang.yin.parser.Parser;
 import org.yinwang.yin.value.Value;
 
@@ -16,13 +15,13 @@ public class Interpreter {
     }
 
 
-    public Value interp(String file) throws ParseError {
+    public Value interp(String file) throws GeneralError {
         Node program = Parser.parse(file);
         return program.interp(new Scope());
     }
 
 
-    public static void main(String[] args) throws ParseError {
+    public static void main(String[] args) throws GeneralError {
         Interpreter i = new Interpreter(args[0]);
         _.msg("result: " + i.interp(args[0]));
     }

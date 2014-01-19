@@ -1,5 +1,6 @@
 package org.yinwang.yin.ast;
 
+import org.yinwang.yin.Binder;
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin.value.Value;
@@ -17,7 +18,9 @@ public class Def extends Node {
 
 
     public Value interp(Scope s) {
-        return null;
+        Value valueValue = value.interp(s);
+        Binder.bind(pattern, valueValue, s);
+        return Value.VOID;
     }
 
 

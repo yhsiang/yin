@@ -2,6 +2,7 @@ package org.yinwang.yin;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.yinwang.yin.ast.Node;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +32,14 @@ public class _ {
 
     public static void abort(String m) {
         System.err.println(m);
+        System.err.flush();
+        Thread.dumpStack();
+        System.exit(1);
+    }
+
+
+    public static void abort(Node loc, String msg) {
+        System.err.println(loc.getFileLineCol() + " " + msg);
         System.err.flush();
         Thread.dumpStack();
         System.exit(1);
