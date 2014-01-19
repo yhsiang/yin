@@ -3,7 +3,7 @@ package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
-import org.yinwang.yin.value.*;
+import org.yinwang.yin.value.Value;
 
 public class Fun extends Node {
     public Parameter params;
@@ -17,7 +17,7 @@ public class Fun extends Node {
     }
 
 
-    public YinValue interp(Scope s) {
+    public Value interp(Scope s) {
         return null;
     }
 

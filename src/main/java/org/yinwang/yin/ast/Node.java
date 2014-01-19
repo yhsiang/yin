@@ -1,7 +1,7 @@
 package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Scope;
-import org.yinwang.yin.value.*;
+import org.yinwang.yin.value.Value;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ public abstract class Node {
     }
 
 
-    public abstract YinValue interp(Scope s);
+    public abstract Value interp(Scope s);
 
 
     public String getFileLineCol() {

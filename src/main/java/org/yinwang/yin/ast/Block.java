@@ -1,7 +1,7 @@
 package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Scope;
-import org.yinwang.yin.value.*;
+import org.yinwang.yin.value.Value;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,8 @@ public class Block extends Node {
         this.statements = statements;
     }
 
-    public YinValue interp(Scope s) {
+
+    public Value interp(Scope s) {
         return null;
     }
 

@@ -2,7 +2,7 @@ package org.yinwang.yin.ast;
 
 
 import org.yinwang.yin.Scope;
-import org.yinwang.yin.value.*;
+import org.yinwang.yin.value.Value;
 
 public class Name extends Node {
     public String id;
@@ -14,7 +14,7 @@ public class Name extends Node {
     }
 
 
-    public YinValue interp(Scope s) {
+    public Value interp(Scope s) {
         return null;
     }
 

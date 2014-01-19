@@ -2,7 +2,7 @@ package org.yinwang.yin.ast;
 
 
 import org.yinwang.yin.Scope;
-import org.yinwang.yin.value.*;
+import org.yinwang.yin.value.Value;
 
 public class Delimeter extends Node {
     public String shape;
@@ -13,7 +13,8 @@ public class Delimeter extends Node {
         this.shape = shape;
     }
 
-    public YinValue interp(Scope s) {
+
+    public Value interp(Scope s) {
         return null;
     }
 

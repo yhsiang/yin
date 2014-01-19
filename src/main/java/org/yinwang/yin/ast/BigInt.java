@@ -2,7 +2,7 @@ package org.yinwang.yin.ast;
 
 
 import org.yinwang.yin.Scope;
-import org.yinwang.yin.value.*;
+import org.yinwang.yin.value.Value;
 
 import java.math.BigInteger;
 
@@ -56,7 +56,7 @@ public class BigInt extends Node {
     }
 
 
-    public YinValue interp(Scope s) {
+    public Value interp(Scope s) {
         return null;
     }
 

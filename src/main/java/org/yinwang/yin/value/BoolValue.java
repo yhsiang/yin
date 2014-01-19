@@ -1,5 +1,5 @@
 package org.yinwang.yin.value;
 
 
-public class BoolValue extends YinValue {
+public class BoolValue extends Value {
 }

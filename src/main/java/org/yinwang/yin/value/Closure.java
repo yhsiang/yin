@@ -1,5 +1,5 @@
 package org.yinwang.yin.value;
 
 
-public class Closure extends YinValue {
+public class Closure extends Value {
 }
