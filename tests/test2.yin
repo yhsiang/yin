@@ -1,0 +1,25 @@
+123
+
+(if 1 2 3)
+
+(fun (x y) (+ x y))
+
+(fun (:x 1 :y 2) (+ x y))
+
+(fun (:x 1 y) (+ x y))
+
+(f y)
+
+(f :x 1 :y 2)
+
+{:x 1 :y 2}
+
+(:: {:x a :y b} {:x 1 :y 2})
+
+(<- {:x a :y b} {:x 1 :y 2})
+
+(record A :x 1 :y int)
+
+(record A (B C) :x 1 :y int)
+
+(A :x 3 :y 10)
