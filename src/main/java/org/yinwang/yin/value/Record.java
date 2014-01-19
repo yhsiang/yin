@@ -32,7 +32,7 @@ public class Record extends Value {
         StringBuilder sb = new StringBuilder();
         sb.append(Constants.TUPLE_BEGIN);
         sb.append(Constants.RECORD_KEYWORD).append(" ");
-        sb.append(name);
+        sb.append(name == null ? "_" : name);
 
         for (Map.Entry<String, Value> e : values.entrySet()) {
             sb.append(" :" + e.getKey() + " " + e.getValue());

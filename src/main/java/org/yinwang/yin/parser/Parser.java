@@ -33,6 +33,11 @@ public class Parser {
                 _.abort(tuple, "syntax error");
             }
 
+            if (delimType(tuple.open, Constants.RECORD_BEGIN)) {
+                return new RecordLiteral(tuple.elements, tuple.file, tuple.start, tuple.end, tuple.line, tuple.col);
+            }
+
+
             Node keyNode = tuple.elements.get(0);
 
             if (keyNode instanceof Name) {
@@ -138,6 +143,15 @@ public class Parser {
             parsed.add(parseNode(s));
         }
         return parsed;
+    }
+
+
+    public static boolean delimType(Node c, String d) {
+        if (c instanceof Delimeter) {
+            return ((Delimeter) c).shape.equals(d);
+        } else {
+            return false;
+        }
     }
 
 
