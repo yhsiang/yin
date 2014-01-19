@@ -16,20 +16,24 @@ public class Parameter {
         this.elements = elements;
 
         for (int i = 0; i < elements.size(); i++) {
-            Node n1 = elements.get(i);
-            if (n1 instanceof Name) {
-                positional.add(((Name) n1).id);
-            } else if (n1 instanceof Keyword) {
-                positional.add(((Keyword) n1).id);
+            Node key = elements.get(i);
+            if (key instanceof Name) {
+                positional.add(((Name) key).id);
+            } else if (key instanceof Keyword) {
+                positional.add(((Keyword) key).id);
                 if (i >= elements.size() - 1) {
-                    throw new ParseError(n1, "missing value for keyword: " + n1);
+                    throw new ParseError(key, "missing value for keyword: " + key);
                 } else {
-                    Node n2 = elements.get(i + 1);
-                    keywords.put(((Keyword) n1).id, n2);
-                    i++;
+                    Node value = elements.get(i + 1);
+                    if (value instanceof Keyword) {
+                        throw new ParseError(value, "keywords can't be used as values: " + value);
+                    } else {
+                        keywords.put(((Keyword) key).id, value);
+                        i++;
+                    }
                 }
             } else {
-                throw new ParseError(n1, "illegal parameter form: " + n1);
+                throw new ParseError(key, "illegal parameter form: " + key);
             }
         }
     }

@@ -271,7 +271,7 @@ public class PreParser {
                 return new Tuple(elements, begin, iter, begin.file, begin.start, iter.end, begin.line, begin.col);
             }
             if (delimType(begin, Constants.RECORD_BEGIN)) {
-                return new RecordDef(elements, begin, iter, begin.file, begin.start, iter.end, begin.line,
+                return new RecordLiteral(elements, begin, iter, begin.file, begin.start, iter.end, begin.line,
                         begin.col);
             }
             return null;

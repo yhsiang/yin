@@ -7,15 +7,15 @@ import java.util.List;
 import java.util.Map;
 
 
-public class RecordDef extends Node {
+public class RecordLiteral extends Node {
 
     public Map<String, Node> map = new LinkedHashMap<>();
     public Node open;
     public Node close;
 
 
-    public RecordDef(List<Node> contents, Node open, Node close, String file, int start, int end, int line,
-                     int col) throws ParseError
+    public RecordLiteral(List<Node> contents, Node open, Node close,
+                         String file, int start, int end, int line, int col) throws ParseError
     {
         super(file, start, end, line, col);
 
@@ -27,9 +27,13 @@ public class RecordDef extends Node {
             Node key = contents.get(i);
             Node value = contents.get(i + 1);
             if (key instanceof Keyword) {
-                map.put(((Keyword) key).id, value);
+                if (value instanceof Keyword) {
+                    throw new ParseError(value, "keywords shouldn't be used as values: " + value);
+                } else {
+                    map.put(((Keyword) key).id, value);
+                }
             } else {
-                throw new ParseError(this, "record initializer key is not a keyword: " + key);
+                throw new ParseError(key, "record initializer key is not a keyword: " + key);
             }
         }
 
