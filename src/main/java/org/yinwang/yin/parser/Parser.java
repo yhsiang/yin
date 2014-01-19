@@ -42,6 +42,12 @@ public class Parser {
 
             if (keyNode instanceof Name) {
                 String keyword = ((Name) keyNode).id;
+
+                if (keyword.equals(Constants.SEQ_KEYWORD)) {
+                    List<Node> statements = parseList(tuple.elements.subList(1, tuple.elements.size()));
+                    return new Block(statements, prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
+                }
+
                 if (keyword.equals(Constants.IF_KEYWORD)) {
                     if (tuple.elements.size() == 4) {
                         Node test = parseNode(tuple.elements.get(1));
