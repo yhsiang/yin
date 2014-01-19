@@ -1,8 +1,6 @@
 package org.yinwang.yin.ast;
 
 
-import org.yinwang.yin.Constants;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,12 +21,15 @@ public class Parameter {
                 positional.add(((Name) n1).id);
             } else if (n1 instanceof Keyword) {
                 positional.add(((Keyword) n1).id);
-                if (i >= elements.size()) {
-                    throw new ParseError(n1, "missing value for keyword: " + ((Keyword) n1).id);
+                if (i >= elements.size() - 1) {
+                    throw new ParseError(n1, "missing value for keyword: " + n1);
                 } else {
                     Node n2 = elements.get(i + 1);
                     keywords.put(((Keyword) n1).id, n2);
+                    i++;
                 }
+            } else {
+                throw new ParseError(n1, "illegal parameter form: " + n1);
             }
         }
     }
