@@ -8,8 +8,7 @@ import org.yinwang.yin.value.Closure;
 import org.yinwang.yin.value.Record;
 import org.yinwang.yin.value.Value;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class Call extends Node {
     public Node func;
@@ -49,10 +48,10 @@ public class Call extends Node {
 
                 // try to bind all arguments
                 for (Name param : params.positional) {
-                    seen.add(param.id);
 
                     Node actual = args.keywords.get(param.id);
                     if (actual != null) {
+                        seen.add(param.id);
                         Value value = actual.interp(funScope);
                         funScope.put(param.id, value);
                     } else {
@@ -66,18 +65,29 @@ public class Call extends Node {
                     }
                 }
 
-                // not allow extra arguments
-                for (String id : params.keywords.keySet()) {
+                // detect extra arguments
+                List<String> extra = new ArrayList<>();
+                for (String id : args.keywords.keySet()) {
                     if (!seen.contains(id)) {
-                        _.abort(this, "extra keyword argument supplied: " + id);
-                        return Value.VOID;
+                        extra.add(id);
                     }
                 }
-                return closure.fun.body.interp(funScope);
+
+                if (!extra.isEmpty()) {
+                    _.abort(this, "extra keyword arguments: " + extra);
+                    return Value.VOID;
+                } else {
+                    return closure.fun.body.interp(funScope);
+                }
             }
         } else if (func instanceof Record) {
             Record template = (Record) func;
             Record copy = template.copy();
+
+            for (Map.Entry<String, Node> e : args.keywords.entrySet()) {
+                copy.values.put(e.getKey(), e.getValue().interp(s));
+            }
+
             // instantiate
             return copy;
         } else {
@@ -88,7 +98,11 @@ public class Call extends Node {
 
 
     public String toString() {
-        return "(" + func + " " + args + ")";
+        if (args.positional.size() != 0) {
+            return "(" + func + " " + args + ")";
+        } else {
+            return "(" + func + ")";
+        }
     }
 
 }
