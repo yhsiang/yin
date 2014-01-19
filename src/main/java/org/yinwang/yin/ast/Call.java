@@ -5,6 +5,7 @@ import org.yinwang.yin.Binder;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
 import org.yinwang.yin.value.Closure;
+import org.yinwang.yin.value.Record;
 import org.yinwang.yin.value.Value;
 
 import java.util.HashSet;
@@ -74,8 +75,13 @@ public class Call extends Node {
                 }
                 return closure.fun.body.interp(funScope);
             }
+        } else if (func instanceof Record) {
+            Record template = (Record) func;
+            Record copy = template.copy();
+            // instantiate
+            return copy;
         } else {
-            _.abort(this.func, "calling non-function");
+            _.abort(this.func, "calling non-function: " + func);
             return Value.VOID;
         }
     }

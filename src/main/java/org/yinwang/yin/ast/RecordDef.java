@@ -3,6 +3,7 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
+import org.yinwang.yin.value.Record;
 import org.yinwang.yin.value.Value;
 
 import java.util.LinkedHashMap;
@@ -45,7 +46,13 @@ public class RecordDef extends Node {
 
 
     public Value interp(Scope s) {
-        return null;
+        Map<String, Value> valueMap = new LinkedHashMap<>();
+        for (Map.Entry<String, Node> e : map.entrySet()) {
+            valueMap.put(e.getKey(), e.getValue().interp(s));
+        }
+        Value r = new Record(name.id, valueMap, this);
+        s.put(name.id, r);
+        return Value.VOID;
     }
 
 
@@ -56,11 +63,11 @@ public class RecordDef extends Node {
         sb.append(name).append(" ");
 
         if (parents != null) {
-            sb.append("(" + Node.printList(parents) + ")");
+            sb.append("(" + Node.printList(parents) + ") ");
         }
 
         for (Map.Entry<String, Node> e : map.entrySet()) {
-            sb.append(" :" + e.getKey() + " " + e.getValue());
+            sb.append(":" + e.getKey() + " " + e.getValue());
         }
 
         sb.append(Constants.TUPLE_END);
