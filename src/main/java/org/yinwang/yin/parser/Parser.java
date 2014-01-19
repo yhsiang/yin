@@ -88,6 +88,37 @@ public class Parser {
                         throw new ParseError(tuple, "incorrect format of definition");
                     }
                 }
+
+                if (keyword.equals(Constants.RECORD_KEYWORD)) {
+                    if (tuple.elements.size() >= 2) {
+                        Node name = tuple.elements.get(1);
+                        Node node2 = tuple.elements.get(2);
+                        if (name instanceof Name) {
+                            if (node2 instanceof Tuple) {
+                                List<Node> parentNodes = ((Tuple) node2).elements;
+                                List<Name> parents = new ArrayList<>();
+                                for (Node p : parentNodes) {
+                                    if (p instanceof Name) {
+                                        parents.add((Name) p);
+                                    } else {
+                                        throw new ParseError(p, "parents can only be names");
+                                    }
+                                }
+                                List<Node> defs = parseList(tuple.elements.subList(3, tuple.elements.size()));
+                                return new RecordDef((Name) name, parents, defs,
+                                        prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
+                            } else {
+                                List<Node> defs = parseList(tuple.elements.subList(2, tuple.elements.size()));
+                                return new RecordDef((Name) name, null, defs, prenode.file, prenode.start, prenode.end,
+                                        prenode.line, prenode.col);
+                            }
+                        } else {
+                            throw new ParseError(name, "syntax error in record name: " + name);
+                        }
+                    } else {
+                        throw new ParseError(tuple, "syntax error in record type definition");
+                    }
+                }
             }
             // application
             Node func = parseNode(tuple.elements.get(0));

@@ -8,15 +8,18 @@ import java.util.Map;
 
 
 public class RecordDef extends Node {
-    public String name;
+    public Name name;
     public String qname;
+    public List<Name> parents;
     public Map<String, Node> map = new LinkedHashMap<>();
 
 
-    public RecordDef(String name, List<Node> contents,
+    public RecordDef(Name name, List<Name> parents, List<Node> contents,
                      String file, int start, int end, int line, int col) throws ParseError
     {
         super(file, start, end, line, col);
+        this.name = name;
+        this.parents = parents;
 
         if (contents.size() % 2 != 0) {
             throw new ParseError(this, "record initializer must have even number of elements");
@@ -35,22 +38,24 @@ public class RecordDef extends Node {
                 throw new ParseError(key, "record initializer key is not a keyword: " + key);
             }
         }
-
     }
 
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(Constants.RECORD_BEGIN);
-        boolean first = true;
-        for (Map.Entry<String, Node> e : map.entrySet()) {
-            if (!first) {
-                sb.append(" ");
-            }
-            sb.append(":" + e.getKey() + " " + e.getValue());
-            first = false;
+        sb.append(Constants.TUPLE_BEGIN);
+        sb.append(Constants.RECORD_KEYWORD).append(" ");
+        sb.append(name).append(" ");
+
+        if (parents != null) {
+            sb.append("(" + Node.printList(parents) + ")");
         }
-        sb.append(Constants.RECORD_END);
+
+        for (Map.Entry<String, Node> e : map.entrySet()) {
+            sb.append(" :" + e.getKey() + " " + e.getValue());
+        }
+
+        sb.append(Constants.TUPLE_END);
         return sb.toString();
     }
 }
