@@ -167,23 +167,16 @@ public class Parser {
             List<Node> elements = t.elements;
             List<Node> newElems = new ArrayList<>();
 
-            Node keyword = elements.get(0);
-            if (delimType(keyword, ".")) {
-                _.abort(keyword, "illegal keyword .");
-                return null;
-            } else {
-                newElems.add(keyword);
-            }
-
-            if (elements.size() > 1) {
-                Node grouped = elements.get(1);
+            if (elements.size() >= 1) {
+                Node grouped = elements.get(0);
                 if (delimType(grouped, ".")) {
-                    _.abort(grouped, "illegal position for .");
+                    _.abort(grouped, "illegal keyword .");
                     return null;
                 }
+
                 grouped = groupAttr(grouped);
 
-                for (int i = 2; i < elements.size(); i++) {
+                for (int i = 1; i < elements.size(); i++) {
                     Node n1 = elements.get(i);
                     if (delimType(n1, ".")) {
                         if (i + 1 >= elements.size()) {

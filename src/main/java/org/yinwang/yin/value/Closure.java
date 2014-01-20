@@ -19,4 +19,9 @@ public class Closure extends Value {
         this.env = env;
     }
 
+
+    public String toString() {
+        return fun.toString();
+    }
+
 }

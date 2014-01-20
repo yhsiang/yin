@@ -1,0 +1,3 @@
+(record F :x (fun (x) x))
+(:: d (F))
+(d.x 18)
