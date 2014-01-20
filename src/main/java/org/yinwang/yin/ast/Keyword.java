@@ -2,6 +2,7 @@ package org.yinwang.yin.ast;
 
 
 import org.yinwang.yin.Scope;
+import org.yinwang.yin._;
 import org.yinwang.yin.value.Value;
 
 public class Keyword extends Node {
@@ -20,6 +21,7 @@ public class Keyword extends Node {
 
 
     public Value interp(Scope s) {
+        _.abort(this, "keyword used as value");
         return null;
     }
 

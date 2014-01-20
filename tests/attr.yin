@@ -7,3 +7,4 @@ a.x.u
 (record C (A B) :t 42)
 (:: c (C))
 c
+

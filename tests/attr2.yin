@@ -1,3 +1,5 @@
-(record F :x (fun (x) x))
-(:: d (F))
-(d.x 18)
+(record F :x (fun (x) x.a))
+(define d (F))
+(d.x {:a 1})
+(define x [1 2 3])
+x.1

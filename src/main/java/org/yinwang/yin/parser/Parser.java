@@ -46,6 +46,9 @@ public class Parser {
                 return new RecordLiteral(tuple.elements, tuple.file, tuple.start, tuple.end, tuple.line, tuple.col);
             }
 
+            if (delimType(tuple.open, Constants.ARRAY_BEGIN)) {
+                return new VectorLiteral(tuple.elements, tuple.file, tuple.start, tuple.end, tuple.line, tuple.col);
+            }
 
             Node keyNode = tuple.elements.get(0);
 
@@ -186,6 +189,10 @@ public class Parser {
                             Node n2 = elements.get(i + 1);
                             if (n2 instanceof Name) {
                                 grouped = new Attr(grouped, (Name) n2, grouped.file,
+                                        grouped.start, n2.end, grouped.line, grouped.col);
+                                i++;   // skip
+                            } else if (n2 instanceof IntNum) {
+                                grouped = new Subscript(grouped, (IntNum) n2, grouped.file,
                                         grouped.start, n2.end, grouped.line, grouped.col);
                                 i++;   // skip
                             } else {

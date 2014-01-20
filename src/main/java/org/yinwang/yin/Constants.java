@@ -15,8 +15,8 @@ public class Constants {
     public static final String SEQ_KEYWORD = "seq";
     public static final String FUN_KEYWORD = "fun";
     public static final String IF_KEYWORD = "if";
-    public static final String DEF_KEYWORD = "::";
-    public static final String ASSIGN_KEYWORD = "<-";
+    public static final String DEF_KEYWORD = "define";
+    public static final String ASSIGN_KEYWORD = "set!";
     public static final String RECORD_KEYWORD = "record";
 
 }

@@ -3,6 +3,7 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin.value.Value;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class Node {
@@ -23,6 +24,20 @@ public abstract class Node {
 
 
     public abstract Value interp(Scope s);
+
+
+    public static Value interp(Node node, Scope s) {
+        return node.interp(s);
+    }
+
+
+    public static List<Value> interpList(List<Node> nodes, Scope s) {
+        List<Value> values = new ArrayList<>();
+        for (Node n : nodes) {
+            values.add(n.interp(s));
+        }
+        return values;
+    }
 
 
     public String getFileLineCol() {
