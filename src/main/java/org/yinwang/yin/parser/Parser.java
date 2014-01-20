@@ -175,36 +175,37 @@ public class Parser {
                 newElems.add(keyword);
             }
 
-
-            Node grouped = elements.get(1);
-            if (delimType(grouped, ".")) {
-                _.abort(grouped, "illegal position for .");
-                return null;
-            }
-            grouped = groupAttr(grouped);
-
-            for (int i = 2; i < elements.size(); i++) {
-                Node n1 = elements.get(i);
-                if (delimType(n1, ".")) {
-                    if (i + 1 >= elements.size()) {
-                        _.abort(n1, "illegal position for .");
-                        return null;
-                    } else {
-                        Node n2 = elements.get(i + 1);
-                        if (n2 instanceof Name) {
-                            grouped = new Attr(grouped, (Name) n2, grouped.file, grouped.start, n2.end, grouped.line,
-                                    grouped.col);
-                            i++;   // skip
-                        } else {
-                            _.abort(n2, "illegal attribute: " + n2);
-                        }
-                    }
-                } else {
-                    newElems.add(grouped);
-                    grouped = n1;
+            if (elements.size() > 1) {
+                Node grouped = elements.get(1);
+                if (delimType(grouped, ".")) {
+                    _.abort(grouped, "illegal position for .");
+                    return null;
                 }
+                grouped = groupAttr(grouped);
+
+                for (int i = 2; i < elements.size(); i++) {
+                    Node n1 = elements.get(i);
+                    if (delimType(n1, ".")) {
+                        if (i + 1 >= elements.size()) {
+                            _.abort(n1, "illegal position for .");
+                            return null;
+                        } else {
+                            Node n2 = elements.get(i + 1);
+                            if (n2 instanceof Name) {
+                                grouped = new Attr(grouped, (Name) n2, grouped.file,
+                                        grouped.start, n2.end, grouped.line, grouped.col);
+                                i++;   // skip
+                            } else {
+                                _.abort(n2, "illegal attribute: " + n2);
+                            }
+                        }
+                    } else {
+                        newElems.add(grouped);
+                        grouped = n1;
+                    }
+                }
+                newElems.add(grouped);
             }
-            newElems.add(grouped);
             return new Tuple(newElems, t.open, t.close, t.file, t.start, t.end, t.line, t.col);
         } else {
             return prenode;

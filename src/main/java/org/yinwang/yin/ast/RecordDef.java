@@ -47,6 +47,28 @@ public class RecordDef extends Node {
 
     public Value interp(Scope s) {
         Map<String, Value> valueMap = new LinkedHashMap<>();
+
+        if (parents != null) {
+            for (Node p : parents) {
+                Value pv = p.interp(s);
+                if (pv instanceof Record) {
+                    for (Map.Entry<String, Value> e : ((Record) pv).values.entrySet()) {
+                        Value existing = valueMap.get(e.getKey());
+                        if (existing == null) {
+                            valueMap.put(e.getKey(), e.getValue());
+                        } else {
+                            _.abort(p,
+                                    "conflicting field " + e.getKey() + " inherited from parent: " + p + ", value: " + pv);
+                            return null;
+                        }
+                    }
+                } else {
+                    _.abort(p, "parent is not a record");
+                    return null;
+                }
+            }
+        }
+
         for (Map.Entry<String, Node> e : map.entrySet()) {
             valueMap.put(e.getKey(), e.getValue().interp(s));
         }

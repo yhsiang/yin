@@ -1,5 +1,9 @@
 (record A :x 1 :y 2)
-(record B :u 1 :v 2)
-(:: b (B :u 10 :v 20))
+(record B :u 12 :v 2)
+(:: b (B :v 20))
 (:: a (A :x b :y 4))
 a.x.u
+
+(record C (A B) :t 42)
+(:: c (C))
+c
