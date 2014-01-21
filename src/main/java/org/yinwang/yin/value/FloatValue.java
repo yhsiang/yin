@@ -9,4 +9,9 @@ public class FloatValue extends Value {
         this.value = value;
     }
 
+
+    public String toString() {
+        return Double.toString(value);
+    }
+
 }

@@ -21,4 +21,8 @@ public class PrimFun extends Value {
         return false;
     }
 
+    public String toString() {
+        return name;
+    }
+
 }
