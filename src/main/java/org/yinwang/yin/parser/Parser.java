@@ -177,8 +177,8 @@ public class Parser {
 
             if (elements.size() >= 1) {
                 Node grouped = elements.get(0);
-                if (delimType(grouped, ".")) {
-                    _.abort(grouped, "illegal keyword .");
+                if (isAttrSub(grouped)) {
+                    _.abort(grouped, "illegal keyword: " + grouped);
                     return null;
                 }
 
@@ -186,17 +186,21 @@ public class Parser {
 
                 for (int i = 1; i < elements.size(); i++) {
                     Node n1 = elements.get(i);
-                    if (delimType(n1, ".")) {
+                    if (isAttrSub(n1)) {
                         if (i + 1 >= elements.size()) {
                             _.abort(n1, "illegal position for .");
                             return null;
                         } else {
                             Node n2 = elements.get(i + 1);
-                            if (n2 instanceof Name) {
-                                grouped = new Attr(grouped, (Name) n2, grouped.file,
-                                        grouped.start, n2.end, grouped.line, grouped.col);
-                                i++;   // skip
-                            } else {
+                            if (delimType(n1, Constants.ATTRIBUTE_ACCESS)) {
+                                if (n2 instanceof Name) {
+                                    grouped = new Attr(grouped, (Name) n2, grouped.file,
+                                            grouped.start, n2.end, grouped.line, grouped.col);
+                                    i++;   // skip
+                                } else {
+                                    _.abort(n2, "attribute is not a name");
+                                }
+                            } else if (delimType(n1, Constants.SUBSCRIPT_ACCESS)) {
                                 grouped = new Subscript(grouped, n2, grouped.file,
                                         grouped.start, n2.end, grouped.line, grouped.col);
                                 i++;   // skip
@@ -222,6 +226,12 @@ public class Parser {
         } else {
             return false;
         }
+    }
+
+
+    public static boolean isAttrSub(Node c) {
+        return delimType(c, Constants.ATTRIBUTE_ACCESS) ||
+                delimType(c, Constants.SUBSCRIPT_ACCESS);
     }
 
 
