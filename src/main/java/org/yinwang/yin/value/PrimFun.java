@@ -1,25 +1,23 @@
 package org.yinwang.yin.value;
 
 
-import org.yinwang.yin.ast.Name;
 import org.yinwang.yin.ast.Node;
 
-public class PrimFun extends Value {
+import java.util.List;
+
+public abstract class PrimFun extends Value {
     public String name;
+    public int arity;
 
 
-    public PrimFun(String name) {
+    protected PrimFun(String name, int arity) {
         this.name = name;
+        this.arity = arity;
     }
 
 
-    public static boolean isOp(Node node) {
-        if (node instanceof Name) {
-            String id = ((Name) node).id;
-            return id.equals("+") || id.equals("-") || id.equals("*") || id.equals("/") || id.equals("<");
-        }
-        return false;
-    }
+    // how to apply the primitive to args (must be positional)
+    public abstract Value apply(List<Value> args, Node location);
 
 
     public String toString() {

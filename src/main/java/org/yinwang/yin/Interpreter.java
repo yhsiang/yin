@@ -17,7 +17,7 @@ public class Interpreter {
 
     public Value interp(String file) {
         Node program = Parser.parse(file);
-        return program.interp(new Scope());
+        return program.interp(Scope.buildInitScope());
     }
 
 

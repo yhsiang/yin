@@ -28,6 +28,7 @@
 
 [xx uu vv]
 
-(if (< 3 2) 10 20)
+(if (< 3 2) 10 (seq (define notthere 24) (+ 1 notthere)))
 
+(seq (define x 19) x)
 

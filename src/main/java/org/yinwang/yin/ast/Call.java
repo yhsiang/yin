@@ -4,7 +4,10 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Binder;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
-import org.yinwang.yin.value.*;
+import org.yinwang.yin.value.Closure;
+import org.yinwang.yin.value.PrimFun;
+import org.yinwang.yin.value.Record;
+import org.yinwang.yin.value.Value;
 
 import java.util.*;
 
@@ -89,77 +92,15 @@ public class Call extends Node {
             // instantiate
             return copy;
         } else if (func instanceof PrimFun) {
-            String name = ((PrimFun) func).name;
-            List<Value> values = Node.interpList(args.positional, s);
-
-            if (name.equals("+")) {
-                if (values.size() == 2) {
-                    Value v1 = values.get(0);
-                    Value v2 = values.get(1);
-                    if (v1 instanceof IntValue && v2 instanceof IntValue) {
-                        return new IntValue(((IntValue) v1).value + ((IntValue) v2).value);
-                    }
-                    if (v1 instanceof FloatValue && v2 instanceof FloatValue) {
-                        return new FloatValue(((FloatValue) v1).value + ((FloatValue) v2).value);
-                    }
-                    if (v1 instanceof FloatValue && v2 instanceof IntValue) {
-                        return new FloatValue(((FloatValue) v1).value + ((IntValue) v2).value);
-                    }
-                    if (v1 instanceof IntValue && v2 instanceof FloatValue) {
-                        return new FloatValue(((IntValue) v1).value + ((FloatValue) v2).value);
-                    }
-                } else {
-                    _.abort(this, "wrong number of arguments to +: " + values.size());
-                    return null;
-                }
+            PrimFun prim = (PrimFun) func;
+            if (args.positional.size() != prim.arity) {
+                _.abort(this, "incorrect number of arguments for primitive " +
+                        prim.name + ": " + args.positional.size());
+                return null;
+            } else {
+                List<Value> args = Node.interpList(this.args.positional, s);
+                return prim.apply(args, this);
             }
-
-            if (name.equals("*")) {
-                if (values.size() == 2) {
-                    Value v1 = values.get(0);
-                    Value v2 = values.get(1);
-                    if (v1 instanceof IntValue && v2 instanceof IntValue) {
-                        return new IntValue(((IntValue) v1).value * ((IntValue) v2).value);
-                    }
-                    if (v1 instanceof FloatValue && v2 instanceof FloatValue) {
-                        return new FloatValue(((FloatValue) v1).value * ((FloatValue) v2).value);
-                    }
-                    if (v1 instanceof FloatValue && v2 instanceof IntValue) {
-                        return new FloatValue(((FloatValue) v1).value * ((IntValue) v2).value);
-                    }
-                    if (v1 instanceof IntValue && v2 instanceof FloatValue) {
-                        return new FloatValue(((IntValue) v1).value * ((FloatValue) v2).value);
-                    }
-                } else {
-                    _.abort(this, "wrong number of arguments to *: " + values.size());
-                    return null;
-                }
-            }
-
-            if (name.equals("<")) {
-                if (values.size() == 2) {
-                    Value v1 = values.get(0);
-                    Value v2 = values.get(1);
-                    if (v1 instanceof IntValue && v2 instanceof IntValue) {
-                        return new BoolValue(((IntValue) v1).value < ((IntValue) v2).value);
-                    }
-                    if (v1 instanceof FloatValue && v2 instanceof FloatValue) {
-                        return new BoolValue(((FloatValue) v1).value < ((FloatValue) v2).value);
-                    }
-                    if (v1 instanceof FloatValue && v2 instanceof IntValue) {
-                        return new BoolValue(((FloatValue) v1).value < ((IntValue) v2).value);
-                    }
-                    if (v1 instanceof IntValue && v2 instanceof FloatValue) {
-                        return new BoolValue(((IntValue) v1).value < ((FloatValue) v2).value);
-                    }
-                } else {
-                    _.abort(this, "wrong number of arguments to <: " + values.size());
-                    return null;
-                }
-            }
-
-            _.abort(this.func, "unrecognized operator: " + func);
-            return null;
         } else {
             _.abort(this.func, "calling non-function: " + func);
             return Value.VOID;

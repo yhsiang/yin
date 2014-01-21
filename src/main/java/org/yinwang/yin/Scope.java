@@ -1,7 +1,8 @@
 package org.yinwang.yin;
 
 
-import org.yinwang.yin.value.Value;
+import org.yinwang.yin.value.*;
+import org.yinwang.yin.value.primitives.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,6 +49,23 @@ public class Scope {
         } else {
             return null;
         }
+    }
+
+
+    public static Scope buildInitScope() {
+        Scope init = new Scope();
+
+        init.put("+", new Add());
+        init.put("-", new Sub());
+        init.put("*", new Mult());
+        init.put("/", new Div());
+        init.put("<", new Lt());
+        init.put("<=", new LtE());
+        init.put(">", new Gt());
+        init.put(">=", new GtE());
+        init.put("=", new Eq());
+
+        return init;
     }
 
 
