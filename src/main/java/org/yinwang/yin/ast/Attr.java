@@ -30,8 +30,23 @@ public class Attr extends Node {
                 return null;
             }
         } else {
-            _.abort(attr, "accessing attribute of non-record: " + record);
+            _.abort(attr, "getting attribute of non-record: " + record);
             return null;
+        }
+    }
+
+
+    public void set(Value v, Scope s) {
+        Value record = value.interp(s);
+        if (record instanceof Record) {
+            Value a = ((Record) record).values.get(attr.id);
+            if (a != null) {
+                ((Record) record).values.put(attr.id, v);
+            } else {
+                _.abort(attr, "can only assign to existing attribute in record, " + attr + " not found in: " + record);
+            }
+        } else {
+            _.abort(attr, "setting attribute of non-record: " + record);
         }
     }
 

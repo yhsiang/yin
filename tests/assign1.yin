@@ -1,3 +1,5 @@
 (define aa [1 2 3])
-(set! aa#1 10)
-aa#1
+(set! aa#0 10)
+(define bb {:x 1 :y 2})
+(set! bb.x 10)
+[aa bb]

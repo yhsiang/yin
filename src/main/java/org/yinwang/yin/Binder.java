@@ -1,6 +1,7 @@
 package org.yinwang.yin;
 
 
+import org.yinwang.yin.ast.Attr;
 import org.yinwang.yin.ast.Name;
 import org.yinwang.yin.ast.Node;
 import org.yinwang.yin.ast.Subscript;
@@ -17,6 +18,8 @@ public class Binder {
             }
         } else if (pattern instanceof Subscript) {
             ((Subscript) pattern).put(value, env);
+        } else if (pattern instanceof Attr) {
+            ((Attr) pattern).set(value, env);
         }
     }
 
