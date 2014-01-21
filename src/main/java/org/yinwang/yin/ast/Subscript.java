@@ -49,7 +49,7 @@ public class Subscript extends Node {
     }
 
 
-    public void put(Value v, Scope s) {
+    public void set(Value v, Scope s) {
         Value vector = value.interp(s);
         Value indexValue = index.interp(s);
 

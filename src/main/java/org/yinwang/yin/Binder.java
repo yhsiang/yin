@@ -17,7 +17,7 @@ public class Binder {
                 defineName((Name) pattern, value, env);
             }
         } else if (pattern instanceof Subscript) {
-            ((Subscript) pattern).put(value, env);
+            ((Subscript) pattern).set(value, env);
         } else if (pattern instanceof Attr) {
             ((Attr) pattern).set(value, env);
         }
