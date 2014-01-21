@@ -3,3 +3,9 @@
 (define bb {:x 1 :y 2})
 (set! bb.x 10)
 [aa bb]
+
+(define [x y] [1 2])
+[x y]
+
+(set! [x y] [y x])
+[x y]
