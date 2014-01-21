@@ -34,6 +34,8 @@ public class Binder {
                     _.abort(pattern, "define with records of different attributes: " +
                             elms1.keySet() + " v.s. " + elms2.keySet());
                 }
+            } else {
+                _.abort(pattern, "define with incompatible types: record and " + value);
             }
         } else if (pattern instanceof VectorLiteral) {
             if (value instanceof Vector) {
@@ -47,6 +49,8 @@ public class Binder {
                     _.abort(pattern,
                             "define with vectors of different sizes: " + elms1.size() + " v.s. " + elms2.size());
                 }
+            } else {
+                _.abort(pattern, "define with incompatible types: vector and " + value);
             }
         } else {
             _.abort(pattern, "unsupported pattern of define: " + pattern);
@@ -80,6 +84,8 @@ public class Binder {
                     _.abort(pattern, "assign with records of different attributes: " +
                             elms1.keySet() + " v.s. " + elms2.keySet());
                 }
+            } else {
+                _.abort(pattern, "assign with incompatible types: record and " + value);
             }
         } else if (pattern instanceof VectorLiteral) {
             if (value instanceof Vector) {
@@ -92,6 +98,8 @@ public class Binder {
                 } else {
                     _.abort(pattern, "assign vectors of different sizes: " + elms1.size() + " v.s. " + elms2.size());
                 }
+            } else {
+                _.abort(pattern, "assign incompatible types: vector and " + value);
             }
         } else {
             _.abort(pattern, "unsupported pattern of assign: " + pattern);

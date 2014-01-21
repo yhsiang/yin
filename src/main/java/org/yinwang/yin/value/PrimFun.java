@@ -16,7 +16,7 @@ public class PrimFun extends Value {
     public static boolean isOp(Node node) {
         if (node instanceof Name) {
             String id = ((Name) node).id;
-            return id.equals("+") || id.equals("-") || id.equals("*") || id.equals("/");
+            return id.equals("+") || id.equals("-") || id.equals("*") || id.equals("/") || id.equals("<");
         }
         return false;
     }

@@ -136,6 +136,28 @@ public class Call extends Node {
                 }
             }
 
+            if (name.equals("<")) {
+                if (values.size() == 2) {
+                    Value v1 = values.get(0);
+                    Value v2 = values.get(1);
+                    if (v1 instanceof IntValue && v2 instanceof IntValue) {
+                        return new BoolValue(((IntValue) v1).value < ((IntValue) v2).value);
+                    }
+                    if (v1 instanceof FloatValue && v2 instanceof FloatValue) {
+                        return new BoolValue(((FloatValue) v1).value < ((FloatValue) v2).value);
+                    }
+                    if (v1 instanceof FloatValue && v2 instanceof IntValue) {
+                        return new BoolValue(((FloatValue) v1).value < ((IntValue) v2).value);
+                    }
+                    if (v1 instanceof IntValue && v2 instanceof FloatValue) {
+                        return new BoolValue(((IntValue) v1).value < ((FloatValue) v2).value);
+                    }
+                } else {
+                    _.abort(this, "wrong number of arguments to <: " + values.size());
+                    return null;
+                }
+            }
+
             _.abort(this.func, "unrecognized operator: " + func);
             return null;
         } else {

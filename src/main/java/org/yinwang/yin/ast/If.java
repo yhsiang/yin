@@ -2,6 +2,8 @@ package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
+import org.yinwang.yin._;
+import org.yinwang.yin.value.BoolValue;
 import org.yinwang.yin.value.Value;
 
 public class If extends Node {
@@ -19,7 +21,17 @@ public class If extends Node {
 
 
     public Value interp(Scope s) {
-        return null;
+        Value tv = interp(test, s);
+        if (tv instanceof BoolValue) {
+            if (((BoolValue) tv).value) {
+                return interp(then, s);
+            } else {
+                return interp(orelse, s);
+            }
+        } else {
+            _.abort(test, "test is not boolean: " + tv);
+            return null;
+        }
     }
 
 
