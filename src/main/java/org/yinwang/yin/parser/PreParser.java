@@ -15,8 +15,6 @@ import java.util.*;
  */
 public class PreParser {
 
-    public static final char RADIX_PREFIX = '#';
-
     public String file;
     public String text;
 
@@ -116,7 +114,7 @@ public class PreParser {
 
 
     public boolean isNumberPrefix(char c) {
-        return Character.isDigit(c) || c == RADIX_PREFIX;
+        return Character.isDigit(c) || c == Constants.RADIX_PREFIX;
     }
 
 
