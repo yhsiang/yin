@@ -23,7 +23,7 @@ public class Interpreter {
 
     public static void main(String[] args) {
         Interpreter i = new Interpreter(args[0]);
-        _.msg("result: " + i.interp(args[0]));
+        _.msg(i.interp(args[0]).toString());
     }
 
 }
