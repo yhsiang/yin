@@ -1,6 +1,7 @@
 package org.yinwang.yin.ast;
 
 
+import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
 import org.yinwang.yin.value.IntValue;
@@ -49,7 +50,7 @@ public class Subscript extends Node {
 
 
     public String toString() {
-        return value + "." + index;
+        return value + Constants.SUBSCRIPT_ACCESS + index;
     }
 
 }

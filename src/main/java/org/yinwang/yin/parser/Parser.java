@@ -48,11 +48,13 @@ public class Parser {
             }
 
             if (delimType(tuple.open, Constants.RECORD_BEGIN)) {
-                return new RecordLiteral(parseList(tuple.elements), tuple.file, tuple.start, tuple.end, tuple.line, tuple.col);
+                return new RecordLiteral(parseList(tuple.elements), tuple.file, tuple.start, tuple.end, tuple.line,
+                        tuple.col);
             }
 
             if (delimType(tuple.open, Constants.ARRAY_BEGIN)) {
-                return new VectorLiteral(parseList(tuple.elements), tuple.file, tuple.start, tuple.end, tuple.line, tuple.col);
+                return new VectorLiteral(parseList(tuple.elements), tuple.file, tuple.start, tuple.end, tuple.line,
+                        tuple.col);
             }
 
             Node keyNode = tuple.elements.get(0);
