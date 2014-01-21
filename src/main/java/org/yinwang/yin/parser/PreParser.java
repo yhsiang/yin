@@ -113,11 +113,6 @@ public class PreParser {
     }
 
 
-    public boolean isNumberPrefix(char c) {
-        return Character.isDigit(c) || c == Constants.RADIX_PREFIX;
-    }
-
-
     /**
      * lexer
      *
@@ -181,9 +176,9 @@ public class PreParser {
         int startLine = line;
         int startCol = col;
 
-        if (isNumberPrefix(text.charAt(start)) ||
+        if (Character.isDigit(text.charAt(start)) ||
                 ((text.charAt(start) == '+' || text.charAt(start) == '-')
-                        && isNumberPrefix(text.charAt(start + 1))))
+                        && Character.isDigit(text.charAt(start + 1))))
         {
             while (offset < text.length() &&
                     !Character.isWhitespace(cur) &&

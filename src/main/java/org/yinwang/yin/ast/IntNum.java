@@ -1,7 +1,6 @@
 package org.yinwang.yin.ast;
 
 
-import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin.value.IntValue;
 import org.yinwang.yin.value.Value;
@@ -28,17 +27,14 @@ public class IntNum extends Node {
             sign = 1;
         }
 
-        if (content.startsWith(Constants.RADIX_PREFIX + "b")) {
+        if (content.startsWith("0b")) {
             base = 2;
             content = content.substring(2);
-        } else if (content.startsWith(Constants.RADIX_PREFIX + "o")) {
-            base = 8;
-            content = content.substring(2);
-        } else if (content.startsWith(Constants.RADIX_PREFIX + "x")) {
+        } else if (content.startsWith("0x")) {
             base = 16;
             content = content.substring(2);
-        } else if (content.startsWith(Constants.RADIX_PREFIX + "d")) {
-            base = 10;
+        } else if (content.startsWith("0o")) {
+            base = 8;
             content = content.substring(2);
         } else {
             base = 10;

@@ -13,7 +13,7 @@ public class Constants {
 
     public static final String ATTRIBUTE_ACCESS = ".";
     public static final String SUBSCRIPT_ACCESS = "#";
-    public static final char RADIX_PREFIX = '$';
+
 
     // keywords
     public static final String SEQ_KEYWORD = "seq";
