@@ -39,10 +39,10 @@ public class Subscript extends Node {
         List<Value> values = ((Vector) vector).values;
         int i = ((IntValue) indexValue).value;
 
-        if (i < values.size()) {
+        if (i >= 0 && i < values.size()) {
             return values.get(i);
         } else {
-            _.abort(this, "subscript " + i + " out of bound: " + (values.size() - 1));
+            _.abort(this, "subscript out of bound: " + i + " v.s. [0, " + (values.size() - 1) + "]");
             return null;
         }
     }

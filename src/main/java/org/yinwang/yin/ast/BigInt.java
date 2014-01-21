@@ -28,17 +28,14 @@ public class BigInt extends Node {
             sign = 1;
         }
 
-        if (content.startsWith("#b")) {
+        if (content.startsWith("0b")) {
             base = 2;
             content = content.substring(2);
-        } else if (content.startsWith("#o")) {
-            base = 8;
-            content = content.substring(2);
-        } else if (content.startsWith("#x")) {
+        } else if (content.startsWith("0x")) {
             base = 16;
             content = content.substring(2);
-        } else if (content.startsWith("#d")) {
-            base = 10;
+        } else if (content.startsWith("0o")) {
+            base = 8;
             content = content.substring(2);
         } else {
             base = 10;
