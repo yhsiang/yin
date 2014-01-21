@@ -11,9 +11,12 @@
 (set! [x y] [y x])
 [x y]
 
-(define {:a xx :b yy} {:a 7 :b 8})
-[xx yy]
-
 (set! {:a x :b y} {:a 7 :b 8})
 [x y]
 
+(define {:a xx :b [uu vv]} {:a 7 :b [8 9]})
+[xx uu vv]
+
+(define t 0)
+(set! [t t] [1 2])
+t

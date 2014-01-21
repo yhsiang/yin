@@ -19,6 +19,7 @@ public class Assign extends Node {
 
     public Value interp(Scope s) {
         Value valueValue = value.interp(s);
+        Binder.checkDup(pattern);
         Binder.assign(pattern, valueValue, s);
         return Value.VOID;
     }

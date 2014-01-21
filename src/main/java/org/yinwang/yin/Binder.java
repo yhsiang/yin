@@ -6,8 +6,10 @@ import org.yinwang.yin.value.Record;
 import org.yinwang.yin.value.Value;
 import org.yinwang.yin.value.Vector;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Binder {
 
@@ -93,6 +95,32 @@ public class Binder {
             }
         } else {
             _.abort(pattern, "unsupported pattern of assign: " + pattern);
+        }
+    }
+
+
+    public static void checkDup(Node pattern) {
+        checkDup1(pattern, new HashSet<String>());
+    }
+
+
+    public static void checkDup1(Node pattern, Set<String> seen) {
+
+        if (pattern instanceof Name) {
+            String id = ((Name) pattern).id;
+            if (seen.contains(id)) {
+                _.abort(pattern, "duplicated name found in pattern: " + pattern);
+            } else {
+                seen.add(id);
+            }
+        } else if (pattern instanceof RecordLiteral) {
+            for (Node v : ((RecordLiteral) pattern).map.values()) {
+                checkDup1(v, seen);
+            }
+        } else if (pattern instanceof VectorLiteral) {
+            for (Node v : ((VectorLiteral) pattern).elements) {
+                checkDup1(v, seen);
+            }
         }
     }
 
