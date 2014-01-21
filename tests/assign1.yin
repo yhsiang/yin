@@ -4,8 +4,16 @@
 (set! bb.x 10)
 [aa bb]
 
+
 (define [x y] [1 2])
 [x y]
 
 (set! [x y] [y x])
 [x y]
+
+(define {:a xx :b yy} {:a 7 :b 8})
+[xx yy]
+
+(set! {:a x :b y} {:a 7 :b 8})
+[x y]
+
