@@ -9,17 +9,17 @@ public class Binder {
 
     public static void bind(Node pattern, Value value, Scope env, boolean assign) {
         if (pattern instanceof Name) {
-            String id = ((Name) pattern).id;
-            Value v = env.lookupLocal(id);
-
-            if (assign && v == null) {
-                _.abort(pattern, "assigned name was not defined: " + id);
-            } else if (!assign && v != null) {
-                _.abort(pattern, "trying to redefine name: " + id);
+            if (assign) {
+                assignName((Name) pattern, value, env);
             } else {
-                env.put(id, value);
+                defineName((Name) pattern, value, env);
             }
         }
+    }
+
+
+    public static void define(Node pattern, Value value, Scope env) {
+        bind(pattern, value, env, false);
     }
 
 
@@ -28,8 +28,26 @@ public class Binder {
     }
 
 
-    public static void def(Node pattern, Value value, Scope env) {
-        bind(pattern, value, env, false);
+    public static void defineName(Name name, Value value, Scope env) {
+        String id = name.id;
+        Value v = env.lookupLocal(id);
+        if (v != null) {
+            _.abort(name, "trying to redefine name: " + id);
+        } else {
+            env.put(id, value);
+        }
+    }
+
+
+    public static void assignName(Name name, Value value, Scope env) {
+        String id = name.id;
+        Scope d = env.findDefiningScope(id);
+
+        if (d == null) {
+            _.abort(name, "assigned name was not defined: " + id);
+        } else {
+            d.put(id, value);
+        }
     }
 
 }

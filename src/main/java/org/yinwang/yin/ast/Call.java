@@ -33,7 +33,7 @@ public class Call extends Node {
                 if (args.positional.size() == params.positional.size()) {
                     for (int i = 0; i < args.positional.size(); i++) {
                         Value value = args.positional.get(i).interp(funScope);
-                        Binder.def(params.positional.get(i), value, funScope);
+                        Binder.define(params.positional.get(i), value, funScope);
                     }
                     return closure.fun.body.interp(funScope);
                 } else {

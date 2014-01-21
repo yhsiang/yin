@@ -39,6 +39,18 @@ public class Scope {
     }
 
 
+    public Scope findDefiningScope(String name) {
+        Value v = table.get(name);
+        if (v != null) {
+            return this;
+        } else if (parent != null) {
+            return parent.findDefiningScope(name);
+        } else {
+            return null;
+        }
+    }
+
+
     public void put(String name, Value value) {
         table.put(name, value);
     }
