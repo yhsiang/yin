@@ -32,6 +32,11 @@ public class Parser {
             return new Attr(parseNode(a.value), a.attr, a.file, a.start, a.end, a.line, a.col);
         }
 
+        if (prenode instanceof Subscript) {
+            Subscript a = (Subscript) prenode;
+            return new Subscript(parseNode(a.value), parseNode(a.index), a.file, a.start, a.end, a.line, a.col);
+        }
+
         // most structures are encoded in a tuple
         // (if t c a) (+ 1 2) (f x y) ...
         // decode them by their first map
@@ -191,12 +196,10 @@ public class Parser {
                                 grouped = new Attr(grouped, (Name) n2, grouped.file,
                                         grouped.start, n2.end, grouped.line, grouped.col);
                                 i++;   // skip
-                            } else if (n2 instanceof IntNum) {
-                                grouped = new Subscript(grouped, (IntNum) n2, grouped.file,
+                            } else {
+                                grouped = new Subscript(grouped, n2, grouped.file,
                                         grouped.start, n2.end, grouped.line, grouped.col);
                                 i++;   // skip
-                            } else {
-                                _.abort(n2, "illegal attribute: " + n2);
                             }
                         }
                     } else {

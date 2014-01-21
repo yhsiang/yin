@@ -11,45 +11,45 @@ import java.util.List;
 
 public class Subscript extends Node {
     public Node value;
-    public IntNum sub;
+    public Node index;
 
 
-    public Subscript(Node value, IntNum sub, String file, int start, int end, int line, int col) {
+    public Subscript(Node value, Node index, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.value = value;
-        this.sub = sub;
+        this.index = index;
     }
 
 
     @Override
     public Value interp(Scope s) {
         Value vector = value.interp(s);
-        Value subValue = sub.interp(s);
+        Value indexValue = index.interp(s);
 
         if (!(vector instanceof Vector)) {
             _.abort(value, "subscripting non-vector: " + vector);
             return null;
         }
 
-        if (!(subValue instanceof IntValue)) {
-            _.abort(value, "subscript " + sub + " is not an integer: " + subValue);
+        if (!(indexValue instanceof IntValue)) {
+            _.abort(value, "subscript " + index + " is not an integer: " + indexValue);
             return null;
         }
 
         List<Value> values = ((Vector) vector).values;
-        int subInt = ((IntValue) subValue).value;
+        int i = ((IntValue) indexValue).value;
 
-        if (subInt < values.size()) {
-            return values.get(subInt);
+        if (i < values.size()) {
+            return values.get(i);
         } else {
-            _.abort(this, "subscript " + subInt + " out of bound: " + (values.size() - 1));
+            _.abort(this, "subscript " + i + " out of bound: " + (values.size() - 1));
             return null;
         }
     }
 
 
     public String toString() {
-        return value + "." + sub;
+        return value + "." + index;
     }
 
 }
