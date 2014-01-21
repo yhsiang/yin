@@ -49,6 +49,29 @@ public class Subscript extends Node {
     }
 
 
+    public void put(Value v, Scope s) {
+        Value vector = value.interp(s);
+        Value indexValue = index.interp(s);
+
+        if (!(vector instanceof Vector)) {
+            _.abort(value, "subscripting non-vector: " + vector);
+        }
+
+        if (!(indexValue instanceof IntValue)) {
+            _.abort(value, "subscript " + index + " is not an integer: " + indexValue);
+        }
+
+        Vector vector1 = (Vector) vector;
+        int i = ((IntValue) indexValue).value;
+
+        if (i >= 0 && i < vector1.size()) {
+            vector1.set(i, v);
+        } else {
+            _.abort(this, "subscript out of bound: " + i + " v.s. [0, " + (vector1.size() - 1) + "]");
+        }
+    }
+
+
     public String toString() {
         return value + Constants.SUBSCRIPT_ACCESS + index;
     }

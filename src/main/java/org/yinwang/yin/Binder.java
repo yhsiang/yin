@@ -3,6 +3,7 @@ package org.yinwang.yin;
 
 import org.yinwang.yin.ast.Name;
 import org.yinwang.yin.ast.Node;
+import org.yinwang.yin.ast.Subscript;
 import org.yinwang.yin.value.Value;
 
 public class Binder {
@@ -14,6 +15,8 @@ public class Binder {
             } else {
                 defineName((Name) pattern, value, env);
             }
+        } else if (pattern instanceof Subscript) {
+            ((Subscript) pattern).put(value, env);
         }
     }
 
