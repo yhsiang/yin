@@ -1,5 +1,13 @@
-(record A (:x Int 1) (:y Bool))
-(A)
+--(record A (:x Int 1) (:y Bool))
+--(A)
 
-(define f (fun ((:x Int (+ 1 2)) (:y Bool)) x))
-(f :y 0)
+--(define f (fun ([:x Int (+ 1 2)] [:y Bool]) x))
+--(f :y 0)
+
+
+(define fact
+  (fun ([:x Int])
+    (if (= x 0) 1 (* x (fact (- x 1))))))
+
+(fact 5)
+
