@@ -26,10 +26,6 @@ public class RecordDef extends Node {
         this.name = name;
         this.parents = parents;
 
-        if (contents.size() % 2 != 0) {
-            _.abort(this, "record initializer must have even number of elements");
-        }
-
         for (int i = 0; i < contents.size(); i++) {
             Node tuple = contents.get(i);
             if (tuple instanceof Tuple) {
@@ -69,6 +65,17 @@ public class RecordDef extends Node {
             for (Node p : parents) {
                 Value pv = p.interp(s);
                 if (pv instanceof RecordType) {
+                    for (Map.Entry<String, Value> e : ((RecordType) pv).typeMap.entrySet()) {
+                        Value existing = vm.get(e.getKey());
+                        if (existing == null) {
+                            tm.put(e.getKey(), e.getValue());
+                        } else {
+                            _.abort(p, "conflicting field " + e.getKey() +
+                                    " inherited from parent: " + p + ", value: " + pv);
+                            return null;
+                        }
+                    }
+
                     for (Map.Entry<String, Value> e : ((RecordType) pv).valueMap.entrySet()) {
                         Value existing = vm.get(e.getKey());
                         if (existing == null) {

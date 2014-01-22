@@ -62,13 +62,19 @@ public class Scope {
         init.put("-", new Sub());
         init.put("*", new Mult());
         init.put("/", new Div());
+
         init.put("<", new Lt());
         init.put("<=", new LtE());
         init.put(">", new Gt());
         init.put(">=", new GtE());
         init.put("=", new Eq());
+        init.put("and", new And());
+        init.put("or", new Or());
+        init.put("not", new Not());
+
         init.put("true", new BoolValue(true));
         init.put("false", new BoolValue(false));
+
         init.put("Int", new IntType());
         init.put("Bool", new BoolType());
 
