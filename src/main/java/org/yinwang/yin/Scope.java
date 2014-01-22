@@ -1,7 +1,10 @@
 package org.yinwang.yin;
 
 
-import org.yinwang.yin.value.*;
+import org.yinwang.yin.value.BoolType;
+import org.yinwang.yin.value.BoolValue;
+import org.yinwang.yin.value.IntType;
+import org.yinwang.yin.value.Value;
 import org.yinwang.yin.value.primitives.*;
 
 import java.util.HashMap;
@@ -64,6 +67,10 @@ public class Scope {
         init.put(">", new Gt());
         init.put(">=", new GtE());
         init.put("=", new Eq());
+        init.put("true", new BoolValue(true));
+        init.put("false", new BoolValue(false));
+        init.put("Int", new IntType());
+        init.put("Bool", new BoolType());
 
         return init;
     }

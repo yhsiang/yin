@@ -3,7 +3,8 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
-import org.yinwang.yin.value.Record;
+import org.yinwang.yin.parser.Parser;
+import org.yinwang.yin.value.RecordType;
 import org.yinwang.yin.value.Value;
 
 import java.util.LinkedHashMap;
@@ -14,7 +15,8 @@ import java.util.Map;
 public class RecordDef extends Node {
     public Name name;
     public List<Name> parents;
-    public Map<String, Node> map = new LinkedHashMap<>();
+    public Map<String, Node> valueMap = new LinkedHashMap<>();
+    public Map<String, Node> typeMap = new LinkedHashMap<>();
 
 
     public RecordDef(Name name, List<Name> parents, List<Node> contents,
@@ -28,36 +30,52 @@ public class RecordDef extends Node {
             _.abort(this, "record initializer must have even number of elements");
         }
 
-        for (int i = 0; i < contents.size(); i += 2) {
-            Node key = contents.get(i);
-            Node value = contents.get(i + 1);
-            if (key instanceof Keyword) {
-                if (value instanceof Keyword) {
-                    _.abort(value, "keywords shouldn't be used as values: " + value);
-                } else {
-                    map.put(((Keyword) key).id, value);
+        for (int i = 0; i < contents.size(); i++) {
+            Node tuple = contents.get(i);
+            if (tuple instanceof Tuple) {
+                List<Node> elements = Parser.parseList(((Tuple) tuple).elements);
+
+                if (elements.size() == 3) {
+                    Node fieldName = elements.get(0);
+                    Node type = elements.get(1);
+                    Node value = elements.get(2);
+
+                    if (!(fieldName instanceof Keyword)) {
+                        _.abort(fieldName, "record initializer key is not a keyword: " + fieldName);
+                    } else {
+                        typeMap.put(((Keyword) fieldName).id, type);
+                        valueMap.put(((Keyword) fieldName).id, value);
+                    }
+                } else if (elements.size() == 2) {
+                    Node fieldName = elements.get(0);
+                    Node type = elements.get(1);
+
+                    if (!(fieldName instanceof Keyword)) {
+                        _.abort(fieldName, "record initializer key is not a keyword: " + fieldName);
+                    } else {
+                        typeMap.put(((Keyword) fieldName).id, type);
+                    }
                 }
-            } else {
-                _.abort(key, "record initializer key is not a keyword: " + key);
             }
         }
     }
 
 
     public Value interp(Scope s) {
-        Map<String, Value> valueMap = new LinkedHashMap<>();
+        Map<String, Value> tm = new LinkedHashMap<>();
+        Map<String, Value> vm = new LinkedHashMap<>();
 
         if (parents != null) {
             for (Node p : parents) {
                 Value pv = p.interp(s);
-                if (pv instanceof Record) {
-                    for (Map.Entry<String, Value> e : ((Record) pv).values.entrySet()) {
-                        Value existing = valueMap.get(e.getKey());
+                if (pv instanceof RecordType) {
+                    for (Map.Entry<String, Value> e : ((RecordType) pv).valueMap.entrySet()) {
+                        Value existing = vm.get(e.getKey());
                         if (existing == null) {
-                            valueMap.put(e.getKey(), e.getValue());
+                            vm.put(e.getKey(), e.getValue());
                         } else {
-                            _.abort(p,
-                                    "conflicting field " + e.getKey() + " inherited from parent: " + p + ", value: " + pv);
+                            _.abort(p, "conflicting field " + e.getKey() +
+                                    " inherited from parent: " + p + ", value: " + pv);
                             return null;
                         }
                     }
@@ -68,10 +86,15 @@ public class RecordDef extends Node {
             }
         }
 
-        for (Map.Entry<String, Node> e : map.entrySet()) {
-            valueMap.put(e.getKey(), e.getValue().interp(s));
+        for (Map.Entry<String, Node> e : this.typeMap.entrySet()) {
+            tm.put(e.getKey(), e.getValue().interp(s));
         }
-        Value r = new Record(name.id, valueMap, this);
+
+        for (Map.Entry<String, Node> e : this.valueMap.entrySet()) {
+            vm.put(e.getKey(), e.getValue().interp(s));
+        }
+
+        Value r = new RecordType(name.id, tm, vm, this);
         s.put(name.id, r);
         return Value.VOID;
     }
@@ -87,7 +110,7 @@ public class RecordDef extends Node {
             sb.append(" (" + Node.printList(parents) + ")");
         }
 
-        for (Map.Entry<String, Node> e : map.entrySet()) {
+        for (Map.Entry<String, Node> e : valueMap.entrySet()) {
             sb.append(" :" + e.getKey() + " " + e.getValue());
         }
 

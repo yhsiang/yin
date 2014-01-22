@@ -6,7 +6,7 @@ import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
 import org.yinwang.yin.value.Closure;
 import org.yinwang.yin.value.PrimFun;
-import org.yinwang.yin.value.Record;
+import org.yinwang.yin.value.RecordType;
 import org.yinwang.yin.value.Value;
 
 import java.util.*;
@@ -82,12 +82,12 @@ public class Call extends Node {
                     return closure.fun.body.interp(funScope);
                 }
             }
-        } else if (func instanceof Record) {
-            Record template = (Record) func;
-            Record copy = template.copy();
+        } else if (func instanceof RecordType) {
+            RecordType template = (RecordType) func;
+            RecordType copy = template.copy();
 
             for (Map.Entry<String, Node> e : args.keywords.entrySet()) {
-                copy.values.put(e.getKey(), e.getValue().interp(s));
+                copy.valueMap.put(e.getKey(), e.getValue().interp(s));
             }
 
             // instantiate

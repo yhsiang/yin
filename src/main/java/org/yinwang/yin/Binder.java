@@ -2,7 +2,7 @@ package org.yinwang.yin;
 
 
 import org.yinwang.yin.ast.*;
-import org.yinwang.yin.value.Record;
+import org.yinwang.yin.value.RecordType;
 import org.yinwang.yin.value.Value;
 import org.yinwang.yin.value.Vector;
 
@@ -23,9 +23,9 @@ public class Binder {
                 env.put(id, value);
             }
         } else if (pattern instanceof RecordLiteral) {
-            if (value instanceof Record) {
+            if (value instanceof RecordType) {
                 Map<String, Node> elms1 = ((RecordLiteral) pattern).map;
-                Map<String, Value> elms2 = ((Record) value).values;
+                Map<String, Value> elms2 = ((RecordType) value).valueMap;
                 if (elms1.keySet().equals(elms2.keySet())) {
                     for (String k1 : elms1.keySet()) {
                         define(elms1.get(k1), elms2.get(k1), env);
@@ -73,9 +73,9 @@ public class Binder {
         } else if (pattern instanceof Attr) {
             ((Attr) pattern).set(value, env);
         } else if (pattern instanceof RecordLiteral) {
-            if (value instanceof Record) {
+            if (value instanceof RecordType) {
                 Map<String, Node> elms1 = ((RecordLiteral) pattern).map;
-                Map<String, Value> elms2 = ((Record) value).values;
+                Map<String, Value> elms2 = ((RecordType) value).valueMap;
                 if (elms1.keySet().equals(elms2.keySet())) {
                     for (String k1 : elms1.keySet()) {
                         assign(elms1.get(k1), elms2.get(k1), env);

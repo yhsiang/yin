@@ -140,11 +140,10 @@ public class Parser {
                                         _.abort(p, "parents can only be names");
                                     }
                                 }
-                                defs = parseList(tuple.elements.subList(3, tuple.elements.size()));
-
+                                defs = tuple.elements.subList(3, tuple.elements.size());
                             } else {
                                 parents = null;
-                                defs = parseList(tuple.elements.subList(2, tuple.elements.size()));
+                                defs = tuple.elements.subList(2, tuple.elements.size());
                             }
 
                             return new RecordDef((Name) name, parents, defs,
