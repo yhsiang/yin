@@ -1,4 +1,4 @@
-;;; scheme.el --- Scheme (and DSSSL) editing mode
+;;; yin.el --- Yin (and DSSSL) editing mode
 
 ;; Copyright (C) 1986-1988, 1997-1998, 2001-2013 Free Software
 ;; Foundation, Inc.
@@ -24,21 +24,21 @@
 
 ;;; Commentary:
 
-;; The major mode for editing Scheme-type Lisp code, very similar to
+;; The major mode for editing Yin-type Lisp code, very similar to
 ;; the Lisp mode documented in the Emacs manual.  `dsssl-mode' is a
-;; variant of scheme-mode for editing DSSSL specifications for SGML
+;; variant of yin-mode for editing DSSSL specifications for SGML
 ;; documents.  [As of Apr 1997, some pointers for DSSSL may be found,
 ;; for instance, at <URL:http://www.sil.org/sgml/related.html#dsssl>.]
 ;; All these Lisp-ish modes vary basically in details of the language
 ;; syntax they highlight/indent/index, but dsssl-mode uses "^;;;" as
 ;; the page-delimiter since ^L isn't normally a valid SGML character.
 ;;
-;; For interacting with a Scheme interpreter See also `run-scheme' in
-;; the `cmuscheme' package and also the implementation-specific
-;; `xscheme' package.
+;; For interacting with a Yin interpreter See also `run-yin' in
+;; the `cmuyin' package and also the implementation-specific
+;; `xyin' package.
 
 ;; Here's a recipe to generate a TAGS file for DSSSL, by the way:
-;; etags --lang=scheme --regex='/[ \t]*(\(mode\|element\)[ \t
+;; etags --lang=yin --regex='/[ \t]*(\(mode\|element\)[ \t
 ;; ]+\([^ \t(
 ;; ]+\)/\2/' --regex='/[ \t]*(element[ \t
 ;; ]*([^)]+[ \t
@@ -52,13 +52,13 @@
 
 (require 'lisp-mode)
 
-(defvar scheme-mode-syntax-table
+(defvar yin-mode-syntax-table
   (let ((st (make-syntax-table))
 	(i 0))
     ;; Symbol constituents
     ;; We used to treat chars 128-256 as symbol-constituent, but they
     ;; should be valid word constituents (Bug#8843).  Note that valid
-    ;; identifier characters are Scheme-implementation dependent.
+    ;; identifier characters are Yin-implementation dependent.
     (while (< i ?0)
       (modify-syntax-entry i "_   " st)
       (setq i (1+ i)))
@@ -111,21 +111,21 @@
     (modify-syntax-entry ?\\ "\\   " st)
     st))
 
-(defvar scheme-mode-abbrev-table nil)
-(define-abbrev-table 'scheme-mode-abbrev-table ())
+(defvar yin-mode-abbrev-table nil)
+(define-abbrev-table 'yin-mode-abbrev-table ())
 
-(defvar scheme-imenu-generic-expression
+(defvar yin-imenu-generic-expression
       '((nil
 	 "^(define\\(\\|-\\(generic\\(\\|-procedure\\)\\|method\\)\\)*\\s-+(?\\(\\sw+\\)" 4)
 	("Types"
 	 "^(define-class\\s-+(?\\(\\sw+\\)" 1)
 	("Macros"
 	 "^(\\(defmacro\\|define-macro\\|define-syntax\\)\\s-+(?\\(\\sw+\\)" 2))
-  "Imenu generic expression for Scheme mode.  See `imenu-generic-expression'.")
+  "Imenu generic expression for Yin mode.  See `imenu-generic-expression'.")
 
-(defun scheme-mode-variables ()
-  (set-syntax-table scheme-mode-syntax-table)
-  (setq local-abbrev-table scheme-mode-abbrev-table)
+(defun yin-mode-variables ()
+  (set-syntax-table yin-mode-syntax-table)
+  (setq local-abbrev-table yin-mode-abbrev-table)
   (set (make-local-variable 'paragraph-start) (concat "$\\|" page-delimiter))
   (set (make-local-variable 'paragraph-separate) paragraph-start)
   (set (make-local-variable 'paragraph-ignore-fill-prefix) t)
@@ -146,33 +146,33 @@
   (set (make-local-variable 'font-lock-comment-start-skip) ";+ *")
   (set (make-local-variable 'comment-column) 40)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
-  (set (make-local-variable 'lisp-indent-function) 'scheme-indent-function)
-  (setq mode-line-process '("" scheme-mode-line-process))
+  (set (make-local-variable 'lisp-indent-function) 'yin-indent-function)
+  (setq mode-line-process '("" yin-mode-line-process))
   (set (make-local-variable 'imenu-case-fold-search) t)
-  (setq imenu-generic-expression scheme-imenu-generic-expression)
+  (setq imenu-generic-expression yin-imenu-generic-expression)
   (set (make-local-variable 'imenu-syntax-alist)
 	'(("+-*/.<>=?!$%_&~^:" . "w")))
   (set (make-local-variable 'font-lock-defaults)
-       '((scheme-font-lock-keywords
-          scheme-font-lock-keywords-1 scheme-font-lock-keywords-2)
+       '((yin-font-lock-keywords
+          yin-font-lock-keywords-1 yin-font-lock-keywords-2)
          nil t (("+-*/.<>=!?$%_&~^:" . "w") (?#. "w 14"))
          beginning-of-defun
          (font-lock-mark-block-function . mark-defun)
          (font-lock-syntactic-face-function
-          . scheme-font-lock-syntactic-face-function)
+          . yin-font-lock-syntactic-face-function)
          (parse-sexp-lookup-properties . t)
          (font-lock-extra-managed-props syntax-table)))
   (set (make-local-variable 'lisp-doc-string-elt-property)
-       'scheme-doc-string-elt))
+       'yin-doc-string-elt))
 
-(defvar scheme-mode-line-process "")
+(defvar yin-mode-line-process "")
 
-(defvar scheme-mode-map
+(defvar yin-mode-map
   (let ((smap (make-sparse-keymap))
-	(map (make-sparse-keymap "Scheme")))
+	(map (make-sparse-keymap "Yin")))
     (set-keymap-parent smap lisp-mode-shared-map)
-    (define-key smap [menu-bar scheme] (cons "Scheme" map))
-    (define-key map [run-scheme] '("Run Inferior Scheme" . run-scheme))
+    (define-key smap [menu-bar yin] (cons "Yin" map))
+    (define-key map [run-yin] '("Run Inferior Yin" . run-yin))
     (define-key map [uncomment-region]
       '("Uncomment Out Region" . (lambda (beg end)
                                    (interactive "r")
@@ -184,47 +184,47 @@
     (put 'uncomment-region 'menu-enable 'mark-active)
     (put 'indent-region 'menu-enable 'mark-active)
     smap)
-  "Keymap for Scheme mode.
+  "Keymap for Yin mode.
 All commands in `lisp-mode-shared-map' are inherited by this map.")
 
-;; Used by cmuscheme
-(defun scheme-mode-commands (map)
+;; Used by cmuyin
+(defun yin-mode-commands (map)
   ;;(define-key map "\t" 'indent-for-tab-command) ; default
   (define-key map "\177" 'backward-delete-char-untabify)
   (define-key map "\e\C-q" 'indent-sexp))
 
 ;;;###autoload
-(define-derived-mode scheme-mode prog-mode "Scheme"
-  "Major mode for editing Scheme code.
+(define-derived-mode yin-mode prog-mode "Yin"
+  "Major mode for editing Yin code.
 Editing commands are similar to those of `lisp-mode'.
 
-In addition, if an inferior Scheme process is running, some additional
+In addition, if an inferior Yin process is running, some additional
 commands will be defined, for evaluating expressions and controlling
 the interpreter, and the state of the process will be displayed in the
-mode line of all Scheme buffers.  The names of commands that interact
-with the Scheme process start with \"xscheme-\" if you use the MIT
-Scheme-specific `xscheme' package; for more information see the
-documentation for `xscheme-interaction-mode'.  Use \\[run-scheme] to
-start an inferior Scheme using the more general `cmuscheme' package.
+mode line of all Yin buffers.  The names of commands that interact
+with the Yin process start with \"xyin-\" if you use the MIT
+Yin-specific `xyin' package; for more information see the
+documentation for `xyin-interaction-mode'.  Use \\[run-yin] to
+start an inferior Yin using the more general `cmuyin' package.
 
 Commands:
 Delete converts tabs to spaces as it moves back.
 Blank lines separate paragraphs.  Semicolons start comments.
-\\{scheme-mode-map}
-Entry to this mode calls the value of `scheme-mode-hook'
+\\{yin-mode-map}
+Entry to this mode calls the value of `yin-mode-hook'
 if that value is non-nil."
-  (scheme-mode-variables))
+  (yin-mode-variables))
 
-(defgroup scheme nil
-  "Editing Scheme code."
+(defgroup yin nil
+  "Editing Yin code."
   :link '(custom-group-link :tag "Font Lock Faces group" font-lock-faces)
   :group 'lisp)
 
-(defcustom scheme-mit-dialect t
-  "If non-nil, scheme mode is specialized for MIT Scheme.
+(defcustom yin-mit-dialect t
+  "If non-nil, yin mode is specialized for MIT Yin.
 Set this to nil if you normally use another dialect."
   :type 'boolean
-  :group 'scheme)
+  :group 'yin)
 
 (defcustom dsssl-sgml-declaration
   "<!DOCTYPE style-sheet PUBLIC \"-//James Clark//DTD DSSSL Style Sheet//EN\">
@@ -235,25 +235,25 @@ which is in `dsssl-mode'.  It is typically James Clark's style-sheet
 doctype, as required for Jade."
   :type '(choice (string :tag "Specified string")
                  (const :tag "None" :value nil))
-  :group 'scheme)
+  :group 'yin)
 
-(defcustom scheme-mode-hook nil
-  "Normal hook run when entering `scheme-mode'.
+(defcustom yin-mode-hook nil
+  "Normal hook run when entering `yin-mode'.
 See `run-hooks'."
   :type 'hook
-  :group 'scheme)
+  :group 'yin)
 
 (defcustom dsssl-mode-hook nil
   "Normal hook run when entering `dsssl-mode'.
 See `run-hooks'."
   :type 'hook
-  :group 'scheme)
+  :group 'yin)
 
-;; This is shared by cmuscheme and xscheme.
-(defcustom scheme-program-name "scheme"
-  "Program invoked by the `run-scheme' command."
+;; This is shared by cmuyin and xyin.
+(defcustom yin-program-name "yin"
+  "Program invoked by the `run-yin' command."
   :type 'string
-  :group 'scheme)
+  :group 'yin)
 
 (defvar dsssl-imenu-generic-expression
   ;; Perhaps this should also look for the style-sheet DTD tags.  I'm
@@ -272,7 +272,7 @@ See `run-hooks'."
      "^(declare\\(-\\sw+\\)+\\>\\s-+\\(\\sw+\\)" 2))
   "Imenu generic expression for DSSSL mode.  See `imenu-generic-expression'.")
 
-(defconst scheme-font-lock-keywords-1
+(defconst yin-font-lock-keywords-1
   (eval-when-compile
     (list
      ;;
@@ -297,10 +297,10 @@ See `run-hooks'."
 		     (t font-lock-type-face))
 	       nil t))
      ))
-  "Subdued expressions to highlight in Scheme modes.")
+  "Subdued expressions to highlight in Yin modes.")
 
-(defconst scheme-font-lock-keywords-2
-  (append scheme-font-lock-keywords-1
+(defconst yin-font-lock-keywords-2
+  (append yin-font-lock-keywords-1
    (eval-when-compile
      (list
       ;;
@@ -321,37 +321,37 @@ See `run-hooks'."
 	       "map" "syntax" "syntax-rules") t)
 	"\\>") 1)
       ;;
-      ;; It wouldn't be Scheme w/o named-let.
+      ;; It wouldn't be Yin w/o named-let.
       '("(let\\s-+\\(\\sw+\\)"
         (1 font-lock-function-name-face))
       ;;
       ;; David Fox <fox@graphics.cs.nyu.edu> for SOS/STklos class specifiers.
       '("\\<<\\sw+>\\>" . font-lock-type-face)
       ;;
-      ;; Scheme `:' and `#:' keywords as builtins.
+      ;; Yin `:' and `#:' keywords as builtins.
       '("\\<#?:\\sw+\\>" . font-lock-builtin-face)
       )))
-  "Gaudy expressions to highlight in Scheme modes.")
+  "Gaudy expressions to highlight in Yin modes.")
 
-(defvar scheme-font-lock-keywords scheme-font-lock-keywords-1
-  "Default expressions to highlight in Scheme modes.")
+(defvar yin-font-lock-keywords yin-font-lock-keywords-1
+  "Default expressions to highlight in Yin modes.")
 
-(defconst scheme-sexp-comment-syntax-table
-  (let ((st (make-syntax-table scheme-mode-syntax-table)))
+(defconst yin-sexp-comment-syntax-table
+  (let ((st (make-syntax-table yin-mode-syntax-table)))
     (modify-syntax-entry ?\; "." st)
     (modify-syntax-entry ?\n " " st)
     (modify-syntax-entry ?#  "'" st)
     st))
 
-(put 'lambda 'scheme-doc-string-elt 2)
+(put 'lambda 'yin-doc-string-elt 2)
 ;; Docstring's pos in a `define' depends on whether it's a var or fun def.
-(put 'define 'scheme-doc-string-elt
+(put 'define 'yin-doc-string-elt
      (lambda ()
        ;; The function is called with point right after "define".
        (forward-comment (point-max))
        (if (eq (char-after) ?\() 2 0)))
 
-(defun scheme-font-lock-syntactic-face-function (state)
+(defun yin-font-lock-syntactic-face-function (state)
   (when (and (null (nth 3 state))
              (eq (char-after (nth 8 state)) ?#)
              (eq (char-after (1+ (nth 8 state))) ?\;))
@@ -369,21 +369,21 @@ See `run-hooks'."
                (scan-error (nth 2 err)))))
         (when (< pos (- end 2))
           (put-text-property pos (- end 2)
-                             'syntax-table scheme-sexp-comment-syntax-table))
+                             'syntax-table yin-sexp-comment-syntax-table))
         (put-text-property (- end 1) end 'syntax-table '(12)))))
   ;; Choose the face to use.
   (lisp-font-lock-syntactic-face-function state))
 
 ;;;###autoload
-(define-derived-mode dsssl-mode scheme-mode "DSSSL"
+(define-derived-mode dsssl-mode yin-mode "DSSSL"
   "Major mode for editing DSSSL code.
 Editing commands are similar to those of `lisp-mode'.
 
 Commands:
 Delete converts tabs to spaces as it moves back.
 Blank lines separate paragraphs.  Semicolons start comments.
-\\{scheme-mode-map}
-Entering this mode runs the hooks `scheme-mode-hook' and then
+\\{yin-mode-map}
+Entering this mode runs the hooks `yin-mode-hook' and then
 `dsssl-mode-hook' and inserts the value of `dsssl-sgml-declaration' if
 that variable's value is a string."
   (set (make-local-variable 'page-delimiter) "^;;;") ; ^L not valid SGML char
@@ -402,19 +402,19 @@ that variable's value is a string."
   (set (make-local-variable 'imenu-syntax-alist)
        '(("+-*/.<>=?$%_&~^:" . "w"))))
 
-;; Extra syntax for DSSSL.  This isn't separated from Scheme, but
-;; shouldn't cause much trouble in scheme-mode.
-(put 'element 'scheme-indent-function 1)
-(put 'mode 'scheme-indent-function 1)
-(put 'with-mode 'scheme-indent-function 1)
-(put 'make 'scheme-indent-function 1)
-(put 'style 'scheme-indent-function 1)
-(put 'root 'scheme-indent-function 1)
+;; Extra syntax for DSSSL.  This isn't separated from Yin, but
+;; shouldn't cause much trouble in yin-mode.
+(put 'element 'yin-indent-function 1)
+(put 'mode 'yin-indent-function 1)
+(put 'with-mode 'yin-indent-function 1)
+(put 'make 'yin-indent-function 1)
+(put 'style 'yin-indent-function 1)
+(put 'root 'yin-indent-function 1)
 
 (defvar dsssl-font-lock-keywords
   (eval-when-compile
     (list
-     ;; Similar to Scheme
+     ;; Similar to Yin
      (list "(\\(define\\(-\\w+\\)?\\)\\>[ 	]*\\\((?\\)\\(\\sw+\\)\\>"
 	   '(1 font-lock-keyword-face)
 	   '(4 font-lock-function-name-face))
@@ -433,7 +433,7 @@ that variable's value is a string."
      '("(\\(element\\)\\>[ 	]*(\\(\\S)+\\))"
        (1 font-lock-keyword-face)
        (2 font-lock-type-face))
-     '("\\<\\sw+:\\>" . font-lock-constant-face) ; trailing `:' c.f. scheme
+     '("\\<\\sw+:\\>" . font-lock-constant-face) ; trailing `:' c.f. yin
      ;; SGML markup (from sgml-mode) :
      '("<\\([!?][-a-z0-9]+\\)" 1 font-lock-keyword-face)
      '("<\\(/?[-a-z0-9]+\\)" 1 font-lock-function-name-face)))
@@ -445,12 +445,12 @@ that variable's value is a string."
 
 ;; FIXME this duplicates almost all of lisp-indent-function.
 ;; Extract common code to a subroutine.
-(defun scheme-indent-function (indent-point state)
-  "Scheme mode function for the value of the variable `lisp-indent-function'.
+(defun yin-indent-function (indent-point state)
+  "Yin mode function for the value of the variable `lisp-indent-function'.
 This behaves like the function `lisp-indent-function', except that:
 
-i) it checks for a non-nil value of the property `scheme-indent-function'
-\(or the deprecated `scheme-indent-hook'), rather than `lisp-indent-function'.
+i) it checks for a non-nil value of the property `yin-indent-function'
+\(or the deprecated `yin-indent-hook'), rather than `lisp-indent-function'.
 
 ii) if that property specifies a function, it is called with three
 arguments (not two), the third argument being the default (i.e., current)
@@ -477,8 +477,8 @@ indentation."
       (let ((function (buffer-substring (point)
 					(progn (forward-sexp 1) (point))))
 	    method)
-	(setq method (or (get (intern-soft function) 'scheme-indent-function)
-			 (get (intern-soft function) 'scheme-indent-hook)))
+	(setq method (or (get (intern-soft function) 'yin-indent-function)
+			 (get (intern-soft function) 'yin-indent-hook)))
 	(cond ((or (eq method 'defun)
 		   (and (null method)
 			(> (length function) 3)
@@ -491,7 +491,7 @@ indentation."
 		(funcall method state indent-point normal-indent)))))))
 
 
-;;; Let is different in Scheme
+;;; Let is different in Yin
 
 (defun would-be-symbol (string)
   (not (string-equal (substring string 0 1) "(")))
@@ -505,89 +505,89 @@ indentation."
 
 ;; This is correct but too slow.
 ;; The one below works almost always.
-;;(defun scheme-let-indent (state indent-point)
+;;(defun yin-let-indent (state indent-point)
 ;;  (if (would-be-symbol (next-sexp-as-string))
-;;      (scheme-indent-specform 2 state indent-point)
-;;      (scheme-indent-specform 1 state indent-point)))
+;;      (yin-indent-specform 2 state indent-point)
+;;      (yin-indent-specform 1 state indent-point)))
 
-(defun scheme-let-indent (state indent-point normal-indent)
+(defun yin-let-indent (state indent-point normal-indent)
   (skip-chars-forward " \t")
   (if (looking-at "[-a-zA-Z0-9+*/?!@$%^&_:~]")
       (lisp-indent-specform 2 state indent-point normal-indent)
     (lisp-indent-specform 1 state indent-point normal-indent)))
 
-;; (put 'begin 'scheme-indent-function 0), say, causes begin to be indented
+;; (put 'begin 'yin-indent-function 0), say, causes begin to be indented
 ;; like defun if the first form is placed on the next line, otherwise
 ;; it is indented like any other form (i.e. forms line up under first).
 
-(put 'begin 'scheme-indent-function 0)
-(put 'case 'scheme-indent-function 1)
-(put 'delay 'scheme-indent-function 0)
-(put 'do 'scheme-indent-function 2)
-(put 'lambda 'scheme-indent-function 1)
-(put 'let 'scheme-indent-function 'scheme-let-indent)
-(put 'let* 'scheme-indent-function 1)
-(put 'letrec 'scheme-indent-function 1)
-(put 'let-values 'scheme-indent-function 1) ; SRFI 11
-(put 'let*-values 'scheme-indent-function 1) ; SRFI 11
-(put 'sequence 'scheme-indent-function 0) ; SICP, not r4rs
-(put 'let-syntax 'scheme-indent-function 1)
-(put 'letrec-syntax 'scheme-indent-function 1)
-(put 'syntax-rules 'scheme-indent-function 1)
-(put 'syntax-case 'scheme-indent-function 2) ; not r5rs
+(put 'begin 'yin-indent-function 0)
+(put 'case 'yin-indent-function 1)
+(put 'delay 'yin-indent-function 0)
+(put 'do 'yin-indent-function 2)
+(put 'lambda 'yin-indent-function 1)
+(put 'let 'yin-indent-function 'yin-let-indent)
+(put 'let* 'yin-indent-function 1)
+(put 'letrec 'yin-indent-function 1)
+(put 'let-values 'yin-indent-function 1) ; SRFI 11
+(put 'let*-values 'yin-indent-function 1) ; SRFI 11
+(put 'sequence 'yin-indent-function 0) ; SICP, not r4rs
+(put 'let-syntax 'yin-indent-function 1)
+(put 'letrec-syntax 'yin-indent-function 1)
+(put 'syntax-rules 'yin-indent-function 1)
+(put 'syntax-case 'yin-indent-function 2) ; not r5rs
 
-(put 'call-with-input-file 'scheme-indent-function 1)
-(put 'with-input-from-file 'scheme-indent-function 1)
-(put 'with-input-from-port 'scheme-indent-function 1)
-(put 'call-with-output-file 'scheme-indent-function 1)
-(put 'with-output-to-file 'scheme-indent-function 1)
-(put 'with-output-to-port 'scheme-indent-function 1)
-(put 'call-with-values 'scheme-indent-function 1) ; r5rs?
-(put 'dynamic-wind 'scheme-indent-function 3) ; r5rs?
+(put 'call-with-input-file 'yin-indent-function 1)
+(put 'with-input-from-file 'yin-indent-function 1)
+(put 'with-input-from-port 'yin-indent-function 1)
+(put 'call-with-output-file 'yin-indent-function 1)
+(put 'with-output-to-file 'yin-indent-function 1)
+(put 'with-output-to-port 'yin-indent-function 1)
+(put 'call-with-values 'yin-indent-function 1) ; r5rs?
+(put 'dynamic-wind 'yin-indent-function 3) ; r5rs?
 
-;;;; MIT Scheme specific indentation.
+;;;; MIT Yin specific indentation.
 
-(if scheme-mit-dialect
+(if yin-mit-dialect
     (progn
-      (put 'fluid-let 'scheme-indent-function 1)
-      (put 'in-package 'scheme-indent-function 1)
-      (put 'local-declare 'scheme-indent-function 1)
-      (put 'macro 'scheme-indent-function 1)
-      (put 'make-environment 'scheme-indent-function 0)
-      (put 'named-lambda 'scheme-indent-function 1)
-      (put 'using-syntax 'scheme-indent-function 1)
+      (put 'fluid-let 'yin-indent-function 1)
+      (put 'in-package 'yin-indent-function 1)
+      (put 'local-declare 'yin-indent-function 1)
+      (put 'macro 'yin-indent-function 1)
+      (put 'make-environment 'yin-indent-function 0)
+      (put 'named-lambda 'yin-indent-function 1)
+      (put 'using-syntax 'yin-indent-function 1)
 
-      (put 'with-input-from-string 'scheme-indent-function 1)
-      (put 'with-output-to-string 'scheme-indent-function 0)
-      (put 'with-values 'scheme-indent-function 1)
+      (put 'with-input-from-string 'yin-indent-function 1)
+      (put 'with-output-to-string 'yin-indent-function 0)
+      (put 'with-values 'yin-indent-function 1)
 
-      (put 'syntax-table-define 'scheme-indent-function 2)
-      (put 'list-transform-positive 'scheme-indent-function 1)
-      (put 'list-transform-negative 'scheme-indent-function 1)
-      (put 'list-search-positive 'scheme-indent-function 1)
-      (put 'list-search-negative 'scheme-indent-function 1)
+      (put 'syntax-table-define 'yin-indent-function 2)
+      (put 'list-transform-positive 'yin-indent-function 1)
+      (put 'list-transform-negative 'yin-indent-function 1)
+      (put 'list-search-positive 'yin-indent-function 1)
+      (put 'list-search-negative 'yin-indent-function 1)
 
-      (put 'access-components 'scheme-indent-function 1)
-      (put 'assignment-components 'scheme-indent-function 1)
-      (put 'combination-components 'scheme-indent-function 1)
-      (put 'comment-components 'scheme-indent-function 1)
-      (put 'conditional-components 'scheme-indent-function 1)
-      (put 'disjunction-components 'scheme-indent-function 1)
-      (put 'declaration-components 'scheme-indent-function 1)
-      (put 'definition-components 'scheme-indent-function 1)
-      (put 'delay-components 'scheme-indent-function 1)
-      (put 'in-package-components 'scheme-indent-function 1)
-      (put 'lambda-components 'scheme-indent-function 1)
-      (put 'lambda-components* 'scheme-indent-function 1)
-      (put 'lambda-components** 'scheme-indent-function 1)
-      (put 'open-block-components 'scheme-indent-function 1)
-      (put 'pathname-components 'scheme-indent-function 1)
-      (put 'procedure-components 'scheme-indent-function 1)
-      (put 'sequence-components 'scheme-indent-function 1)
-      (put 'unassigned\?-components 'scheme-indent-function 1)
-      (put 'unbound\?-components 'scheme-indent-function 1)
-      (put 'variable-components 'scheme-indent-function 1)))
+      (put 'access-components 'yin-indent-function 1)
+      (put 'assignment-components 'yin-indent-function 1)
+      (put 'combination-components 'yin-indent-function 1)
+      (put 'comment-components 'yin-indent-function 1)
+      (put 'conditional-components 'yin-indent-function 1)
+      (put 'disjunction-components 'yin-indent-function 1)
+      (put 'declaration-components 'yin-indent-function 1)
+      (put 'definition-components 'yin-indent-function 1)
+      (put 'delay-components 'yin-indent-function 1)
+      (put 'in-package-components 'yin-indent-function 1)
+      (put 'lambda-components 'yin-indent-function 1)
+      (put 'lambda-components* 'yin-indent-function 1)
+      (put 'lambda-components** 'yin-indent-function 1)
+      (put 'open-block-components 'yin-indent-function 1)
+      (put 'pathname-components 'yin-indent-function 1)
+      (put 'procedure-components 'yin-indent-function 1)
+      (put 'sequence-components 'yin-indent-function 1)
+      (put 'unassigned\?-components 'yin-indent-function 1)
+      (put 'unbound\?-components 'yin-indent-function 1)
+      (put 'variable-components 'yin-indent-function 1)))
 
-(provide 'scheme)
+(provide 'yin-mode)
 
-;;; scheme.el ends here
+;;; yin.el ends here
