@@ -21,6 +21,15 @@ public class Tuple extends Node {
     }
 
 
+    public Node getHead() {
+        if (elements.isEmpty()) {
+            return null;
+        } else {
+            return elements.get(0);
+        }
+    }
+
+
     public Value interp(Scope s) {
         return null;
     }

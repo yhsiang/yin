@@ -123,10 +123,16 @@ public class Parser {
                     if (tuple.elements.size() >= 2) {
                         Node name = tuple.elements.get(1);
                         Node node2 = tuple.elements.get(2);
+
+                        List<Name> parents;
+                        List<Node> defs;
+
                         if (name instanceof Name) {
-                            if (node2 instanceof Tuple) {
+                            if (node2 instanceof Tuple &&
+                                    ((Tuple) node2).getHead() instanceof Name)
+                            {
                                 List<Node> parentNodes = ((Tuple) node2).elements;
-                                List<Name> parents = new ArrayList<>();
+                                parents = new ArrayList<>();
                                 for (Node p : parentNodes) {
                                     if (p instanceof Name) {
                                         parents.add((Name) p);
@@ -134,14 +140,15 @@ public class Parser {
                                         _.abort(p, "parents can only be names");
                                     }
                                 }
-                                List<Node> defs = parseList(tuple.elements.subList(3, tuple.elements.size()));
-                                return new RecordDef((Name) name, parents, defs,
-                                        prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
+                                defs = parseList(tuple.elements.subList(3, tuple.elements.size()));
+
                             } else {
-                                List<Node> defs = parseList(tuple.elements.subList(2, tuple.elements.size()));
-                                return new RecordDef((Name) name, null, defs, prenode.file, prenode.start, prenode.end,
-                                        prenode.line, prenode.col);
+                                parents = null;
+                                defs = parseList(tuple.elements.subList(2, tuple.elements.size()));
                             }
+
+                            return new RecordDef((Name) name, parents, defs,
+                                    prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
                         } else {
                             _.abort(name, "syntax error in record name: " + name);
                         }

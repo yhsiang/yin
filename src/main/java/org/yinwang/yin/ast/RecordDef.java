@@ -13,7 +13,6 @@ import java.util.Map;
 
 public class RecordDef extends Node {
     public Name name;
-    public String qname;
     public List<Name> parents;
     public Map<String, Node> map = new LinkedHashMap<>();
 
