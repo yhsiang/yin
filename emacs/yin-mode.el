@@ -22,35 +22,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Commentary:
-
-;; The major mode for editing Yin-type Lisp code, very similar to
-;; the Lisp mode documented in the Emacs manual.  `dsssl-mode' is a
-;; variant of yin-mode for editing DSSSL specifications for SGML
-;; documents.  [As of Apr 1997, some pointers for DSSSL may be found,
-;; for instance, at <URL:http://www.sil.org/sgml/related.html#dsssl>.]
-;; All these Lisp-ish modes vary basically in details of the language
-;; syntax they highlight/indent/index, but dsssl-mode uses "^;;;" as
-;; the page-delimiter since ^L isn't normally a valid SGML character.
-;;
-;; For interacting with a Yin interpreter See also `run-yin' in
-;; the `cmuyin' package and also the implementation-specific
-;; `xyin' package.
-
-;; Here's a recipe to generate a TAGS file for DSSSL, by the way:
-;; etags --lang=yin --regex='/[ \t]*(\(mode\|element\)[ \t
-;; ]+\([^ \t(
-;; ]+\)/\2/' --regex='/[ \t]*(element[ \t
-;; ]*([^)]+[ \t
-;; ]+\([^)]+\)[ \t
-;; ]*)/\1/' --regex='/(declare[^ \t
-;; ]*[ \t
-;; ]+\([^ \t
-;; ]+\)/\1/' "$@"
-
-;;; Code:
-
-(require 'lisp-mode)
+;; (require 'lisp-mode)
 
 (defvar yin-mode-syntax-table
   (let ((st (make-syntax-table))
