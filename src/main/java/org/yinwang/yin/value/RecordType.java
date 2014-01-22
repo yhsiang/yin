@@ -45,9 +45,13 @@ public class RecordType extends Value {
         sb.append(Constants.RECORD_KEYWORD).append(" ");
         sb.append(name == null ? "_" : name);
 
-        for (Map.Entry<String, Value> e : valueMap.entrySet()) {
-            Value type = typeMap.get(e.getKey());
-            sb.append(" (:" + e.getKey() + " " + type + " " + e.getValue() + ")");
+        for (Map.Entry<String, Value> e : typeMap.entrySet()) {
+            Value value = valueMap.get(e.getKey());
+            if (value != null) {
+                sb.append(" (:" + e.getKey() + " " + e.getValue() + " " + value + ")");
+            } else {
+                sb.append(" (:" + e.getKey() + " " + e.getValue() + ")");
+            }
         }
 
         sb.append(Constants.TUPLE_END);
