@@ -40,7 +40,8 @@ public class Call extends Node {
                     }
                     return closure.fun.body.interp(funScope);
                 } else {
-                    _.abort(this.func, "calling function with wrong number of arguments: " + args.positional.size());
+                    _.abort(this.func, "calling function with wrong number of arguments: " +
+                            args.positional.size());
                     return Value.VOID;
                 }
             } else {
@@ -95,7 +96,7 @@ public class Call extends Node {
             PrimFun prim = (PrimFun) func;
             if (args.positional.size() != prim.arity) {
                 _.abort(this, "incorrect number of arguments for primitive " +
-                        prim.name + ": " + args.positional.size());
+                        prim.name + ", expecting " + prim.arity + ", but got " + args.positional.size());
                 return null;
             } else {
                 List<Value> args = Node.interpList(this.args.positional, s);
