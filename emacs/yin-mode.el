@@ -279,19 +279,10 @@ See `run-hooks'."
       ;; Control structures.
       (cons
        (concat
-	"(" (regexp-opt
-	     '("begin" "call-with-current-continuation" "call/cc"
-	       "call-with-input-file" "call-with-output-file" "case" "cond"
-	       "do" "else" "for-each" "if" "lambda"
-	       "let" "let*" "let-syntax" "letrec" "letrec-syntax"
-	       ;; SRFI 11 usage comes up often enough.
-	       "let-values" "let*-values"
-	       ;; Hannes Haug <hannes.haug@student.uni-tuebingen.de> wants:
-	       "and" "or" "delay" "force"
-	       ;; Stefan Monnier <stefan.monnier@epfl.ch> says don't bother:
-	       ;;"quasiquote" "quote" "unquote" "unquote-splicing"
-	       "map" "syntax" "syntax-rules") t)
-	"\\>") 1)
+        "(" (regexp-opt
+             '("define" "fun" "seq" "if" "else" "set!"
+               "assert" "and" "or" "not" "true" "false") t)
+        "\\>") 1)
       ;;
       ;; It wouldn't be Yin w/o named-let.
       '("(let\\s-+\\(\\sw+\\)"
