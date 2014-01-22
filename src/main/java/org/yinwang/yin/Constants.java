@@ -2,6 +2,9 @@ package org.yinwang.yin;
 
 
 public class Constants {
+
+    public static final String LINE_COMMENT = "--";
+
     public static final String TUPLE_BEGIN = "(";
     public static final String TUPLE_END = ")";
 

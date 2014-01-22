@@ -120,11 +120,27 @@ public class PreParser {
      */
     @Nullable
     private Node nextToken() {
-        // skip spaces
-        while (offset < text.length() &&
-                Character.isWhitespace(text.charAt(offset)))
-        {
-            forward();
+
+        boolean seenComment = true;
+        while (seenComment) {
+            seenComment = false;
+            // skip spaces
+            while (offset < text.length() &&
+                    Character.isWhitespace(text.charAt(offset)))
+            {
+                forward();
+            }
+
+            // comments
+            if (offset + Constants.LINE_COMMENT.length() <= text.length() &&
+                    text.substring(offset, offset + Constants.LINE_COMMENT.length()).equals(Constants.LINE_COMMENT))
+            {
+                while (text.charAt(offset) != '\n') {
+                    forward();
+                }
+                forward();
+                seenComment = true;
+            }
         }
 
         // end of file

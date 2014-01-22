@@ -32,3 +32,21 @@
 
 (seq (define x 19) x)
 
+(define ok (fun (x) (set! x 10) x))
+[(ok 8) x]
+
+(define arr [1 2 3])
+(define [t1 t2 t3] arr)
+[t1 t2 t3]
+
+(define [u1 [v1 v2] u2] [2 [3 5] 7])
+[u1 u2 v1 v2]
+
+
+-- (define (record A :a a1 :b b1) (record A :a 10 :b 20))
+-- [a1 b1]
+
+
+(record A :a 1 :b 2)
+(A)
+
