@@ -23,7 +23,7 @@ public class Fun extends Node {
 
     public Value interp(Scope s) {
         Map<String, Value> defaults = new HashMap<>();
-        for (Map.Entry<String, Node> e : params.keywords.entrySet()) {
+        for (Map.Entry<String, Node> e : params.valueMap.entrySet()) {
             Value v = e.getValue().interp(s);
             defaults.put(e.getKey(), v);
         }

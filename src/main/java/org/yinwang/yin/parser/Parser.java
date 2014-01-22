@@ -81,8 +81,7 @@ public class Parser {
                     if (tuple.elements.size() >= 3) {
                         Node preParams = tuple.elements.get(1);
                         if (preParams instanceof Tuple) {
-                            List<Node> parsedElems = parseList(((Tuple) preParams).elements);
-                            Parameter parameter = new Parameter(parsedElems);
+                            Parameter parameter = new Parameter(((Tuple) preParams).elements);
                             List<Node> statements = parseList(tuple.elements.subList(2, tuple.elements.size()));
                             int start = statements.get(0).start;
                             int end = statements.get(statements.size() - 1).end;

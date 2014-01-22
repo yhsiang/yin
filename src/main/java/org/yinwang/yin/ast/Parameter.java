@@ -2,6 +2,7 @@ package org.yinwang.yin.ast;
 
 
 import org.yinwang.yin._;
+import org.yinwang.yin.parser.Parser;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,32 +13,43 @@ public class Parameter {
 
     public List<Node> elements;
     public List<Name> positional = new ArrayList<>();
-    public Map<String, Node> keywords = new LinkedHashMap<>();
+    public Map<String, Node> valueMap = new LinkedHashMap<>();
+    public Map<String, Node> typeMap = new LinkedHashMap<>();
 
 
-    public Parameter(List<Node> elements) {
-        this.elements = elements;
+    public Parameter(List<Node> contents) {
+        this.elements = contents;
 
-        for (int i = 0; i < elements.size(); i++) {
-            Node key = elements.get(i);
-            if (key instanceof Name) {
-                positional.add((Name) key);
-            } else if (key instanceof Keyword) {
-                positional.add(((Keyword) key).asName());
-                if (i >= elements.size() - 1) {
-                    _.abort(key, "missing value for keyword: " + key);
-                } else {
-                    Node value = elements.get(i + 1);
-                    if (value instanceof Keyword) {
-                        _.abort(value, "keywords can't be used as values: " + value);
+        for (int i = 0; i < contents.size(); i++) {
+            Node tuple = contents.get(i);
+            if (tuple instanceof Tuple) {
+                List<Node> elements = Parser.parseList(((Tuple) tuple).elements);
+
+                if (elements.size() == 3) {
+                    Node fieldName = elements.get(0);
+                    Node type = elements.get(1);
+                    Node value = elements.get(2);
+
+                    if (!(fieldName instanceof Keyword)) {
+                        _.abort(fieldName, "argument initializer key is not a keyword: " + fieldName);
                     } else {
-                        keywords.put(((Keyword) key).id, value);
-                        i++;
+                        positional.add(((Keyword) fieldName).asName());
+                        typeMap.put(((Keyword) fieldName).id, type);
+                        valueMap.put(((Keyword) fieldName).id, value);
                     }
+                } else if (elements.size() == 2) {
+                    Node fieldName = elements.get(0);
+                    Node type = elements.get(1);
+
+                    if (!(fieldName instanceof Keyword)) {
+                        _.abort(fieldName, "argument initializer key is not a keyword: " + fieldName);
+                    } else {
+                        positional.add(((Keyword) fieldName).asName());
+                        typeMap.put(((Keyword) fieldName).id, type);
+                    }
+                } else {
+                    _.abort(tuple, "illegal argument form: " + tuple);
                 }
-            } else {
-                // parameter does not allow other things
-                _.abort(key, "illegal argument form: " + key);
             }
         }
     }
