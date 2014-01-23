@@ -38,5 +38,9 @@
 (B :y 20 :z 30)
 
 
--- (define f (fun ([:x Int (+ 1 2)] [:y Bool]) x))
--- (f :y 0)
+(define f 
+  (fun ([:x (U Int Float) (+ 1 2)] 
+        [:y Int]) 
+    (+ x y)))
+
+(f :y 2)

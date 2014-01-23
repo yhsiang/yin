@@ -136,9 +136,6 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
   (set (make-local-variable 'paragraph-separate) paragraph-start)
   (set (make-local-variable 'paragraph-ignore-fill-prefix) t)
   (set (make-local-variable 'fill-paragraph-function) 'lisp-fill-paragraph)
-  ;; Adaptive fill mode gets in the way of auto-fill,
-  ;; and should make no difference for explicit fill
-  ;; because lisp-fill-paragraph should do the job.
   (set (make-local-variable 'adaptive-fill-mode) nil)
   (set (make-local-variable 'indent-line-function) 'lisp-indent-line)
   (set (make-local-variable 'comment-start) "-- ")
@@ -148,7 +145,8 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
   (setq mode-line-process '("" yin-mode-line-process))
   (set (make-local-variable 'imenu-case-fold-search) t)
   (setq imenu-generic-expression yin-imenu-generic-expression)
-  (set (make-local-variable 'imenu-syntax-alist) '(("+/.<>=?!$%_&~^:" . "w")))
+  (set (make-local-variable 'imenu-syntax-alist)
+       '(("+/.<>=?!$%_&~^:" . "w")))
   (set (make-local-variable 'font-lock-defaults)
        '((yin-font-lock-keywords)
          nil t (("+/.<>=!?$%_&~^:" . "w")))))
@@ -175,22 +173,6 @@ See `run-hooks'."
   "Program invoked by the `run-yin' command."
   :type 'string
   :group 'yin)
-
-
-(defconst yin-sexp-comment-syntax-table
-  (let ((st (make-syntax-table yin-mode-syntax-table)))
-    (modify-syntax-entry ?\; "." st)
-    (modify-syntax-entry ?\n " " st)
-    (modify-syntax-entry ?#  "'" st)
-    st))
-
-(put 'lambda 'yin-doc-string-elt 2)
-;; Docstring's pos in a `define' depends on whether it's a var or fun def.
-(put 'define 'yin-doc-string-elt
-     (lambda ()
-       ;; The function is called with point right after "define".
-       (forward-comment (point-max))
-       (if (eq (char-after) ?\() 2 0)))
 
 
 (defvar calculate-lisp-indent-last-sexp)
