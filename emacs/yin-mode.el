@@ -99,10 +99,6 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
 (setq yin-constant-regexp (regexp-opt yin-constants 'words))
 (setq yin-functions-regexp (regexp-opt yin-functions 'words))
 
-
-(defvar yin-font-lock-keywords
-  "Default expressions to highlight in Yin modes.")
-
 (setq yin-font-lock-keywords
   `((,yin-type-regexp . font-lock-type-face)
     (,yin-constant-regexp . font-lock-constant-face)
@@ -233,5 +229,3 @@ indentation."
 (put 'let 'yin-indent-function 'yin-let-indent)
 
 (provide 'yin-mode)
-
-;;; yin.el ends here
