@@ -27,20 +27,12 @@
     (modify-syntax-entry ?\r "    " st)
     (modify-syntax-entry ?\s "    " st)
 
-    ;; These characters are delimiters but otherwise undefined.
     ;; Brackets and braces balance for editing convenience.
     (modify-syntax-entry ?\[ "(]  " st)
     (modify-syntax-entry ?\] ")[  " st)
     (modify-syntax-entry ?{ "(}  " st)
     (modify-syntax-entry ?} "){  " st)
     (modify-syntax-entry ?\| "\" 23bn" st)
-    ;; Guile allows #! ... !# comments.
-    ;; But SRFI-22 defines the comment as #!...\n instead.
-    ;; Also Guile says that the !# should be on a line of its own.
-    ;; It's too difficult to get it right, for too little benefit.
-    ;; (modify-syntax-entry ?! "_ 2" st)
-
-    ;; Other atom delimiters
     (modify-syntax-entry ?\( "()  " st)
     (modify-syntax-entry ?\) ")(  " st)
 
@@ -55,7 +47,7 @@
     ;; Special characters
     (modify-syntax-entry ?, "'   " st)
     (modify-syntax-entry ?@ "'   " st)
-    (modify-syntax-entry ?# "' 14" st)
+    (modify-syntax-entry ?# "'   " st)
     (modify-syntax-entry ?\\ "\\   " st)
     st))
 
@@ -95,7 +87,6 @@
 All commands in `lisp-mode-shared-map' are inherited by this map.")
 
 
-;;;###autoload
 ;; syntax table
 (defvar yin-mode-syntax-table nil "Syntax table for `yin-mode'.")
 (setq yin-mode-syntax-table
@@ -160,13 +151,7 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
   (set (make-local-variable 'imenu-syntax-alist) '(("+/.<>=?!$%_&~^:" . "w")))
   (set (make-local-variable 'font-lock-defaults)
        '((yin-font-lock-keywords)
-         nil t (("+/.<>=!?$%_&~^:" . "w") (?#. "w 14"))
-         beginning-of-defun
-         (font-lock-mark-block-function . mark-defun)
-         (parse-sexp-lookup-properties . t)
-         (font-lock-extra-managed-props syntax-table)))
-  (set (make-local-variable 'lisp-doc-string-elt-property)
-       'yin-doc-string-elt))
+         nil t (("+/.<>=!?$%_&~^:" . "w")))))
 
 
 (define-derived-mode yin-mode prog-mode "Yin"
@@ -207,8 +192,8 @@ See `run-hooks'."
        (forward-comment (point-max))
        (if (eq (char-after) ?\() 2 0)))
 
-(defvar calculate-lisp-indent-last-sexp)
 
+(defvar calculate-lisp-indent-last-sexp)
 
 ;; FIXME this duplicates almost all of lisp-indent-function.
 ;; Extract common code to a subroutine.
@@ -257,9 +242,8 @@ indentation."
 	      (method
 		(funcall method state indent-point normal-indent)))))))
 
-
-;;; Let is different in Yin
 
+;;; Let is different in Yin
 (defun would-be-symbol (string)
   (not (string-equal (substring string 0 1) "(")))
 
@@ -269,13 +253,6 @@ indentation."
   (let ((the-end (point)))
     (backward-sexp 1)
     (buffer-substring (point) the-end)))
-
-;; This is correct but too slow.
-;; The one below works almost always.
-;;(defun yin-let-indent (state indent-point)
-;;  (if (would-be-symbol (next-sexp-as-string))
-;;      (yin-indent-specform 2 state indent-point)
-;;      (yin-indent-specform 1 state indent-point)))
 
 (defun yin-let-indent (state indent-point normal-indent)
   (skip-chars-forward " \t")
