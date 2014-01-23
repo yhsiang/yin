@@ -68,7 +68,7 @@
 
 (defvar yin-mode-map
   (let ((smap (make-sparse-keymap))
-	(map (make-sparse-keymap "Yin")))
+        (map (make-sparse-keymap "Yin")))
     (set-keymap-parent smap lisp-mode-shared-map)
     (define-key smap [menu-bar yin] (cons "Yin" map))
     (define-key map [run-yin] '("Run Inferior Yin" . run-yin))
@@ -109,6 +109,7 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
     (,yin-functions-regexp . font-lock-function-name-face)
     (,yin-keywords-regexp . font-lock-keyword-face)    ;; must be last
 ))
+
 
 (defun yin-mode-variables ()
   (set-syntax-table yin-mode-syntax-table)
