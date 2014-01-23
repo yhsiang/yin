@@ -87,17 +87,6 @@
 All commands in `lisp-mode-shared-map' are inherited by this map.")
 
 
-;; syntax table
-(defvar yin-mode-syntax-table nil "Syntax table for `yin-mode'.")
-(setq yin-mode-syntax-table
-      (let ((st (make-syntax-table)))
-
-        ;; haskell-style comment --comment
-        (modify-syntax-entry ?- ". 12b" st)
-        (modify-syntax-entry ?\n "> b" st)
-        st))
-
-
 ;; define several class of keywords
 (setq yin-keywords '("define" "fun" "if" "set!" "assert" "record"))
 (setq yin-types '("Int" "Float" "Bool"))
@@ -115,8 +104,7 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
   "Default expressions to highlight in Yin modes.")
 
 (setq yin-font-lock-keywords
-  `(
-    (,yin-type-regexp . font-lock-type-face)
+  `((,yin-type-regexp . font-lock-type-face)
     (,yin-constant-regexp . font-lock-constant-face)
     (,yin-functions-regexp . font-lock-function-name-face)
     (,yin-keywords-regexp . font-lock-keyword-face)    ;; must be last
