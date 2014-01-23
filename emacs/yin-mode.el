@@ -1,29 +1,3 @@
-;;; yin.el --- Yin (and DSSSL) editing mode
-
-;; Copyright (C) 1986-1988, 1997-1998, 2001-2013 Free Software
-;; Foundation, Inc.
-
-;; Author: Bill Rozas <jinx@martigny.ai.mit.edu>
-;; Adapted-by: Dave Love <d.love@dl.ac.uk>
-;; Keywords: languages, lisp
-
-;; This file is part of GNU Emacs.
-
-;; GNU Emacs is free software: you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
-
-;; GNU Emacs is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
-
-;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
-
-;; (require 'lisp-mode)
-
 (defvar yin-mode-syntax-table
   (let ((st (make-syntax-table))
 	(i 0))
@@ -49,7 +23,6 @@
 
     ;; Whitespace
     (modify-syntax-entry ?\t "    " st)
-    (modify-syntax-entry ?\n ">   " st)
     (modify-syntax-entry ?\f "    " st)
     (modify-syntax-entry ?\r "    " st)
     (modify-syntax-entry ?\s "    " st)
@@ -70,8 +43,11 @@
     ;; Other atom delimiters
     (modify-syntax-entry ?\( "()  " st)
     (modify-syntax-entry ?\) ")(  " st)
+
     ;; It's used for single-line comments as well as for #;(...) sexp-comments.
-    (modify-syntax-entry ?\; "< 2 " st)
+    (modify-syntax-entry ?- ". 12b" st)
+    (modify-syntax-entry ?\n "> b" st)
+
     (modify-syntax-entry ?\" "\"   " st)
     (modify-syntax-entry ?' "'   " st)
     (modify-syntax-entry ?` "'   " st)
@@ -82,7 +58,7 @@
     (modify-syntax-entry ?# "' 14" st)
     (modify-syntax-entry ?\\ "\\   " st)
     st))
-
+
 (defvar yin-mode-abbrev-table nil)
 (define-abbrev-table 'yin-mode-abbrev-table ())
 
@@ -95,47 +71,6 @@
 	 "^(\\(defmacro\\|define-macro\\|define-syntax\\)\\s-+(?\\(\\sw+\\)" 2))
   "Imenu generic expression for Yin mode.  See `imenu-generic-expression'.")
 
-(defun yin-mode-variables ()
-  (set-syntax-table yin-mode-syntax-table)
-  (setq local-abbrev-table yin-mode-abbrev-table)
-  (set (make-local-variable 'paragraph-start) (concat "$\\|" page-delimiter))
-  (set (make-local-variable 'paragraph-separate) paragraph-start)
-  (set (make-local-variable 'paragraph-ignore-fill-prefix) t)
-  (set (make-local-variable 'fill-paragraph-function) 'lisp-fill-paragraph)
-  ;; Adaptive fill mode gets in the way of auto-fill,
-  ;; and should make no difference for explicit fill
-  ;; because lisp-fill-paragraph should do the job.
-  (set (make-local-variable 'adaptive-fill-mode) nil)
-  (set (make-local-variable 'indent-line-function) 'lisp-indent-line)
-  (set (make-local-variable 'parse-sexp-ignore-comments) t)
-  (set (make-local-variable 'outline-regexp) ";;; \\|(....")
-  (set (make-local-variable 'comment-start) "-- ")
-  (set (make-local-variable 'comment-add) 1)
-  ;; Look within the line for a ; following an even number of backslashes
-  ;; after either a non-backslash or the line beginning.
-  (set (make-local-variable 'comment-start-skip)
-       "\\(\\(^\\|[^\\\\\n]\\)\\(\\\\\\\\\\)*\\);+[ \t]*")
-  (set (make-local-variable 'font-lock-comment-start-skip) ";+ *")
-  (set (make-local-variable 'comment-column) 40)
-  (set (make-local-variable 'parse-sexp-ignore-comments) t)
-  (set (make-local-variable 'lisp-indent-function) 'yin-indent-function)
-  (setq mode-line-process '("" yin-mode-line-process))
-  (set (make-local-variable 'imenu-case-fold-search) t)
-  (setq imenu-generic-expression yin-imenu-generic-expression)
-  (set (make-local-variable 'imenu-syntax-alist)
-	'(("+-*/.<>=?!$%_&~^:" . "w")))
-  (set (make-local-variable 'font-lock-defaults)
-       '((yin-font-lock-keywords
-          yin-font-lock-keywords-1 yin-font-lock-keywords-2)
-         nil t (("+-*/.<>=!?$%_&~^:" . "w") (?#. "w 14"))
-         beginning-of-defun
-         (font-lock-mark-block-function . mark-defun)
-         (font-lock-syntactic-face-function
-          . yin-font-lock-syntactic-face-function)
-         (parse-sexp-lookup-properties . t)
-         (font-lock-extra-managed-props syntax-table)))
-  (set (make-local-variable 'lisp-doc-string-elt-property)
-       'yin-doc-string-elt))
 
 (defvar yin-mode-line-process "")
 
@@ -159,55 +94,90 @@
   "Keymap for Yin mode.
 All commands in `lisp-mode-shared-map' are inherited by this map.")
 
-;; Used by cmuyin
-(defun yin-mode-commands (map)
-  ;;(define-key map "\t" 'indent-for-tab-command) ; default
-  (define-key map "\177" 'backward-delete-char-untabify)
-  (define-key map "\e\C-q" 'indent-sexp))
-
+
 ;;;###autoload
+;; syntax table
+(defvar yin-mode-syntax-table nil "Syntax table for `yin-mode'.")
+(setq yin-mode-syntax-table
+      (let ((st (make-syntax-table)))
+
+        ;; haskell-style comment --comment
+        (modify-syntax-entry ?- ". 12b" st)
+        (modify-syntax-entry ?\n "> b" st)
+        st))
+
+
+;; define several class of keywords
+(setq yin-keywords '("define" "fun" "if" "set!" "assert" "record"))
+(setq yin-types '("Int" "Float" "Bool"))
+(setq yin-constants '("true" "false"))
+(setq yin-functions '("map" "and" "or" "not"))
+
+;; create the regex string for each class of keywords
+(setq yin-keywords-regexp (regexp-opt yin-keywords 'words))
+(setq yin-type-regexp (regexp-opt yin-types 'words))
+(setq yin-constant-regexp (regexp-opt yin-constants 'words))
+(setq yin-functions-regexp (regexp-opt yin-functions 'words))
+
+
+;; clear memory
+(setq yin-keywords nil)
+(setq yin-types nil)
+(setq yin-constants nil)
+(setq yin-functions nil)
+
+
+(defvar yin-font-lock-keywords
+  "Default expressions to highlight in Yin modes.")
+
+(setq yin-font-lock-keywords
+  `(
+    (,yin-type-regexp . font-lock-type-face)
+    (,yin-constant-regexp . font-lock-constant-face)
+    (,yin-functions-regexp . font-lock-function-name-face)
+    (,yin-keywords-regexp . font-lock-keyword-face)    ;; must be last
+))
+
+(defun yin-mode-variables ()
+  (set-syntax-table yin-mode-syntax-table)
+  (setq local-abbrev-table yin-mode-abbrev-table)
+  (set (make-local-variable 'paragraph-start) (concat "$\\|" page-delimiter))
+  (set (make-local-variable 'paragraph-separate) paragraph-start)
+  (set (make-local-variable 'paragraph-ignore-fill-prefix) t)
+  (set (make-local-variable 'fill-paragraph-function) 'lisp-fill-paragraph)
+  ;; Adaptive fill mode gets in the way of auto-fill,
+  ;; and should make no difference for explicit fill
+  ;; because lisp-fill-paragraph should do the job.
+  (set (make-local-variable 'adaptive-fill-mode) nil)
+  (set (make-local-variable 'indent-line-function) 'lisp-indent-line)
+  (set (make-local-variable 'comment-start) "-- ")
+  (set (make-local-variable 'comment-column) 40)
+  (set (make-local-variable 'parse-sexp-ignore-comments) t)
+  (set (make-local-variable 'lisp-indent-function) 'yin-indent-function)
+  (setq mode-line-process '("" yin-mode-line-process))
+  (set (make-local-variable 'imenu-case-fold-search) t)
+  (setq imenu-generic-expression yin-imenu-generic-expression)
+  (set (make-local-variable 'imenu-syntax-alist) '(("+/.<>=?!$%_&~^:" . "w")))
+  (set (make-local-variable 'font-lock-defaults)
+       '((yin-font-lock-keywords)
+         nil t (("+/.<>=!?$%_&~^:" . "w") (?#. "w 14"))
+         beginning-of-defun
+         (font-lock-mark-block-function . mark-defun)
+         (parse-sexp-lookup-properties . t)
+         (font-lock-extra-managed-props syntax-table)))
+  (set (make-local-variable 'lisp-doc-string-elt-property)
+       'yin-doc-string-elt))
+
+
 (define-derived-mode yin-mode prog-mode "Yin"
-  "Major mode for editing Yin code.
-Editing commands are similar to those of `lisp-mode'.
-
-In addition, if an inferior Yin process is running, some additional
-commands will be defined, for evaluating expressions and controlling
-the interpreter, and the state of the process will be displayed in the
-mode line of all Yin buffers.  The names of commands that interact
-with the Yin process start with \"xyin-\" if you use the MIT
-Yin-specific `xyin' package; for more information see the
-documentation for `xyin-interaction-mode'.  Use \\[run-yin] to
-start an inferior Yin using the more general `cmuyin' package.
-
-Commands:
-Delete converts tabs to spaces as it moves back.
-Blank lines separate paragraphs.  Semicolons start comments.
-\\{yin-mode-map}
-Entry to this mode calls the value of `yin-mode-hook'
-if that value is non-nil."
   (yin-mode-variables))
+
 
 (defgroup yin nil
   "Editing Yin code."
   :link '(custom-group-link :tag "Font Lock Faces group" font-lock-faces)
   :group 'lisp)
 
-(defcustom yin-mit-dialect t
-  "If non-nil, yin mode is specialized for MIT Yin.
-Set this to nil if you normally use another dialect."
-  :type 'boolean
-  :group 'yin)
-
-(defcustom dsssl-sgml-declaration
-  "<!DOCTYPE style-sheet PUBLIC \"-//James Clark//DTD DSSSL Style Sheet//EN\">
-"
-  "An SGML declaration for the DSSSL file.
-If it is defined as a string this will be inserted into an empty buffer
-which is in `dsssl-mode'.  It is typically James Clark's style-sheet
-doctype, as required for Jade."
-  :type '(choice (string :tag "Specified string")
-                 (const :tag "None" :value nil))
-  :group 'yin)
 
 (defcustom yin-mode-hook nil
   "Normal hook run when entering `yin-mode'.
@@ -215,89 +185,12 @@ See `run-hooks'."
   :type 'hook
   :group 'yin)
 
-(defcustom dsssl-mode-hook nil
-  "Normal hook run when entering `dsssl-mode'.
-See `run-hooks'."
-  :type 'hook
-  :group 'yin)
 
-;; This is shared by cmuyin and xyin.
 (defcustom yin-program-name "yin"
   "Program invoked by the `run-yin' command."
   :type 'string
   :group 'yin)
 
-(defvar dsssl-imenu-generic-expression
-  ;; Perhaps this should also look for the style-sheet DTD tags.  I'm
-  ;; not sure it's the best way to organize it; perhaps one type
-  ;; should be at the first level, though you don't see this anyhow if
-  ;; it gets split up.
-  '(("Defines"
-     "^(define\\s-+(?\\(\\sw+\\)" 1)
-    ("Modes"
-     "^\\s-*(mode\\s-+\\(\\(\\sw\\|\\s-\\)+\\)" 1)
-    ("Elements"
-     ;; (element foo ...) or (element (foo bar ...) ...)
-     ;; Fixme: Perhaps it should do `root'.
-     "^\\s-*(element\\s-+(?\\(\\(\\sw\\|\\s-\\)+\\))?" 1)
-    ("Declarations"
-     "^(declare\\(-\\sw+\\)+\\>\\s-+\\(\\sw+\\)" 2))
-  "Imenu generic expression for DSSSL mode.  See `imenu-generic-expression'.")
-
-(defconst yin-font-lock-keywords-1
-  (eval-when-compile
-    (list
-     ;;
-     ;; Declarations.  Hannes Haug <hannes.haug@student.uni-tuebingen.de> says
-     ;; this works for SOS, STklos, SCOOPS, Meroon and Tiny CLOS.
-     (list (concat "(\\(define\\*?\\("
-		   ;; Function names.
-		   "\\(\\|-public\\|-method\\|-generic\\(-procedure\\)?\\)\\|"
-		   ;; Macro names, as variable names.  A bit dubious, this.
-		   "\\(-syntax\\|-macro\\)\\|"
-		   ;; Class names.
-		   "-class"
-                   ;; Guile modules.
-                   "\\|-module"
-		   "\\)\\)\\>"
-		   ;; Any whitespace and declared object.
-		   "[ \t]*(?"
-		   "\\(\\sw+\\)?")
-	   '(1 font-lock-keyword-face)
-	   '(6 (cond ((match-beginning 3) font-lock-function-name-face)
-		     ((match-beginning 5) font-lock-variable-name-face)
-		     (t font-lock-type-face))
-	       nil t))
-     ))
-  "Subdued expressions to highlight in Yin modes.")
-
-(defconst yin-font-lock-keywords-2
-  (append yin-font-lock-keywords-1
-   (eval-when-compile
-     (list
-      ;;
-      ;; Control structures.
-      (cons
-       (concat
-        "(" (regexp-opt
-             '("define" "fun" "seq" "if" "else" "set!"
-               "assert" "and" "or" "not" "true" "false") t)
-        "\\>") 1)
-      ;;
-      ;; It wouldn't be Yin w/o named-let.
-      '("(let\\s-+\\(\\sw+\\)"
-        (1 font-lock-function-name-face))
-      ;;
-      ;; David Fox <fox@graphics.cs.nyu.edu> for SOS/STklos class specifiers.
-      '("\\<<\\sw+>\\>" . font-lock-type-face)
-      ;;
-      ;; Yin `:' and `#:' keywords as builtins.
-      '("\\<#?:\\sw+\\>" . font-lock-builtin-face)
-      )))
-  "Gaudy expressions to highlight in Yin modes.")
-
-(defvar yin-font-lock-keywords yin-font-lock-keywords-1
-  "Default expressions to highlight in Yin modes.")
 
 (defconst yin-sexp-comment-syntax-table
   (let ((st (make-syntax-table yin-mode-syntax-table)))
@@ -314,95 +207,6 @@ See `run-hooks'."
        (forward-comment (point-max))
        (if (eq (char-after) ?\() 2 0)))
 
-(defun yin-font-lock-syntactic-face-function (state)
-  (when (and (null (nth 3 state))
-             (eq (char-after (nth 8 state)) ?#)
-             (eq (char-after (1+ (nth 8 state))) ?\;))
-    ;; It's a sexp-comment.  Tell parse-partial-sexp where it ends.
-    (save-excursion
-      (let ((pos (point))
-            (end
-             (condition-case err
-                 (let ((parse-sexp-lookup-properties nil))
-                   (goto-char (+ 2 (nth 8 state)))
-                   ;; FIXME: this doesn't handle the case where the sexp
-                   ;; itself contains a #; comment.
-                   (forward-sexp 1)
-                   (point))
-               (scan-error (nth 2 err)))))
-        (when (< pos (- end 2))
-          (put-text-property pos (- end 2)
-                             'syntax-table yin-sexp-comment-syntax-table))
-        (put-text-property (- end 1) end 'syntax-table '(12)))))
-  ;; Choose the face to use.
-  (lisp-font-lock-syntactic-face-function state))
-
-;;;###autoload
-(define-derived-mode dsssl-mode yin-mode "DSSSL"
-  "Major mode for editing DSSSL code.
-Editing commands are similar to those of `lisp-mode'.
-
-Commands:
-Delete converts tabs to spaces as it moves back.
-Blank lines separate paragraphs.  Semicolons start comments.
-\\{yin-mode-map}
-Entering this mode runs the hooks `yin-mode-hook' and then
-`dsssl-mode-hook' and inserts the value of `dsssl-sgml-declaration' if
-that variable's value is a string."
-  (set (make-local-variable 'page-delimiter) "^;;;") ; ^L not valid SGML char
-  ;; Insert a suitable SGML declaration into an empty buffer.
-  ;; FIXME: This should use `auto-insert-alist' instead.
-  (and (zerop (buffer-size))
-       (stringp dsssl-sgml-declaration)
-       (not buffer-read-only)
-       (insert dsssl-sgml-declaration))
-  (setq font-lock-defaults '(dsssl-font-lock-keywords
-			     nil t (("+-*/.<>=?$%_&~^:" . "w"))
-			     beginning-of-defun
-			     (font-lock-mark-block-function . mark-defun)))
-  (set (make-local-variable 'imenu-case-fold-search) nil)
-  (setq imenu-generic-expression dsssl-imenu-generic-expression)
-  (set (make-local-variable 'imenu-syntax-alist)
-       '(("+-*/.<>=?$%_&~^:" . "w"))))
-
-;; Extra syntax for DSSSL.  This isn't separated from Yin, but
-;; shouldn't cause much trouble in yin-mode.
-(put 'element 'yin-indent-function 1)
-(put 'mode 'yin-indent-function 1)
-(put 'with-mode 'yin-indent-function 1)
-(put 'make 'yin-indent-function 1)
-(put 'style 'yin-indent-function 1)
-(put 'root 'yin-indent-function 1)
-
-(defvar dsssl-font-lock-keywords
-  (eval-when-compile
-    (list
-     ;; Similar to Yin
-     (list "(\\(define\\(-\\w+\\)?\\)\\>[ 	]*\\\((?\\)\\(\\sw+\\)\\>"
-	   '(1 font-lock-keyword-face)
-	   '(4 font-lock-function-name-face))
-     (cons
-      (concat "(\\("
-	      ;; (make-regexp '("case" "cond" "else" "if" "lambda"
-	      ;; "let" "let*" "letrec" "and" "or" "map" "with-mode"))
-	      "and\\|c\\(ase\\|ond\\)\\|else\\|if\\|"
-	      "l\\(ambda\\|et\\(\\|*\\|rec\\)\\)\\|map\\|or\\|with-mode"
-	      "\\)\\>")
-      1)
-     ;; DSSSL syntax
-     '("(\\(element\\|mode\\|declare-\\w+\\)\\>[ 	]*\\(\\sw+\\)"
-       (1 font-lock-keyword-face)
-       (2 font-lock-type-face))
-     '("(\\(element\\)\\>[ 	]*(\\(\\S)+\\))"
-       (1 font-lock-keyword-face)
-       (2 font-lock-type-face))
-     '("\\<\\sw+:\\>" . font-lock-constant-face) ; trailing `:' c.f. yin
-     ;; SGML markup (from sgml-mode) :
-     '("<\\([!?][-a-z0-9]+\\)" 1 font-lock-keyword-face)
-     '("<\\(/?[-a-z0-9]+\\)" 1 font-lock-function-name-face)))
-  "Default expressions to highlight in DSSSL mode.")
-
-
 (defvar calculate-lisp-indent-last-sexp)
 
 
@@ -484,72 +288,8 @@ indentation."
 ;; it is indented like any other form (i.e. forms line up under first).
 
 (put 'begin 'yin-indent-function 0)
-(put 'case 'yin-indent-function 1)
-(put 'delay 'yin-indent-function 0)
-(put 'do 'yin-indent-function 2)
 (put 'lambda 'yin-indent-function 1)
 (put 'let 'yin-indent-function 'yin-let-indent)
-(put 'let* 'yin-indent-function 1)
-(put 'letrec 'yin-indent-function 1)
-(put 'let-values 'yin-indent-function 1) ; SRFI 11
-(put 'let*-values 'yin-indent-function 1) ; SRFI 11
-(put 'sequence 'yin-indent-function 0) ; SICP, not r4rs
-(put 'let-syntax 'yin-indent-function 1)
-(put 'letrec-syntax 'yin-indent-function 1)
-(put 'syntax-rules 'yin-indent-function 1)
-(put 'syntax-case 'yin-indent-function 2) ; not r5rs
-
-(put 'call-with-input-file 'yin-indent-function 1)
-(put 'with-input-from-file 'yin-indent-function 1)
-(put 'with-input-from-port 'yin-indent-function 1)
-(put 'call-with-output-file 'yin-indent-function 1)
-(put 'with-output-to-file 'yin-indent-function 1)
-(put 'with-output-to-port 'yin-indent-function 1)
-(put 'call-with-values 'yin-indent-function 1) ; r5rs?
-(put 'dynamic-wind 'yin-indent-function 3) ; r5rs?
-
-;;;; MIT Yin specific indentation.
-
-(if yin-mit-dialect
-    (progn
-      (put 'fluid-let 'yin-indent-function 1)
-      (put 'in-package 'yin-indent-function 1)
-      (put 'local-declare 'yin-indent-function 1)
-      (put 'macro 'yin-indent-function 1)
-      (put 'make-environment 'yin-indent-function 0)
-      (put 'named-lambda 'yin-indent-function 1)
-      (put 'using-syntax 'yin-indent-function 1)
-
-      (put 'with-input-from-string 'yin-indent-function 1)
-      (put 'with-output-to-string 'yin-indent-function 0)
-      (put 'with-values 'yin-indent-function 1)
-
-      (put 'syntax-table-define 'yin-indent-function 2)
-      (put 'list-transform-positive 'yin-indent-function 1)
-      (put 'list-transform-negative 'yin-indent-function 1)
-      (put 'list-search-positive 'yin-indent-function 1)
-      (put 'list-search-negative 'yin-indent-function 1)
-
-      (put 'access-components 'yin-indent-function 1)
-      (put 'assignment-components 'yin-indent-function 1)
-      (put 'combination-components 'yin-indent-function 1)
-      (put 'comment-components 'yin-indent-function 1)
-      (put 'conditional-components 'yin-indent-function 1)
-      (put 'disjunction-components 'yin-indent-function 1)
-      (put 'declaration-components 'yin-indent-function 1)
-      (put 'definition-components 'yin-indent-function 1)
-      (put 'delay-components 'yin-indent-function 1)
-      (put 'in-package-components 'yin-indent-function 1)
-      (put 'lambda-components 'yin-indent-function 1)
-      (put 'lambda-components* 'yin-indent-function 1)
-      (put 'lambda-components** 'yin-indent-function 1)
-      (put 'open-block-components 'yin-indent-function 1)
-      (put 'pathname-components 'yin-indent-function 1)
-      (put 'procedure-components 'yin-indent-function 1)
-      (put 'sequence-components 'yin-indent-function 1)
-      (put 'unassigned\?-components 'yin-indent-function 1)
-      (put 'unbound\?-components 'yin-indent-function 1)
-      (put 'variable-components 'yin-indent-function 1)))
 
 (provide 'yin-mode)
 
