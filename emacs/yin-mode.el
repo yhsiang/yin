@@ -109,7 +109,7 @@
   (set (make-local-variable 'indent-line-function) 'lisp-indent-line)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'outline-regexp) ";;; \\|(....")
-  (set (make-local-variable 'comment-start) ";")
+  (set (make-local-variable 'comment-start) "-- ")
   (set (make-local-variable 'comment-add) 1)
   ;; Look within the line for a ; following an even number of backslashes
   ;; after either a non-backslash or the line beginning.
