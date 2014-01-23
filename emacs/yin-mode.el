@@ -111,13 +111,6 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
 (setq yin-functions-regexp (regexp-opt yin-functions 'words))
 
 
-;; clear memory
-(setq yin-keywords nil)
-(setq yin-types nil)
-(setq yin-constants nil)
-(setq yin-functions nil)
-
-
 (defvar yin-font-lock-keywords
   "Default expressions to highlight in Yin modes.")
 
