@@ -27,27 +27,10 @@ public class Scope {
     }
 
 
-    public Value lookupLocal(String name) {
-        Object v = lookupLocalItem(name, "value");
-        if (v == null) {
-            return null;
-        } else if (v instanceof Value) {
-            return (Value) v;
-        } else {
-            _.abort("value is not a Value, shouldn't happen: " + v);
-            return null;
-        }
-    }
-
-
     public Value lookup(String name) {
-        Object v = lookupLocalItem(name, "value");
+        Object v = lookupProperty(name, "value");
         if (v == null) {
-            if (parent != null) {
-                return parent.lookup(name);
-            } else {
-                return null;
-            }
+            return null;
         } else if (v instanceof Value) {
             return (Value) v;
         } else {
@@ -57,7 +40,20 @@ public class Scope {
     }
 
 
-    public Object lookupLocalItem(String name, String key) {
+    public Value lookupLocal(String name) {
+        Object v = lookupPropertyLocal(name, "value");
+        if (v == null) {
+            return null;
+        } else if (v instanceof Value) {
+            return (Value) v;
+        } else {
+            _.abort("value is not a Value, shouldn't happen: " + v);
+            return null;
+        }
+    }
+
+
+    public Object lookupPropertyLocal(String name, String key) {
         Map<String, Object> item = table.get(name);
         if (item != null) {
             return item.get(key);
@@ -67,12 +63,12 @@ public class Scope {
     }
 
 
-    public Object lookupItem(String name, String key) {
-        Object v = lookupLocalItem(name, key);
+    public Object lookupProperty(String name, String key) {
+        Object v = lookupPropertyLocal(name, key);
         if (v != null) {
             return v;
         } else if (parent != null) {
-            return parent.lookupItem(name, key);
+            return parent.lookupProperty(name, key);
         } else {
             return null;
         }
