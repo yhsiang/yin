@@ -22,7 +22,7 @@ public class Attr extends Node {
     public Value interp(Scope s) {
         Value record = value.interp(s);
         if (record instanceof RecordType) {
-            Value a = ((RecordType) record).valueMap.get(attr.id);
+            Value a = ((RecordType) record).properties.lookup(attr.id);
             if (a != null) {
                 return a;
             } else {
@@ -39,9 +39,9 @@ public class Attr extends Node {
     public void set(Value v, Scope s) {
         Value record = value.interp(s);
         if (record instanceof RecordType) {
-            Value a = ((RecordType) record).valueMap.get(attr.id);
+            Value a = ((RecordType) record).properties.lookup(attr.id);
             if (a != null) {
-                ((RecordType) record).valueMap.put(attr.id, v);
+                ((RecordType) record).properties.putValue(attr.id, v);
             } else {
                 _.abort(attr, "can only assign to existing attribute in record, " + attr + " not found in: " + record);
             }

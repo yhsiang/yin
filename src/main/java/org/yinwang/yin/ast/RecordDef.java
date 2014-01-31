@@ -3,11 +3,9 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
-import org.yinwang.yin.parser.Parser;
 import org.yinwang.yin.value.RecordType;
 import org.yinwang.yin.value.Value;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,77 +13,41 @@ import java.util.Map;
 public class RecordDef extends Node {
     public Name name;
     public List<Name> parents;
-    public Map<String, Node> valueMap = new LinkedHashMap<>();
-    public Map<String, Node> typeMap = new LinkedHashMap<>();
+    public Scope propsNode;
+    public Scope properties;
 
 
-    public RecordDef(Name name, List<Name> parents, List<Node> contents,
+    public RecordDef(Name name, List<Name> parents, Scope propsNode,
                      String file, int start, int end, int line, int col)
     {
         super(file, start, end, line, col);
         this.name = name;
         this.parents = parents;
-
-        for (int i = 0; i < contents.size(); i++) {
-            Node tuple = contents.get(i);
-            if (tuple instanceof Tuple) {
-                List<Node> elements = Parser.parseList(((Tuple) tuple).elements);
-
-                if (elements.size() == 3) {
-                    Node fieldName = elements.get(0);
-                    Node type = elements.get(1);
-                    Node value = elements.get(2);
-
-                    if (!(fieldName instanceof Keyword)) {
-                        _.abort(fieldName, "record initializer key is not a keyword: " + fieldName);
-                    } else {
-                        typeMap.put(((Keyword) fieldName).id, type);
-                        valueMap.put(((Keyword) fieldName).id, value);
-                    }
-                } else if (elements.size() == 2) {
-                    Node fieldName = elements.get(0);
-                    Node type = elements.get(1);
-
-                    if (!(fieldName instanceof Keyword)) {
-                        _.abort(fieldName, "record initializer key is not a keyword: " + fieldName);
-                    } else {
-                        typeMap.put(((Keyword) fieldName).id, type);
-                    }
-                }
-            }
-        }
+        this.propsNode = propsNode;
     }
 
 
     public Value interp(Scope s) {
-        Map<String, Value> tm = new LinkedHashMap<>();
-        Map<String, Value> vm = new LinkedHashMap<>();
+        Scope properties = new Scope();
 
         if (parents != null) {
             for (Node p : parents) {
                 Value pv = p.interp(s);
                 if (pv instanceof RecordType) {
-                    for (Map.Entry<String, Value> e : ((RecordType) pv).typeMap.entrySet()) {
-                        Value existing = vm.get(e.getKey());
-                        if (existing == null) {
-                            tm.put(e.getKey(), e.getValue());
-                        } else {
-                            _.abort(p, "conflicting field " + e.getKey() +
+                    Scope parentProps = ((RecordType) pv).properties;
+
+                    // check for duplicated keys
+                    for (String key : parentProps.keySet()) {
+                        Value existing = properties.lookupLocal(key);
+                        if (existing != null) {
+                            _.abort(p, "conflicting field " + key +
                                     " inherited from parent: " + p + ", value: " + pv);
                             return null;
                         }
                     }
 
-                    for (Map.Entry<String, Value> e : ((RecordType) pv).valueMap.entrySet()) {
-                        Value existing = vm.get(e.getKey());
-                        if (existing == null) {
-                            vm.put(e.getKey(), e.getValue());
-                        } else {
-                            _.abort(p, "conflicting field " + e.getKey() +
-                                    " inherited from parent: " + p + ", value: " + pv);
-                            return null;
-                        }
-                    }
+                    // add all properties or all fields in parent
+                    properties.putAll(parentProps);
                 } else {
                     _.abort(p, "parent is not a record");
                     return null;
@@ -93,15 +55,20 @@ public class RecordDef extends Node {
             }
         }
 
-        for (Map.Entry<String, Node> e : this.typeMap.entrySet()) {
-            tm.put(e.getKey(), e.getValue().interp(s));
+        for (String field : propsNode.keySet()) {
+            Map<String, Object> props = propsNode.lookupAllProps(field);
+            for (Map.Entry<String, Object> e : props.entrySet()) {
+                Object v = e.getValue();
+                if (v instanceof Node) {
+                    Value vValue = ((Node) v).interp(s);
+                    properties.put(field, e.getKey(), vValue);
+                } else {
+                    _.abort(this, "property is not a node, parser bug: " + v);
+                }
+            }
         }
 
-        for (Map.Entry<String, Node> e : this.valueMap.entrySet()) {
-            vm.put(e.getKey(), e.getValue().interp(s));
-        }
-
-        Value r = new RecordType(name.id, tm, vm, this);
+        Value r = new RecordType(name.id, this, properties);
         s.putValue(name.id, r);
         return Value.VOID;
     }
@@ -117,8 +84,11 @@ public class RecordDef extends Node {
             sb.append(" (" + Node.printList(parents) + ")");
         }
 
-        for (Map.Entry<String, Node> e : valueMap.entrySet()) {
-            sb.append(" :" + e.getKey() + " " + e.getValue());
+        for (String field : propsNode.keySet()) {
+            Map<String, Object> props = propsNode.lookupAllProps(field);
+            for (Map.Entry<String, Object> e : props.entrySet()) {
+                sb.append(" :" + e.getKey() + " " + e.getValue());
+            }
         }
 
         sb.append(Constants.TUPLE_END);

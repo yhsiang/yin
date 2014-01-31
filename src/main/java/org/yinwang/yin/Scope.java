@@ -10,6 +10,7 @@ import org.yinwang.yin.value.primitives.*;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class Scope {
 
@@ -24,6 +25,26 @@ public class Scope {
 
     public Scope(Scope parent) {
         this.parent = parent;
+    }
+
+
+    public Scope copy() {
+        Scope ret = new Scope();
+        for (String name : table.keySet()) {
+            Map<String, Object> props = new LinkedHashMap<>();
+            props.putAll(table.get(name));
+            ret.table.put(name, props);
+        }
+        return ret;
+    }
+
+
+    public void putAll(Scope other) {
+        for (String name : other.table.keySet()) {
+            Map<String, Object> props = new LinkedHashMap<>();
+            props.putAll(other.table.get(name));
+            table.put(name, props);
+        }
     }
 
 
@@ -72,6 +93,11 @@ public class Scope {
         } else {
             return null;
         }
+    }
+
+
+    public Map<String, Object> lookupAllProps(String name) {
+        return table.get(name);
     }
 
 
@@ -124,8 +150,28 @@ public class Scope {
     }
 
 
+    public void putProperties(String name, Map<String, Object> props) {
+        Map<String, Object> item = table.get(name);
+        if (item == null) {
+            item = new LinkedHashMap<>();
+        }
+        item.putAll(props);
+        table.put(name, item);
+    }
+
+
     public void putValue(String name, Object value) {
         put(name, "value", value);
+    }
+
+
+    public Set<String> keySet() {
+        return table.keySet();
+    }
+
+
+    public boolean containsKey(String key) {
+        return table.containsKey(key);
     }
 
 }

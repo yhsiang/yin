@@ -25,10 +25,10 @@ public class Binder {
         } else if (pattern instanceof RecordLiteral) {
             if (value instanceof RecordType) {
                 Map<String, Node> elms1 = ((RecordLiteral) pattern).map;
-                Map<String, Value> elms2 = ((RecordType) value).valueMap;
+                Scope elms2 = ((RecordType) value).properties;
                 if (elms1.keySet().equals(elms2.keySet())) {
                     for (String k1 : elms1.keySet()) {
-                        define(elms1.get(k1), elms2.get(k1), env);
+                        define(elms1.get(k1), elms2.lookupLocal(k1), env);
                     }
                 } else {
                     _.abort(pattern, "define with records of different attributes: " +
@@ -75,10 +75,10 @@ public class Binder {
         } else if (pattern instanceof RecordLiteral) {
             if (value instanceof RecordType) {
                 Map<String, Node> elms1 = ((RecordLiteral) pattern).map;
-                Map<String, Value> elms2 = ((RecordType) value).valueMap;
+                Scope elms2 = ((RecordType) value).properties;
                 if (elms1.keySet().equals(elms2.keySet())) {
                     for (String k1 : elms1.keySet()) {
-                        assign(elms1.get(k1), elms2.get(k1), env);
+                        assign(elms1.get(k1), elms2.lookupLocal(k1), env);
                     }
                 } else {
                     _.abort(pattern, "assign with records of different attributes: " +

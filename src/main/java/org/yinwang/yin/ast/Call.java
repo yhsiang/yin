@@ -81,7 +81,7 @@ public class Call extends Node {
             RecordType copy = template.copy();
 
             for (Map.Entry<String, Node> e : args.keywords.entrySet()) {
-                copy.valueMap.put(e.getKey(), e.getValue().interp(s));
+                copy.properties.putValue(e.getKey(), e.getValue().interp(s));
             }
 
             // instantiate

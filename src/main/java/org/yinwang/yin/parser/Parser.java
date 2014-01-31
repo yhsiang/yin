@@ -1,6 +1,7 @@
 package org.yinwang.yin.parser;
 
 import org.yinwang.yin.Constants;
+import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
 import org.yinwang.yin.ast.*;
 
@@ -132,16 +133,16 @@ public class Parser {
                 if (keyword.equals(Constants.RECORD_KEYWORD)) {
                     if (tuple.elements.size() >= 2) {
                         Node name = tuple.elements.get(1);
-                        Node node2 = tuple.elements.get(2);
+                        Node maybeParents = tuple.elements.get(2);
 
                         List<Name> parents;
                         List<Node> defs;
 
                         if (name instanceof Name) {
-                            if (node2 instanceof Tuple &&
-                                    ((Tuple) node2).getHead() instanceof Name)
+                            if (maybeParents instanceof Tuple &&
+                                    delimType(((Tuple) maybeParents).open, Constants.TUPLE_BEGIN))
                             {
-                                List<Node> parentNodes = ((Tuple) node2).elements;
+                                List<Node> parentNodes = ((Tuple) maybeParents).elements;
                                 parents = new ArrayList<>();
                                 for (Node p : parentNodes) {
                                     if (p instanceof Name) {
@@ -156,8 +157,34 @@ public class Parser {
                                 defs = tuple.elements.subList(2, tuple.elements.size());
                             }
 
-                            return new RecordDef((Name) name, parents, defs,
-                                    prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
+                            Scope properties = new Scope();
+                            for (Node def : defs) {
+                                if (def instanceof Tuple &&
+                                        delimType(((Tuple) maybeParents).open, Constants.ARRAY_BEGIN))
+                                {
+                                    List<Node> elements = ((Tuple) def).elements;
+                                    if (elements.size() > 0) {
+                                        Node nameNode = elements.get(0);
+                                        if (nameNode instanceof Name) {
+                                            String id = ((Name) nameNode).id;
+                                            Map<String, Node> props = parseMap(elements.subList(1, elements.size()));
+                                            Map<String, Object> propsObj = new LinkedHashMap<>();
+                                            for (Map.Entry<String, Node> e : props.entrySet()) {
+                                                propsObj.put(e.getKey(), e.getValue());
+                                            }
+                                            properties.putProperties(id, propsObj);
+                                        } else {
+                                            _.abort(nameNode, "expect field name, but got: " + nameNode);
+                                        }
+                                    } else {
+                                        _.abort(def, "empty record slot not allowed");
+                                    }
+                                }
+                            }
+
+
+                            return new RecordDef((Name) name, parents, properties, prenode.file,
+                                    prenode.start, prenode.end, prenode.line, prenode.col);
                         } else {
                             _.abort(name, "syntax error in record name: " + name);
                         }

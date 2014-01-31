@@ -40,11 +40,11 @@ public class RecordLiteral extends Node {
 
 
     public Value interp(Scope s) {
-        Map<String, Value> valueMap = new LinkedHashMap<>();
+        Scope properties = new Scope();
         for (Map.Entry<String, Node> e : map.entrySet()) {
-            valueMap.put(e.getKey(), e.getValue().interp(s));
+            properties.putValue(e.getKey(), e.getValue().interp(s));
         }
-        return new RecordType(null, valueMap, this);
+        return new RecordType(null, this, properties);
     }
 
 

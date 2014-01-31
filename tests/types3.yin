@@ -1,6 +1,14 @@
 (define f
   (fun (x y)
+    -- (declare [x :type Int :default 1]
+    --          [y :type Bool :default true])
     (+ x y)))
 
 (f 1 2)
 
+
+(record A
+  [x :type Int :default 1]
+  [y :type Bool :default true])
+
+(A)
