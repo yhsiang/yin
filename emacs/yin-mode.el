@@ -88,7 +88,7 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
 
 
 ;; define several class of keywords
-(setq yin-keywords '("define" "fun" "if" "set!" "assert" "record"))
+(setq yin-keywords '("define" "fun" "if" "set!" "declare" "record" "U"))
 (setq yin-types '("Int" "Float" "Bool"))
 (setq yin-constants '("true" "false"))
 (setq yin-functions '("map" "and" "or" "not"))
@@ -103,6 +103,7 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
   `((,yin-type-regexp . font-lock-type-face)
     (,yin-constant-regexp . font-lock-constant-face)
     (,yin-functions-regexp . font-lock-function-name-face)
+    ("\\<:\\sw+\\>" . font-lock-builtin-face)
     (,yin-keywords-regexp . font-lock-keyword-face)    ;; must be last
 ))
 
