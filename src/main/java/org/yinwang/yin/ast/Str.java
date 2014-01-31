@@ -2,6 +2,7 @@ package org.yinwang.yin.ast;
 
 
 import org.yinwang.yin.Scope;
+import org.yinwang.yin.value.StringValue;
 import org.yinwang.yin.value.Value;
 
 public class Str extends Node {
@@ -15,7 +16,7 @@ public class Str extends Node {
 
 
     public Value interp(Scope s) {
-        return null;
+        return new StringValue(value);
     }
 
 

@@ -5,7 +5,9 @@ import org.yinwang.yin._;
 import org.yinwang.yin.ast.*;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Parser {
 
@@ -81,13 +83,22 @@ public class Parser {
                     if (tuple.elements.size() >= 3) {
                         Node preParams = tuple.elements.get(1);
                         if (preParams instanceof Tuple) {
-                            Parameter parameter = new Parameter(((Tuple) preParams).elements);
+                            List<Node> params = parseList(((Tuple) preParams).elements);
+                            List<Name> paramNames = new ArrayList<>();
+                            for (Node p : params) {
+                                if (p instanceof Name) {
+                                    paramNames.add((Name) p);
+                                } else {
+                                    _.abort(p, "parameter msut be a name");
+                                    return null;
+                                }
+                            }
                             List<Node> statements = parseList(tuple.elements.subList(2, tuple.elements.size()));
                             int start = statements.get(0).start;
                             int end = statements.get(statements.size() - 1).end;
                             Node body = new Block(statements, prenode.file, start, end, prenode.line, prenode.col);
-                            return new Fun(parameter, body, prenode.file, prenode.start, prenode.end, prenode.line,
-                                    prenode.col);
+                            return new Fun(paramNames, body, prenode.file, prenode.start, prenode.end,
+                                    prenode.line, prenode.col);
                         } else {
                             _.abort(preParams, "incorrect format of parameters");
                         }
@@ -173,6 +184,28 @@ public class Parser {
             parsed.add(parseNode(s));
         }
         return parsed;
+    }
+
+
+    // treat the list of nodes as key-value pairs like (:x 1 :y 2)
+    public static Map<String, Node> parseMap(List<Node> prenodes) {
+        Map<String, Node> ret = new LinkedHashMap<>();
+        if (prenodes.size() % 2 != 0) {
+            _.abort("list must be of the form (:key1 value1 :key2 value2)");
+            return null;
+        }
+
+        for (int i = 0; i < prenodes.size(); i += 2) {
+            Node key = parseNode(prenodes.get(i));
+            Node value = parseNode(prenodes.get(i + 1));
+            if (!(key instanceof Keyword)) {
+                _.abort(key, "key must be a keyword, but got: " + key);
+                return null;
+            } else {
+                ret.put(((Keyword) key).id, value);
+            }
+        }
+        return ret;
     }
 
 

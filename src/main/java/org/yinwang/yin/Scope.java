@@ -8,11 +8,12 @@ import org.yinwang.yin.value.Value;
 import org.yinwang.yin.value.primitives.*;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Scope {
 
-    public Map<String, Value> table = new HashMap<>();
+    public Map<String, Map<String, Object>> table = new HashMap<>();
     public Scope parent;
 
 
@@ -27,16 +28,51 @@ public class Scope {
 
 
     public Value lookupLocal(String name) {
-        return table.get(name);
+        Object v = lookupLocalItem(name, "value");
+        if (v == null) {
+            return null;
+        } else if (v instanceof Value) {
+            return (Value) v;
+        } else {
+            _.abort("value is not a Value, shouldn't happen: " + v);
+            return null;
+        }
     }
 
 
     public Value lookup(String name) {
-        Value v = table.get(name);
+        Object v = lookupLocalItem(name, "value");
+        if (v == null) {
+            if (parent != null) {
+                return parent.lookup(name);
+            } else {
+                return null;
+            }
+        } else if (v instanceof Value) {
+            return (Value) v;
+        } else {
+            _.abort("value is not a Value, shouldn't happen: " + v);
+            return null;
+        }
+    }
+
+
+    public Object lookupLocalItem(String name, String key) {
+        Map<String, Object> item = table.get(name);
+        if (item != null) {
+            return item.get(key);
+        } else {
+            return null;
+        }
+    }
+
+
+    public Object lookupItem(String name, String key) {
+        Object v = lookupLocalItem(name, key);
         if (v != null) {
             return v;
         } else if (parent != null) {
-            return parent.lookup(name);
+            return parent.lookupItem(name, key);
         } else {
             return null;
         }
@@ -44,7 +80,7 @@ public class Scope {
 
 
     public Scope findDefiningScope(String name) {
-        Value v = table.get(name);
+        Object v = table.get(name);
         if (v != null) {
             return this;
         } else if (parent != null) {
@@ -58,32 +94,42 @@ public class Scope {
     public static Scope buildInitScope() {
         Scope init = new Scope();
 
-        init.put("+", new Add());
-        init.put("-", new Sub());
-        init.put("*", new Mult());
-        init.put("/", new Div());
+        init.putValue("+", new Add());
+        init.putValue("-", new Sub());
+        init.putValue("*", new Mult());
+        init.putValue("/", new Div());
 
-        init.put("<", new Lt());
-        init.put("<=", new LtE());
-        init.put(">", new Gt());
-        init.put(">=", new GtE());
-        init.put("=", new Eq());
-        init.put("and", new And());
-        init.put("or", new Or());
-        init.put("not", new Not());
+        init.putValue("<", new Lt());
+        init.putValue("<=", new LtE());
+        init.putValue(">", new Gt());
+        init.putValue(">=", new GtE());
+        init.putValue("=", new Eq());
+        init.putValue("and", new And());
+        init.putValue("or", new Or());
+        init.putValue("not", new Not());
 
-        init.put("true", new BoolValue(true));
-        init.put("false", new BoolValue(false));
+        init.putValue("true", new BoolValue(true));
+        init.putValue("false", new BoolValue(false));
 
-        init.put("Int", new IntType());
-        init.put("Bool", new BoolType());
+        init.putValue("Int", new IntType());
+        init.putValue("Bool", new BoolType());
 
         return init;
     }
 
 
-    public void put(String name, Value value) {
-        table.put(name, value);
+    public void put(String name, String key, Object value) {
+        Map<String, Object> item = table.get(name);
+        if (item == null) {
+            item = new LinkedHashMap<>();
+        }
+        item.put(key, value);
+        table.put(name, item);
+    }
+
+
+    public void putValue(String name, Object value) {
+        put(name, "value", value);
     }
 
 }

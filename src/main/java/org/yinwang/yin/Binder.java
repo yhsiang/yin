@@ -20,7 +20,7 @@ public class Binder {
             if (v != null) {
                 _.abort(pattern, "trying to redefine name: " + id);
             } else {
-                env.put(id, value);
+                env.putValue(id, value);
             }
         } else if (pattern instanceof RecordLiteral) {
             if (value instanceof RecordType) {
@@ -66,7 +66,7 @@ public class Binder {
             if (d == null) {
                 _.abort(pattern, "assigned name was not defined: " + id);
             } else {
-                d.put(id, value);
+                d.putValue(id, value);
             }
         } else if (pattern instanceof Subscript) {
             ((Subscript) pattern).set(value, env);

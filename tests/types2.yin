@@ -15,7 +15,7 @@
 -- factorial
 (define fact
   (fun (x)
-    (assert (: x Int))                  -- assert x to be an integer
+    (declare (: x Int))                  -- declare x to be an integer
     (if (= x 0) 1 (* x (fact (- x 1))))))
 
 (fact 5)
@@ -24,7 +24,7 @@
 ------------- mutural recursive functions -------------
 (define even
   (fun (x)
-    (assert (: x Int))
+    (declare (: x Int))
     (if (= x 0)
         true
         (if (= x 1)
@@ -33,7 +33,7 @@
 
 (define odd
   (fun (x)
-    (assert (: x Int))
+    (declare (: x Int))
     (if (= x 0)
         false
         (if (= x 1)
@@ -54,10 +54,32 @@
 (B :y 20 :z 30)
 
 
-(define f 
+(define f
   (fun ([:x (+ 1 2)] y)
-    (assert (: x (U Int Float))
-            (: y Int))
+    (declare (: x (U Int Float))
+             (: y Int))
     (+ x y)))
 
 (f :y 2)
+
+
+(define f
+  (fun ([:x (+ 1 2)] y)
+    (declare (: x (U Int Float))
+             (: y Int))
+    (+ x y)))
+
+
+(define f
+  (fun (x y)
+    (declare [x :type (U Int Float)
+                :default 10]
+             [y :type Int
+                :default 20
+                :escape true])
+    (+ x y)))
+
+
+(record A (B C)
+        [x :type Int :default 10 :mutable true]
+        [y :type Bool :default 20])

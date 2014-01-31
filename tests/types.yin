@@ -38,9 +38,18 @@
 (B :y 20 :z 30)
 
 
-(define f 
-  (fun ([:x (U Int Float) (+ 1 2)] 
-        [:y Int]) 
+(define f
+  (fun ([:x (U Int Float) (+ 1 2)]
+        [:y Int])
     (+ x y)))
 
 (f :y 2)
+
+(define 我是
+  (fun ([:x Int] [:n Int])
+    ["我是" x n]))
+
+(define 三 3)
+
+(我是 "猪头" 三)
+

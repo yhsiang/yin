@@ -29,14 +29,14 @@ public class Call extends Node {
         if (func instanceof Closure) {
             Closure closure = (Closure) func;
             Scope funScope = new Scope(closure.env);
-            Parameter params = closure.fun.params;
+            List<Name> params = closure.fun.params;
 
             if (!args.positional.isEmpty() && args.keywords.isEmpty()) {
                 // positional
-                if (args.positional.size() == params.positional.size()) {
+                if (args.positional.size() == params.size()) {
                     for (int i = 0; i < args.positional.size(); i++) {
                         Value value = args.positional.get(i).interp(s);
-                        Binder.define(params.positional.get(i), value, funScope);
+                        Binder.define(params.get(i), value, funScope);
                     }
                     return closure.fun.body.interp(funScope);
                 } else {
@@ -49,21 +49,15 @@ public class Call extends Node {
                 Set<String> seen = new HashSet<>();
 
                 // try to bind all arguments
-                for (Name param : params.positional) {
-
+                for (Name param : params) {
                     Node actual = args.keywords.get(param.id);
                     if (actual != null) {
                         seen.add(param.id);
                         Value value = actual.interp(funScope);
-                        funScope.put(param.id, value);
+                        funScope.putValue(param.id, value);
                     } else {
-                        Value defaultValue = closure.defaults.get(param.id);
-                        if (defaultValue != null) {
-                            funScope.put(param.id, defaultValue);
-                        } else {
-                            _.abort(param, "argument not supplied for: " + param);
-                            return Value.VOID;
-                        }
+                        _.abort(param, "argument not supplied for: " + param);
+                        return Value.VOID;
                     }
                 }
 

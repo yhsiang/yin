@@ -102,7 +102,7 @@ public class RecordDef extends Node {
         }
 
         Value r = new RecordType(name.id, tm, vm, this);
-        s.put(name.id, r);
+        s.putValue(name.id, r);
         return Value.VOID;
     }
 

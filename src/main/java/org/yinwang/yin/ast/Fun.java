@@ -6,15 +6,14 @@ import org.yinwang.yin.Scope;
 import org.yinwang.yin.value.Closure;
 import org.yinwang.yin.value.Value;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class Fun extends Node {
-    public Parameter params;
+    public List<Name> params;
     public Node body;
 
 
-    public Fun(Parameter params, Node body, String file, int start, int end, int line, int col) {
+    public Fun(List<Name> params, Node body, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.params = params;
         this.body = body;
@@ -22,12 +21,7 @@ public class Fun extends Node {
 
 
     public Value interp(Scope s) {
-        Map<String, Value> defaults = new HashMap<>();
-        for (Map.Entry<String, Node> e : params.valueMap.entrySet()) {
-            Value v = e.getValue().interp(s);
-            defaults.put(e.getKey(), v);
-        }
-        return new Closure(this, defaults, s);
+        return new Closure(this, s);
     }
 
 
