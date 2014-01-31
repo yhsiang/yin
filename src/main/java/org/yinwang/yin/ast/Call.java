@@ -4,10 +4,7 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Binder;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
-import org.yinwang.yin.value.Closure;
-import org.yinwang.yin.value.PrimFun;
-import org.yinwang.yin.value.RecordType;
-import org.yinwang.yin.value.Value;
+import org.yinwang.yin.value.*;
 
 import java.util.*;
 
@@ -78,14 +75,24 @@ public class Call extends Node {
             }
         } else if (func instanceof RecordType) {
             RecordType template = (RecordType) func;
-            RecordType copy = template.copy();
+            Map<String, Value> values = new LinkedHashMap<>();
+
+            for (String key : template.properties.keySet()) {
+                Object defaultValue = template.properties.lookupPropertyLocal(key, "default");
+                if (defaultValue instanceof Value) {
+                    values.put(key, (Value) defaultValue);
+                } else {
+                    _.abort("default value is not value, shouldn't happen");
+
+                }
+            }
 
             for (Map.Entry<String, Node> e : args.keywords.entrySet()) {
-                copy.properties.putValue(e.getKey(), e.getValue().interp(s));
+                values.put(e.getKey(), e.getValue().interp(s));
             }
 
             // instantiate
-            return copy;
+            return new RecordValue(template.name, template, values);
         } else if (func instanceof PrimFun) {
             PrimFun prim = (PrimFun) func;
             if (args.positional.size() != prim.arity) {
