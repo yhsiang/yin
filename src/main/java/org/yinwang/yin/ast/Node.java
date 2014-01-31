@@ -41,7 +41,7 @@ public abstract class Node {
 
 
     public String getFileLineCol() {
-        return file + ":" + line + ":" + col;
+        return file + ":" + (line + 1) + ":" + (col + 1);
     }
 
 

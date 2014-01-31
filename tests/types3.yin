@@ -2,13 +2,13 @@
   (fun (x y)
     -- (declare [x :type Int :default 1]
     --          [y :type Bool :default true])
-    (+ x y)))
+    [x y]))
 
-(f 1 2)
+(f :y 1 :x 2)
 
 
-(record A
-  [x :type Int :default (+ 1 2)]
-  [y :type Bool :default true])
+-- (record A
+--   [x :type Int :default (+ 1 2)]
+--   [y :type Bool :default true])
 
-(A :x 10 :y false)
+-- (A :x 10 :y false :z 12)

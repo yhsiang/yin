@@ -38,7 +38,9 @@ public class Argument {
         for (int i = 0; i < elements.size(); i++) {
             Node key = elements.get(i);
             if (key instanceof Keyword) {
+                String id = ((Keyword) key).id;
                 positional.add(((Keyword) key).asName());
+
                 if (i >= elements.size() - 1) {
                     _.abort(key, "missing value for keyword: " + key);
                 } else {
@@ -46,7 +48,10 @@ public class Argument {
                     if (value instanceof Keyword) {
                         _.abort(value, "keywords can't be used as values: " + value);
                     } else {
-                        keywords.put(((Keyword) key).id, value);
+                        if (keywords.containsKey(id)) {
+                            _.abort(key, "duplicated keyword: " + key);
+                        }
+                        keywords.put(id, value);
                         i++;
                     }
                 }
