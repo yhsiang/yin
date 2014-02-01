@@ -123,7 +123,9 @@ public class Call extends Node {
 
                 for (String key : template.properties.keySet()) {
                     Object defaultValue = template.properties.lookupPropertyLocal(key, "default");
-                    if (defaultValue instanceof Value) {
+                    if (defaultValue == null) {
+                        continue;
+                    } else if (defaultValue instanceof Value) {
                         values.put(key, (Value) defaultValue);
                     } else {
                         _.abort("default value is not value, shouldn't happen");
@@ -131,7 +133,17 @@ public class Call extends Node {
                 }
 
                 for (Map.Entry<String, Node> e : args.keywords.entrySet()) {
-                    values.put(e.getKey(), e.getValue().interp(s));
+                    if (!template.properties.keySet().contains(e.getKey())) {
+                        _.abort(this, "extra keyword argument: " + e.getKey());
+                    } else {
+                        values.put(e.getKey(), e.getValue().interp(s));
+                    }
+                }
+
+                for (String field : template.properties.keySet()) {
+                    if (!values.containsKey(field)) {
+                        _.abort(this, "field is not initialized: " + field);
+                    }
                 }
 
                 // instantiate
