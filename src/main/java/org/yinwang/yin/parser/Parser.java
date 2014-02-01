@@ -60,11 +60,13 @@ public class Parser {
             if (keyNode instanceof Name) {
                 String keyword = ((Name) keyNode).id;
 
+                // -------------------- sequence --------------------
                 if (keyword.equals(Constants.SEQ_KEYWORD)) {
                     List<Node> statements = parseList(tuple.elements.subList(1, tuple.elements.size()));
                     return new Block(statements, prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
                 }
 
+                // -------------------- if --------------------
                 if (keyword.equals(Constants.IF_KEYWORD)) {
                     if (tuple.elements.size() == 4) {
                         Node test = parseNode(tuple.elements.get(1));
@@ -75,6 +77,7 @@ public class Parser {
                     }
                 }
 
+                // -------------------- definition --------------------
                 if (keyword.equals(Constants.DEF_KEYWORD)) {
                     if (tuple.elements.size() == 3) {
                         Node pattern = parseNode(tuple.elements.get(1));
@@ -86,6 +89,7 @@ public class Parser {
                     }
                 }
 
+                // -------------------- assignment --------------------
                 if (keyword.equals(Constants.ASSIGN_KEYWORD)) {
                     if (tuple.elements.size() == 3) {
                         Node pattern = parseNode(tuple.elements.get(1));
@@ -97,7 +101,7 @@ public class Parser {
                     }
                 }
 
-                // function definition
+                // -------------------- anonymous function --------------------
                 if (keyword.equals(Constants.FUN_KEYWORD)) {
                     if (tuple.elements.size() < 3) {
                         _.abort(tuple, "syntax error in function definition");
@@ -128,7 +132,7 @@ public class Parser {
                             prenode.line, prenode.col);
                 }
 
-                // record type definition
+                // -------------------- record type definition --------------------
                 if (keyword.equals(Constants.RECORD_KEYWORD)) {
                     if (tuple.elements.size() < 2) {
                         _.abort(tuple, "syntax error in record type definition");
@@ -192,7 +196,8 @@ public class Parser {
                 }
             }
 
-            // application
+            // -------------------- application --------------------
+            // must go after others because it has no keywords
             Node func = parseNode(tuple.elements.get(0));
             List<Node> parsedArgs = parseList(tuple.elements.subList(1, tuple.elements.size()));
             Argument args = new Argument(parsedArgs);
@@ -226,10 +231,8 @@ public class Parser {
             Node value = parseNode(prenodes.get(i + 1));
             if (!(key instanceof Keyword)) {
                 _.abort(key, "key must be a keyword, but got: " + key);
-                return null;
-            } else {
-                ret.put(((Keyword) key).id, value);
             }
+            ret.put(((Keyword) key).id, value);
         }
         return ret;
     }
@@ -245,9 +248,7 @@ public class Parser {
                 Node grouped = elements.get(0);
                 if (delimType(grouped, Constants.ATTRIBUTE_ACCESS)) {
                     _.abort(grouped, "illegal keyword: " + grouped);
-                    return null;
                 }
-
                 grouped = groupAttr(grouped);
 
                 for (int i = 1; i < elements.size(); i++) {
@@ -255,18 +256,15 @@ public class Parser {
                     if (delimType(n1, Constants.ATTRIBUTE_ACCESS)) {
                         if (i + 1 >= elements.size()) {
                             _.abort(n1, "illegal position for .");
-                            return null;
-                        } else {
-                            Node n2 = elements.get(i + 1);
-                            if (delimType(n1, Constants.ATTRIBUTE_ACCESS)) {
-                                if (n2 instanceof Name) {
-                                    grouped = new Attr(grouped, (Name) n2, grouped.file,
-                                            grouped.start, n2.end, grouped.line, grouped.col);
-                                    i++;   // skip
-                                } else {
-                                    _.abort(n2, "attribute is not a name");
-                                }
+                        }
+                        Node n2 = elements.get(i + 1);
+                        if (delimType(n1, Constants.ATTRIBUTE_ACCESS)) {
+                            if (!(n2 instanceof Name)) {
+                                _.abort(n2, "attribute is not a name");
                             }
+                            grouped = new Attr(grouped, (Name) n2, grouped.file,
+                                    grouped.start, n2.end, grouped.line, grouped.col);
+                            i++;   // skip
                         }
                     } else {
                         newElems.add(grouped);
@@ -283,11 +281,7 @@ public class Parser {
 
 
     public static boolean delimType(Node c, String d) {
-        if (c instanceof Delimeter) {
-            return ((Delimeter) c).shape.equals(d);
-        } else {
-            return false;
-        }
+        return c instanceof Delimeter && ((Delimeter) c).shape.equals(d);
     }
 
 
