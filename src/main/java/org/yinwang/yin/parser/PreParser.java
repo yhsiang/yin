@@ -45,7 +45,6 @@ public class PreParser {
         addDelimiterPair(Constants.ARRAY_BEGIN, Constants.ARRAY_END);
 
         addDelimiter(Constants.ATTRIBUTE_ACCESS);
-        addDelimiter(Constants.SUBSCRIPT_ACCESS);
     }
 
 

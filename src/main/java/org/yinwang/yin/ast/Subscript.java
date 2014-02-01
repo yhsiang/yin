@@ -73,7 +73,7 @@ public class Subscript extends Node {
 
 
     public String toString() {
-        return value + Constants.SUBSCRIPT_ACCESS + index;
+        return "(ref " + value + " " + index + ")";
     }
 
 }

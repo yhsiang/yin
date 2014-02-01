@@ -4,6 +4,7 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
 import org.yinwang.yin.value.RecordType;
+import org.yinwang.yin.value.RecordValue;
 import org.yinwang.yin.value.Value;
 
 public class Attr extends Node {
@@ -21,8 +22,8 @@ public class Attr extends Node {
     @Override
     public Value interp(Scope s) {
         Value record = value.interp(s);
-        if (record instanceof RecordType) {
-            Value a = ((RecordType) record).properties.lookup(attr.id);
+        if (record instanceof RecordValue) {
+            Value a = ((RecordValue) record).values.get(attr.id);
             if (a != null) {
                 return a;
             } else {

@@ -35,11 +35,6 @@ public class Parser {
             return new Attr(parseNode(a.value), a.attr, a.file, a.start, a.end, a.line, a.col);
         }
 
-        if (prenode instanceof Subscript) {
-            Subscript a = (Subscript) prenode;
-            return new Subscript(parseNode(a.value), parseNode(a.index), a.file, a.start, a.end, a.line, a.col);
-        }
-
         // most structures are encoded in a tuple
         // (if t c a) (+ 1 2) (f x y) ...
         // decode them by their first map
@@ -160,7 +155,7 @@ public class Parser {
                             Scope properties = new Scope();
                             for (Node def : defs) {
                                 if (def instanceof Tuple &&
-                                        delimType(((Tuple) maybeParents).open, Constants.ARRAY_BEGIN))
+                                        delimType(((Tuple) def).open, Constants.ARRAY_BEGIN))
                                 {
                                     List<Node> elements = ((Tuple) def).elements;
                                     if (elements.size() > 0) {
@@ -244,7 +239,7 @@ public class Parser {
 
             if (elements.size() >= 1) {
                 Node grouped = elements.get(0);
-                if (isAttrSub(grouped)) {
+                if (delimType(grouped, Constants.ATTRIBUTE_ACCESS)) {
                     _.abort(grouped, "illegal keyword: " + grouped);
                     return null;
                 }
@@ -253,7 +248,7 @@ public class Parser {
 
                 for (int i = 1; i < elements.size(); i++) {
                     Node n1 = elements.get(i);
-                    if (isAttrSub(n1)) {
+                    if (delimType(n1, Constants.ATTRIBUTE_ACCESS)) {
                         if (i + 1 >= elements.size()) {
                             _.abort(n1, "illegal position for .");
                             return null;
@@ -267,10 +262,6 @@ public class Parser {
                                 } else {
                                     _.abort(n2, "attribute is not a name");
                                 }
-                            } else if (delimType(n1, Constants.SUBSCRIPT_ACCESS)) {
-                                grouped = new Subscript(grouped, n2, grouped.file,
-                                        grouped.start, n2.end, grouped.line, grouped.col);
-                                i++;   // skip
                             }
                         }
                     } else {
@@ -293,12 +284,6 @@ public class Parser {
         } else {
             return false;
         }
-    }
-
-
-    public static boolean isAttrSub(Node c) {
-        return delimType(c, Constants.ATTRIBUTE_ACCESS) ||
-                delimType(c, Constants.SUBSCRIPT_ACCESS);
     }
 
 
