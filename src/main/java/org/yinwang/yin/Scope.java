@@ -160,7 +160,7 @@ public class Scope {
     }
 
 
-    public void putValue(String name, Object value) {
+    public void putValue(String name, Value value) {
         put(name, "value", value);
     }
 

@@ -23,5 +23,6 @@ public class Constants {
     public static final String DEF_KEYWORD = "define";
     public static final String ASSIGN_KEYWORD = "set!";
     public static final String RECORD_KEYWORD = "record";
+    public static final String DECLARE_KEYWORD = "declare";
 
 }
