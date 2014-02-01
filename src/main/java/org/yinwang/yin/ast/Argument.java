@@ -19,17 +19,16 @@ public class Argument {
         boolean hasKeyword = false;
 
         for (int i = 0; i < elements.size(); i++) {
-            if (elements.get(i) instanceof Name) {
-                hasName = true;
-            }
             if (elements.get(i) instanceof Keyword) {
                 hasKeyword = true;
                 i++;
+            } else {
+                hasName = true;
             }
         }
 
         if (hasName && hasKeyword) {
-            _.abort(elements.get(0), "mix positional and keyword arguments not allowed");
+            _.abort(elements.get(0), "mix positional and keyword arguments not allowed: " + elements);
         }
 
 
