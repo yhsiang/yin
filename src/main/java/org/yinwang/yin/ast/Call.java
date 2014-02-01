@@ -50,10 +50,16 @@ public class Call extends Node {
             }
 
             s.putAll(properties);
+
             for (String key : properties.keySet()) {
                 Object defaultValue = properties.lookupPropertyLocal(key, "default");
-                if (defaultValue instanceof Value) {
-                    s.putValue(key, (Value) defaultValue);
+                if (defaultValue == null) {
+                    continue;
+                } else if (defaultValue instanceof Value) {
+                    Value existing = s.lookup(key);
+                    if (existing == null) {
+                        s.putValue(key, (Value) defaultValue);
+                    }
                 } else {
                     _.abort("default value is not value, shouldn't happen");
                 }
