@@ -80,6 +80,28 @@ public class Parser {
                     }
                 }
 
+                if (keyword.equals(Constants.DEF_KEYWORD)) {
+                    if (tuple.elements.size() == 3) {
+                        Node pattern = parseNode(tuple.elements.get(1));
+                        Node value = parseNode(tuple.elements.get(2));
+                        return new Def(pattern, value, prenode.file, prenode.start, prenode.end, prenode.line,
+                                prenode.col);
+                    } else {
+                        _.abort(tuple, "incorrect format of definition");
+                    }
+                }
+
+                if (keyword.equals(Constants.ASSIGN_KEYWORD)) {
+                    if (tuple.elements.size() == 3) {
+                        Node pattern = parseNode(tuple.elements.get(1));
+                        Node value = parseNode(tuple.elements.get(2));
+                        return new Assign(pattern, value, prenode.file, prenode.start, prenode.end, prenode.line,
+                                prenode.col);
+                    } else {
+                        _.abort(tuple, "incorrect format of definition");
+                    }
+                }
+
                 if (keyword.equals(Constants.FUN_KEYWORD)) {
                     if (tuple.elements.size() >= 3) {
                         Node preParams = tuple.elements.get(1);
@@ -105,28 +127,6 @@ public class Parser {
                         }
                     } else {
                         _.abort(tuple, "syntax error in function definition");
-                    }
-                }
-
-                if (keyword.equals(Constants.DEF_KEYWORD)) {
-                    if (tuple.elements.size() == 3) {
-                        Node pattern = parseNode(tuple.elements.get(1));
-                        Node value = parseNode(tuple.elements.get(2));
-                        return new Def(pattern, value, prenode.file, prenode.start, prenode.end, prenode.line,
-                                prenode.col);
-                    } else {
-                        _.abort(tuple, "incorrect format of definition");
-                    }
-                }
-
-                if (keyword.equals(Constants.ASSIGN_KEYWORD)) {
-                    if (tuple.elements.size() == 3) {
-                        Node pattern = parseNode(tuple.elements.get(1));
-                        Node value = parseNode(tuple.elements.get(2));
-                        return new Assign(pattern, value, prenode.file, prenode.start, prenode.end, prenode.line,
-                                prenode.col);
-                    } else {
-                        _.abort(tuple, "incorrect format of definition");
                     }
                 }
 
@@ -218,7 +218,7 @@ public class Parser {
     public static Map<String, Node> parseMap(List<Node> prenodes) {
         Map<String, Node> ret = new LinkedHashMap<>();
         if (prenodes.size() % 2 != 0) {
-            _.abort("list must be of the form (:key1 value1 :key2 value2)");
+            _.abort("must be of the form (:key1 value1 :key2 value2), but got: " + prenodes);
             return null;
         }
 
