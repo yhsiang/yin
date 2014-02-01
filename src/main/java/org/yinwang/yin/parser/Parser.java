@@ -97,102 +97,101 @@ public class Parser {
                     }
                 }
 
+                // function definition
                 if (keyword.equals(Constants.FUN_KEYWORD)) {
-                    if (tuple.elements.size() >= 3) {
-
-                        // construct parameter list
-                        Node preParams = tuple.elements.get(1);
-                        if (preParams instanceof Tuple) {
-                            List<Name> paramNames = new ArrayList<>();
-                            for (Node p : ((Tuple) preParams).elements) {
-                                Node parsed = parseNode(p);
-                                if (parsed instanceof Name) {
-                                    paramNames.add((Name) parsed);
-                                } else {
-                                    _.abort(parsed, "parameter msut be a name");
-                                    return null;
-                                }
-                            }
-
-                            // construct body
-                            List<Node> statements = parseList(tuple.elements.subList(2, tuple.elements.size()));
-                            int start = statements.get(0).start;
-                            int end = statements.get(statements.size() - 1).end;
-                            Node body = new Block(statements, prenode.file, start, end, prenode.line, prenode.col);
-
-                            return new Fun(paramNames, body, prenode.file, prenode.start, prenode.end,
-                                    prenode.line, prenode.col);
-                        } else {
-                            _.abort(preParams, "incorrect format of parameters: " + preParams);
-                        }
-                    } else {
+                    if (tuple.elements.size() < 3) {
                         _.abort(tuple, "syntax error in function definition");
                     }
+
+                    // construct parameter list
+                    Node preParams = tuple.elements.get(1);
+                    if (!(preParams instanceof Tuple)) {
+                        _.abort(preParams, "incorrect format of parameters: " + preParams);
+                    }
+
+                    List<Name> paramNames = new ArrayList<>();
+                    for (Node p : ((Tuple) preParams).elements) {
+                        Node parsed = parseNode(p);
+                        if (!(parsed instanceof Name)) {
+                            _.abort(parsed, "parameter msut be a name");
+                        }
+                        paramNames.add((Name) parsed);
+                    }
+
+                    // construct body
+                    List<Node> statements = parseList(tuple.elements.subList(2, tuple.elements.size()));
+                    int start = statements.get(0).start;
+                    int end = statements.get(statements.size() - 1).end;
+                    Node body = new Block(statements, prenode.file, start, end, prenode.line, prenode.col);
+
+                    return new Fun(paramNames, body, prenode.file, prenode.start, prenode.end,
+                            prenode.line, prenode.col);
                 }
 
+                // record type definition
                 if (keyword.equals(Constants.RECORD_KEYWORD)) {
-                    if (tuple.elements.size() >= 2) {
-                        Node name = tuple.elements.get(1);
-                        Node maybeParents = tuple.elements.get(2);
-
-                        List<Name> parents;
-                        List<Node> fields;
-
-                        if (!(name instanceof Name)) {
-                            _.abort(name, "syntax error in record name: " + name);
-                            return null;
-                        }
-
-                        // check if there are parents (record A (B C) ...)
-                        if (maybeParents instanceof Tuple &&
-                                delimType(((Tuple) maybeParents).open, Constants.TUPLE_BEGIN))
-                        {
-                            List<Node> parentNodes = ((Tuple) maybeParents).elements;
-                            parents = new ArrayList<>();
-                            for (Node p : parentNodes) {
-                                if (p instanceof Name) {
-                                    parents.add((Name) p);
-                                } else {
-                                    _.abort(p, "parents can only be names");
-                                }
-                            }
-                            fields = tuple.elements.subList(3, tuple.elements.size());
-                        } else {
-                            parents = null;
-                            fields = tuple.elements.subList(2, tuple.elements.size());
-                        }
-
-                        Scope properties = new Scope();
-                        for (Node field : fields) {
-                            if (field instanceof Tuple &&
-                                    delimType(((Tuple) field).open, Constants.ARRAY_BEGIN))
-                            {
-                                List<Node> elements = ((Tuple) field).elements;
-                                if (elements.isEmpty()) {
-                                    _.abort(field, "empty record slot not allowed");
-                                }
-
-                                Node nameNode = elements.get(0);
-                                if (!(nameNode instanceof Name)) {
-                                    _.abort(nameNode, "expect field name, but got: " + nameNode);
-                                }
-
-                                Map<String, Node> props = parseMap(elements.subList(1, elements.size()));
-                                Map<String, Object> propsObj = new LinkedHashMap<>();
-                                for (Map.Entry<String, Node> e : props.entrySet()) {
-                                    propsObj.put(e.getKey(), e.getValue());
-                                }
-                                properties.putProperties(((Name) nameNode).id, propsObj);
-                            }
-                        }
-
-                        return new RecordDef((Name) name, parents, properties, prenode.file,
-                                prenode.start, prenode.end, prenode.line, prenode.col);
-                    } else {
+                    if (tuple.elements.size() < 2) {
                         _.abort(tuple, "syntax error in record type definition");
                     }
+
+                    Node name = tuple.elements.get(1);
+                    Node maybeParents = tuple.elements.get(2);
+
+                    List<Name> parents;
+                    List<Node> fields;
+
+                    if (!(name instanceof Name)) {
+                        _.abort(name, "syntax error in record name: " + name);
+                        return null;
+                    }
+
+                    // check if there are parents (record A (B C) ...)
+                    if (maybeParents instanceof Tuple &&
+                            delimType(((Tuple) maybeParents).open, Constants.TUPLE_BEGIN))
+                    {
+                        List<Node> parentNodes = ((Tuple) maybeParents).elements;
+                        parents = new ArrayList<>();
+                        for (Node p : parentNodes) {
+                            if (!(p instanceof Name)) {
+                                _.abort(p, "parents can only be names");
+                            }
+                            parents.add((Name) p);
+                        }
+                        fields = tuple.elements.subList(3, tuple.elements.size());
+                    } else {
+                        parents = null;
+                        fields = tuple.elements.subList(2, tuple.elements.size());
+                    }
+
+                    Scope properties = new Scope();
+                    for (Node field : fields) {
+                        if (field instanceof Tuple &&
+                                delimType(((Tuple) field).open, Constants.ARRAY_BEGIN))
+                        {
+                            List<Node> elements = ((Tuple) field).elements;
+                            if (elements.isEmpty()) {
+                                _.abort(field, "empty record slot not allowed");
+                            }
+
+                            Node nameNode = elements.get(0);
+                            if (!(nameNode instanceof Name)) {
+                                _.abort(nameNode, "expect field name, but got: " + nameNode);
+                            }
+
+                            Map<String, Node> props = parseMap(elements.subList(1, elements.size()));
+                            Map<String, Object> propsObj = new LinkedHashMap<>();
+                            for (Map.Entry<String, Node> e : props.entrySet()) {
+                                propsObj.put(e.getKey(), e.getValue());
+                            }
+                            properties.putProperties(((Name) nameNode).id, propsObj);
+                        }
+                    }
+
+                    return new RecordDef((Name) name, parents, properties, prenode.file,
+                            prenode.start, prenode.end, prenode.line, prenode.col);
                 }
             }
+
             // application
             Node func = parseNode(tuple.elements.get(0));
             List<Node> parsedArgs = parseList(tuple.elements.subList(1, tuple.elements.size()));
