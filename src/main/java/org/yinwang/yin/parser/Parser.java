@@ -40,38 +40,39 @@ public class Parser {
         // decode them by their first map
         if (prenode instanceof Tuple) {
             Tuple tuple = ((Tuple) prenode);
+            List<Node> elements = tuple.elements;
 
-            if (tuple.elements.isEmpty()) {
+            if (elements.isEmpty()) {
                 _.abort(tuple, "syntax error");
             }
 
             if (delimType(tuple.open, Constants.RECORD_BEGIN)) {
-                return new RecordLiteral(parseList(tuple.elements), tuple.file, tuple.start, tuple.end, tuple.line,
+                return new RecordLiteral(parseList(elements), tuple.file, tuple.start, tuple.end, tuple.line,
                         tuple.col);
             }
 
             if (delimType(tuple.open, Constants.ARRAY_BEGIN)) {
-                return new VectorLiteral(parseList(tuple.elements), tuple.file, tuple.start, tuple.end, tuple.line,
+                return new VectorLiteral(parseList(elements), tuple.file, tuple.start, tuple.end, tuple.line,
                         tuple.col);
             }
 
-            Node keyNode = tuple.elements.get(0);
+            Node keyNode = elements.get(0);
 
             if (keyNode instanceof Name) {
                 String keyword = ((Name) keyNode).id;
 
                 // -------------------- sequence --------------------
                 if (keyword.equals(Constants.SEQ_KEYWORD)) {
-                    List<Node> statements = parseList(tuple.elements.subList(1, tuple.elements.size()));
+                    List<Node> statements = parseList(elements.subList(1, elements.size()));
                     return new Block(statements, prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
                 }
 
                 // -------------------- if --------------------
                 if (keyword.equals(Constants.IF_KEYWORD)) {
-                    if (tuple.elements.size() == 4) {
-                        Node test = parseNode(tuple.elements.get(1));
-                        Node conseq = parseNode(tuple.elements.get(2));
-                        Node alter = parseNode(tuple.elements.get(3));
+                    if (elements.size() == 4) {
+                        Node test = parseNode(elements.get(1));
+                        Node conseq = parseNode(elements.get(2));
+                        Node alter = parseNode(elements.get(3));
                         return new If(test, conseq, alter, prenode.file, prenode.start, prenode.end, prenode.line,
                                 prenode.col);
                     }
@@ -79,9 +80,9 @@ public class Parser {
 
                 // -------------------- definition --------------------
                 if (keyword.equals(Constants.DEF_KEYWORD)) {
-                    if (tuple.elements.size() == 3) {
-                        Node pattern = parseNode(tuple.elements.get(1));
-                        Node value = parseNode(tuple.elements.get(2));
+                    if (elements.size() == 3) {
+                        Node pattern = parseNode(elements.get(1));
+                        Node value = parseNode(elements.get(2));
                         return new Def(pattern, value, prenode.file, prenode.start, prenode.end, prenode.line,
                                 prenode.col);
                     } else {
@@ -91,9 +92,9 @@ public class Parser {
 
                 // -------------------- assignment --------------------
                 if (keyword.equals(Constants.ASSIGN_KEYWORD)) {
-                    if (tuple.elements.size() == 3) {
-                        Node pattern = parseNode(tuple.elements.get(1));
-                        Node value = parseNode(tuple.elements.get(2));
+                    if (elements.size() == 3) {
+                        Node pattern = parseNode(elements.get(1));
+                        Node value = parseNode(elements.get(2));
                         return new Assign(pattern, value, prenode.file, prenode.start, prenode.end, prenode.line,
                                 prenode.col);
                     } else {
@@ -103,12 +104,12 @@ public class Parser {
 
                 // -------------------- anonymous function --------------------
                 if (keyword.equals(Constants.FUN_KEYWORD)) {
-                    if (tuple.elements.size() < 3) {
+                    if (elements.size() < 3) {
                         _.abort(tuple, "syntax error in function definition");
                     }
 
                     // construct parameter list
-                    Node preParams = tuple.elements.get(1);
+                    Node preParams = elements.get(1);
                     if (!(preParams instanceof Tuple)) {
                         _.abort(preParams, "incorrect format of parameters: " + preParams);
                     }
@@ -123,7 +124,7 @@ public class Parser {
                     }
 
                     // construct body
-                    List<Node> statements = parseList(tuple.elements.subList(2, tuple.elements.size()));
+                    List<Node> statements = parseList(elements.subList(2, elements.size()));
                     int start = statements.get(0).start;
                     int end = statements.get(statements.size() - 1).end;
                     Node body = new Block(statements, prenode.file, start, end, prenode.line, prenode.col);
@@ -134,12 +135,12 @@ public class Parser {
 
                 // -------------------- record type definition --------------------
                 if (keyword.equals(Constants.RECORD_KEYWORD)) {
-                    if (tuple.elements.size() < 2) {
+                    if (elements.size() < 2) {
                         _.abort(tuple, "syntax error in record type definition");
                     }
 
-                    Node name = tuple.elements.get(1);
-                    Node maybeParents = tuple.elements.get(2);
+                    Node name = elements.get(1);
+                    Node maybeParents = elements.get(2);
 
                     List<Name> parents;
                     List<Node> fields;
@@ -161,10 +162,10 @@ public class Parser {
                             }
                             parents.add((Name) p);
                         }
-                        fields = tuple.elements.subList(3, tuple.elements.size());
+                        fields = elements.subList(3, elements.size());
                     } else {
                         parents = null;
-                        fields = tuple.elements.subList(2, tuple.elements.size());
+                        fields = elements.subList(2, elements.size());
                     }
 
                     Scope properties = parseProperties(fields);
@@ -173,10 +174,10 @@ public class Parser {
                 }
 
                 if (keyword.equals(Constants.DECLARE_KEYWORD)) {
-                    if (tuple.elements.size() < 2) {
+                    if (elements.size() < 2) {
                         _.abort(tuple, "syntax error in record type definition");
                     }
-                    Scope properties = parseProperties(tuple.elements.subList(1, tuple.elements.size()));
+                    Scope properties = parseProperties(elements.subList(1, elements.size()));
                     return new Declare(properties, prenode.file,
                             prenode.start, prenode.end, prenode.line, prenode.col);
                 }
@@ -184,8 +185,8 @@ public class Parser {
 
             // -------------------- application --------------------
             // must go after others because it has no keywords
-            Node func = parseNode(tuple.elements.get(0));
-            List<Node> parsedArgs = parseList(tuple.elements.subList(1, tuple.elements.size()));
+            Node func = parseNode(elements.get(0));
+            List<Node> parsedArgs = parseList(elements.subList(1, elements.size()));
             Argument args = new Argument(parsedArgs);
             return new Call(func, args, prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
         }
