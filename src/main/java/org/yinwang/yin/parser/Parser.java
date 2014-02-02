@@ -117,7 +117,7 @@ public class Parser {
                     for (Node p : ((Tuple) preParams).elements) {
                         Node parsed = parseNode(p);
                         if (!(parsed instanceof Name)) {
-                            _.abort(parsed, "parameter msut be a name");
+                            _.abort(parsed, "parameter must be a name");
                         }
                         paramNames.add((Name) parsed);
                     }
@@ -193,6 +193,39 @@ public class Parser {
 
                     return new RecordDef((Name) name, parents, properties, prenode.file,
                             prenode.start, prenode.end, prenode.line, prenode.col);
+                }
+
+                if (keyword.equals(Constants.DECLARE_KEYWORD)) {
+                    if (tuple.elements.size() < 2) {
+                        _.abort(tuple, "syntax error in record type definition");
+                    }
+
+                    List<Node> fields = tuple.elements.subList(1, tuple.elements.size());
+
+                    Scope properties = new Scope();
+                    for (Node field : fields) {
+                        if (field instanceof Tuple &&
+                                delimType(((Tuple) field).open, Constants.ARRAY_BEGIN))
+                        {
+                            List<Node> elements = ((Tuple) field).elements;
+                            if (elements.isEmpty()) {
+                                _.abort(field, "empty record slot not allowed");
+                            }
+
+                            Node nameNode = elements.get(0);
+                            if (!(nameNode instanceof Name)) {
+                                _.abort(nameNode, "expect field name, but got: " + nameNode);
+                            }
+
+                            Map<String, Node> props = parseMap(elements.subList(1, elements.size()));
+                            Map<String, Object> propsObj = new LinkedHashMap<>();
+                            for (Map.Entry<String, Node> e : props.entrySet()) {
+                                propsObj.put(e.getKey(), e.getValue());
+                            }
+                            properties.putProperties(((Name) nameNode).id, propsObj);
+                        }
+                    }
+                    return new Declare(properties, prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
                 }
             }
 
