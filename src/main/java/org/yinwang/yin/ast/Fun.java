@@ -11,11 +11,13 @@ import java.util.List;
 public class Fun extends Node {
     public List<Name> params;
     public Node body;
+    public Scope properties;
 
 
-    public Fun(List<Name> params, Node body, String file, int start, int end, int line, int col) {
+    public Fun(List<Name> params, Scope properties, Node body, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.params = params;
+        this.properties = properties;
         this.body = body;
     }
 

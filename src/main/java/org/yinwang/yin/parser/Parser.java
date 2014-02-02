@@ -114,13 +114,40 @@ public class Parser {
                         _.abort(preParams, "incorrect format of parameters: " + preParams);
                     }
 
+                    // parse the parameters, test whether it's all names or all tuples
+                    boolean hasName = false;
+                    boolean hasTuple = false;
                     List<Name> paramNames = new ArrayList<>();
+                    List<Node> paramTuples = new ArrayList<>();
+
                     for (Node p : ((Tuple) preParams).elements) {
-                        Node parsed = parseNode(p);
-                        if (!(parsed instanceof Name)) {
-                            _.abort(parsed, "parameter must be a name");
+                        if (p instanceof Name) {
+                            hasName = true;
+                            paramNames.add((Name) p);
+                        } else if (p instanceof Tuple) {
+                            hasTuple = true;
+                            List<Node> argElements = ((Tuple) p).elements;
+                            if (argElements.size() == 0) {
+                                _.abort(p, "illegal argument format: " + p);
+                            }
+                            if (!(argElements.get(0) instanceof Name)) {
+                                _.abort(p, "illegal argument name : " + argElements.get(0));
+                            }
+                            paramNames.add((Name) argElements.get(0));
+                            paramTuples.add(p);
                         }
-                        paramNames.add((Name) parsed);
+                    }
+
+                    if (hasName && hasTuple) {
+                        _.abort(preParams, "parameters must be either all names or all tuples: " + preParams);
+                        return null;
+                    }
+
+                    Scope properties;
+                    if (hasTuple) {
+                        properties = parseProperties(paramTuples);
+                    } else {
+                        properties = null;
                     }
 
                     // construct body
@@ -129,8 +156,8 @@ public class Parser {
                     int end = statements.get(statements.size() - 1).end;
                     Node body = new Block(statements, prenode.file, start, end, prenode.line, prenode.col);
 
-                    return new Fun(paramNames, body, prenode.file, prenode.start, prenode.end,
-                            prenode.line, prenode.col);
+                    return new Fun(paramNames, properties, body,
+                            prenode.file, prenode.start, prenode.end, prenode.line, prenode.col);
                 }
 
                 // -------------------- record type definition --------------------
