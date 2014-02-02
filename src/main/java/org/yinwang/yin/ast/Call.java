@@ -23,15 +23,21 @@ public class Call extends Node {
     public Value interp(Scope s) {
         Value fun = this.func.interp(s);
         if (fun instanceof Closure) {
+            Fun def = ((Closure) fun).fun;
             Closure closure = (Closure) fun;
             Scope funScope = new Scope(closure.env);
             List<Name> params = closure.fun.params;
+
+            if (def.properties != null) {
+                Declare.evalProperties(def.properties, funScope);
+            }
 
             if (!args.positional.isEmpty() && args.keywords.isEmpty()) {
                 // positional
                 if (args.positional.size() != params.size()) {
                     _.abort(this.func,
-                            "calling function with wrong number of arguments: " + args.positional.size());
+                            "calling function with wrong number of arguments. expected: " + params.size()
+                                    + " actual: " + args.positional.size());
                 }
 
                 for (int i = 0; i < args.positional.size(); i++) {

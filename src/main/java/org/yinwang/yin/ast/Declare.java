@@ -3,11 +3,8 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
-import org.yinwang.yin.parser.Parser;
 import org.yinwang.yin.value.Value;
 
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 
@@ -23,6 +20,16 @@ public class Declare extends Node {
 
 
     public Value interp(Scope s) {
+        evalProperties(propsNode, s);
+        return Value.VOID;
+    }
+
+
+    // helper
+    // evaluate the properties inside propsNode
+    // then merge into the Scope s
+    public static void evalProperties(Scope propsNode, Scope s) {
+        // evaluate the properties
         Scope properties = new Scope();
         for (String field : propsNode.keySet()) {
             Map<String, Object> props = propsNode.lookupAllProps(field);
@@ -32,13 +39,15 @@ public class Declare extends Node {
                     Value vValue = ((Node) v).interp(s);
                     properties.put(field, e.getKey(), vValue);
                 } else {
-                    _.abort(this, "property is not a node, parser bug: " + v);
+                    _.abort("property is not a node, parser bug: " + v);
                 }
             }
         }
 
+        // merge the properties into current scope
         s.putAll(properties);
 
+        // set default values for variables
         for (String key : properties.keySet()) {
             Object defaultValue = properties.lookupPropertyLocal(key, "default");
             if (defaultValue == null) {
@@ -49,11 +58,9 @@ public class Declare extends Node {
                     s.putValue(key, (Value) defaultValue);
                 }
             } else {
-                _.abort("default value is not value, shouldn't happen");
+                _.abort("default value is not a value, shouldn't happen");
             }
         }
-
-        return Value.VOID;
     }
 
 
