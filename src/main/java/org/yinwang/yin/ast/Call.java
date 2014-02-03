@@ -29,7 +29,7 @@ public class Call extends Node {
             List<Name> params = closure.fun.params;
 
             if (def.properties != null) {
-                Declare.evalProperties(def.properties, funScope);
+                Declare.mergeProperties(def.properties, funScope);
             }
 
             if (!args.positional.isEmpty() && args.keywords.isEmpty()) {

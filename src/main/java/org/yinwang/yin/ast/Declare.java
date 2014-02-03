@@ -20,7 +20,7 @@ public class Declare extends Node {
 
 
     public Value interp(Scope s) {
-        evalProperties(propsNode, s);
+        mergeProperties(propsNode, s);
         return Value.VOID;
     }
 
@@ -28,28 +28,16 @@ public class Declare extends Node {
     // helper
     // evaluate the properties inside propsNode
     // then merge into the Scope s
-    public static void evalProperties(Scope propsNode, Scope s) {
+    public static void mergeProperties(Scope unevaled, Scope s) {
         // evaluate the properties
-        Scope properties = new Scope();
-        for (String field : propsNode.keySet()) {
-            Map<String, Object> props = propsNode.lookupAllProps(field);
-            for (Map.Entry<String, Object> e : props.entrySet()) {
-                Object v = e.getValue();
-                if (v instanceof Node) {
-                    Value vValue = ((Node) v).interp(s);
-                    properties.put(field, e.getKey(), vValue);
-                } else {
-                    _.abort("property is not a node, parser bug: " + v);
-                }
-            }
-        }
+        Scope evaled = evalProperties(unevaled, s);
 
         // merge the properties into current scope
-        s.putAll(properties);
+        s.putAll(evaled);
 
         // set default values for variables
-        for (String key : properties.keySet()) {
-            Object defaultValue = properties.lookupPropertyLocal(key, "default");
+        for (String key : evaled.keySet()) {
+            Object defaultValue = evaled.lookupPropertyLocal(key, "default");
             if (defaultValue == null) {
                 continue;
             } else if (defaultValue instanceof Value) {
@@ -61,6 +49,25 @@ public class Declare extends Node {
                 _.abort("default value is not a value, shouldn't happen");
             }
         }
+    }
+
+
+    public static Scope evalProperties(Scope unevaled, Scope s) {
+        Scope evaled = new Scope();
+
+        for (String field : unevaled.keySet()) {
+            Map<String, Object> props = unevaled.lookupAllProps(field);
+            for (Map.Entry<String, Object> e : props.entrySet()) {
+                Object v = e.getValue();
+                if (v instanceof Node) {
+                    Value vValue = ((Node) v).interp(s);
+                    evaled.put(field, e.getKey(), vValue);
+                } else {
+                    _.abort("property is not a node, parser bug: " + v);
+                }
+            }
+        }
+        return evaled;
     }
 
 
