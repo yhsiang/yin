@@ -55,9 +55,7 @@ public class RecordDef extends Node {
             }
         }
 
-        Value r = new RecordType(name.id, this, properties);
-        s.putValue(name.id, r);
-        return Value.VOID;
+        return new RecordType(name.id, this, properties);
     }
 
 
