@@ -18,12 +18,7 @@ public class RecordType extends Value {
     public RecordType(String name, Node definition, Scope properties) {
         this.name = name;
         this.definition = definition;
-        this.properties = properties;
-    }
-
-
-    public RecordType copy() {
-        return new RecordType(name, definition, properties.copy());
+        this.properties = properties.copy();
     }
 
 

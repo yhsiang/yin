@@ -82,6 +82,7 @@ public class Call extends Node {
             RecordType template = (RecordType) fun;
             Map<String, Value> values = new LinkedHashMap<>();
 
+            // set default values for fields
             for (String key : template.properties.keySet()) {
                 Object defaultValue = template.properties.lookupPropertyLocal(key, "default");
                 if (defaultValue == null) {
@@ -93,6 +94,7 @@ public class Call extends Node {
                 }
             }
 
+            // set actual values, overwrite defaults if any
             for (Map.Entry<String, Node> e : args.keywords.entrySet()) {
                 if (!template.properties.keySet().contains(e.getKey())) {
                     _.abort(this, "extra keyword argument: " + e.getKey());
@@ -101,6 +103,7 @@ public class Call extends Node {
                 }
             }
 
+            // check uninitialized fields
             for (String field : template.properties.keySet()) {
                 if (!values.containsKey(field)) {
                     _.abort(this, "field is not initialized: " + field);
