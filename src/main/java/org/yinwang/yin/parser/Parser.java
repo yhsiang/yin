@@ -102,6 +102,16 @@ public class Parser {
                     }
                 }
 
+                // -------------------- declare --------------------
+                if (keyword.equals(Constants.DECLARE_KEYWORD)) {
+                    if (elements.size() < 2) {
+                        _.abort(tuple, "syntax error in record type definition");
+                    }
+                    Scope properties = parseProperties(elements.subList(1, elements.size()));
+                    return new Declare(properties, prenode.file,
+                            prenode.start, prenode.end, prenode.line, prenode.col);
+                }
+
                 // -------------------- anonymous function --------------------
                 if (keyword.equals(Constants.FUN_KEYWORD)) {
                     if (elements.size() < 3) {
@@ -197,15 +207,6 @@ public class Parser {
 
                     Scope properties = parseProperties(fields);
                     return new RecordDef((Name) name, parents, properties, prenode.file,
-                            prenode.start, prenode.end, prenode.line, prenode.col);
-                }
-
-                if (keyword.equals(Constants.DECLARE_KEYWORD)) {
-                    if (elements.size() < 2) {
-                        _.abort(tuple, "syntax error in record type definition");
-                    }
-                    Scope properties = parseProperties(elements.subList(1, elements.size()));
-                    return new Declare(properties, prenode.file,
                             prenode.start, prenode.end, prenode.line, prenode.col);
                 }
             }
