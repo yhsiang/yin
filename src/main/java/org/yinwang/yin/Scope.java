@@ -7,14 +7,13 @@ import org.yinwang.yin.value.IntType;
 import org.yinwang.yin.value.Value;
 import org.yinwang.yin.value.primitives.*;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 public class Scope {
 
-    public Map<String, Map<String, Object>> table = new HashMap<>();
+    public Map<String, Map<String, Object>> table = new LinkedHashMap<>();
     public Scope parent;
 
 

@@ -23,7 +23,7 @@ public class Attr extends Node {
     public Value interp(Scope s) {
         Value record = value.interp(s);
         if (record instanceof RecordValue) {
-            Value a = ((RecordValue) record).values.get(attr.id);
+            Value a = ((RecordValue) record).properties.lookupLocal(attr.id);
             if (a != null) {
                 return a;
             } else {

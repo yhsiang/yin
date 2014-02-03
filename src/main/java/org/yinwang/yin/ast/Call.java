@@ -80,26 +80,17 @@ public class Call extends Node {
             }
         } else if (fun instanceof RecordType) {
             RecordType template = (RecordType) fun;
-            Map<String, Value> values = new LinkedHashMap<>();
+            Scope values = new Scope();
 
             // set default values for fields
-            for (String key : template.properties.keySet()) {
-                Object defaultValue = template.properties.lookupPropertyLocal(key, "default");
-                if (defaultValue == null) {
-                    continue;
-                } else if (defaultValue instanceof Value) {
-                    values.put(key, (Value) defaultValue);
-                } else {
-                    _.abort("default value is not value, shouldn't happen");
-                }
-            }
+            Declare.mergeProperties(template.properties, values);
 
             // set actual values, overwrite defaults if any
             for (Map.Entry<String, Node> e : args.keywords.entrySet()) {
                 if (!template.properties.keySet().contains(e.getKey())) {
                     _.abort(this, "extra keyword argument: " + e.getKey());
                 } else {
-                    values.put(e.getKey(), e.getValue().interp(s));
+                    values.putValue(e.getKey(), e.getValue().interp(s));
                 }
             }
 
