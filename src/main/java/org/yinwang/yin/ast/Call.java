@@ -28,8 +28,8 @@ public class Call extends Node {
             Scope funScope = new Scope(closure.env);
             List<Name> params = closure.fun.params;
 
-            if (def.properties != null) {
-                Declare.mergeProperties(def.properties, funScope);
+            if (def.propertyForm != null) {
+                Declare.mergeProperties(closure.properties, funScope);
             }
 
             if (!args.positional.isEmpty() && args.keywords.isEmpty()) {

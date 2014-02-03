@@ -13,22 +13,22 @@ import java.util.Map;
 public class RecordDef extends Node {
     public Name name;
     public List<Name> parents;
-    public Scope propsNode;
+    public Scope propertyForm;
     public Scope properties;
 
 
-    public RecordDef(Name name, List<Name> parents, Scope propsNode,
+    public RecordDef(Name name, List<Name> parents, Scope propertyForm,
                      String file, int start, int end, int line, int col)
     {
         super(file, start, end, line, col);
         this.name = name;
         this.parents = parents;
-        this.propsNode = propsNode;
+        this.propertyForm = propertyForm;
     }
 
 
     public Value interp(Scope s) {
-        Scope properties = new Scope();
+        Scope properties = Declare.evalProperties(propertyForm, s);
 
         if (parents != null) {
             for (Node p : parents) {
@@ -55,19 +55,6 @@ public class RecordDef extends Node {
             }
         }
 
-        for (String field : propsNode.keySet()) {
-            Map<String, Object> props = propsNode.lookupAllProps(field);
-            for (Map.Entry<String, Object> e : props.entrySet()) {
-                Object v = e.getValue();
-                if (v instanceof Node) {
-                    Value vValue = ((Node) v).interp(s);
-                    properties.put(field, e.getKey(), vValue);
-                } else {
-                    _.abort(this, "property is not a node, parser bug: " + v);
-                }
-            }
-        }
-
         Value r = new RecordType(name.id, this, properties);
         s.putValue(name.id, r);
         return Value.VOID;
@@ -84,8 +71,8 @@ public class RecordDef extends Node {
             sb.append(" (" + Node.printList(parents) + ")");
         }
 
-        for (String field : propsNode.keySet()) {
-            Map<String, Object> props = propsNode.lookupAllProps(field);
+        for (String field : propertyForm.keySet()) {
+            Map<String, Object> props = propertyForm.lookupAllProps(field);
             for (Map.Entry<String, Object> e : props.entrySet()) {
                 sb.append(" :" + e.getKey() + " " + e.getValue());
             }

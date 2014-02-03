@@ -11,19 +11,21 @@ import java.util.List;
 public class Fun extends Node {
     public List<Name> params;
     public Node body;
-    public Scope properties;
+    public Scope propertyForm;
 
 
-    public Fun(List<Name> params, Scope properties, Node body, String file, int start, int end, int line, int col) {
+    public Fun(List<Name> params, Scope propertyForm, Node body, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.params = params;
-        this.properties = properties;
+        this.propertyForm = propertyForm;     // unevaluated property form
         this.body = body;
     }
 
 
     public Value interp(Scope s) {
-        return new Closure(this, s);
+        // evaluate and cache the properties in the closure
+        Scope properties = Declare.evalProperties(propertyForm, s);
+        return new Closure(this, properties, s);
     }
 
 

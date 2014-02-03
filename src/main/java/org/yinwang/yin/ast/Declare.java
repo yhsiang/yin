@@ -9,18 +9,17 @@ import java.util.Map;
 
 
 public class Declare extends Node {
-    public Scope propsNode;
-    public Scope properties;
+    public Scope propertyForm;
 
 
-    public Declare(Scope propsNode, String file, int start, int end, int line, int col) {
+    public Declare(Scope propertyForm, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
-        this.propsNode = propsNode;
+        this.propertyForm = propertyForm;
     }
 
 
     public Value interp(Scope s) {
-        mergeProperties(propsNode, s);
+//        mergeProperties(propsNode, s);
         return Value.VOID;
     }
 
@@ -28,16 +27,13 @@ public class Declare extends Node {
     // helper
     // evaluate the properties inside propsNode
     // then merge into the Scope s
-    public static void mergeProperties(Scope unevaled, Scope s) {
-        // evaluate the properties
-        Scope evaled = evalProperties(unevaled, s);
-
+    public static void mergeProperties(Scope properties, Scope s) {
         // merge the properties into current scope
-        s.putAll(evaled);
+        s.putAll(properties);
 
         // set default values for variables
-        for (String key : evaled.keySet()) {
-            Object defaultValue = evaled.lookupPropertyLocal(key, "default");
+        for (String key : properties.keySet()) {
+            Object defaultValue = properties.lookupPropertyLocal(key, "default");
             if (defaultValue == null) {
                 continue;
             } else if (defaultValue instanceof Value) {
@@ -76,8 +72,8 @@ public class Declare extends Node {
         sb.append(Constants.TUPLE_BEGIN);
         sb.append(Constants.DECLARE_KEYWORD).append(" ");
 
-        for (String field : propsNode.keySet()) {
-            Map<String, Object> props = propsNode.lookupAllProps(field);
+        for (String field : propertyForm.keySet()) {
+            Map<String, Object> props = propertyForm.lookupAllProps(field);
             for (Map.Entry<String, Object> e : props.entrySet()) {
                 sb.append(" :" + e.getKey() + " " + e.getValue());
             }
