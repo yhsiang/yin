@@ -88,8 +88,8 @@ All commands in `lisp-mode-shared-map' are inherited by this map.")
 
 
 ;; define several class of keywords
-(setq yin-keywords '("define" "fun" "if" "set!" "declare" "record" "U"))
-(setq yin-types '("Int" "Float" "Bool"))
+(setq yin-keywords '("define" "fun" "if" "set!" "declare" "record" "seq" "U"))
+(setq yin-types '("Int" "Float" "Bool" "String"))
 (setq yin-constants '("true" "false"))
 (setq yin-functions '("map" "and" "or" "not"))
 

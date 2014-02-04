@@ -260,7 +260,7 @@ public class Parser {
                     delimType(((Tuple) field).open, Constants.ARRAY_BEGIN))
             {
                 List<Node> elements = ((Tuple) field).elements;
-                if (elements.isEmpty()) {
+                if (elements.size() < 2) {
                     _.abort(field, "empty record slot not allowed");
                 }
 
@@ -269,7 +269,10 @@ public class Parser {
                     _.abort(nameNode, "expect field name, but got: " + nameNode);
                 }
 
-                Map<String, Node> props = parseMap(elements.subList(1, elements.size()));
+                Node typeNode = elements.get(1);
+                properties.put(((Name) nameNode).id, "type", typeNode);
+
+                Map<String, Node> props = parseMap(elements.subList(2, elements.size()));
                 Map<String, Object> propsObj = new LinkedHashMap<>();
                 for (Map.Entry<String, Node> e : props.entrySet()) {
                     propsObj.put(e.getKey(), e.getValue());

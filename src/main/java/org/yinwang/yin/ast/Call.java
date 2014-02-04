@@ -1,7 +1,6 @@
 package org.yinwang.yin.ast;
 
 
-import org.yinwang.yin.Binder;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
 import org.yinwang.yin.value.*;
@@ -27,6 +26,7 @@ public class Call extends Node {
             Scope funScope = new Scope(closure.env);
             List<Name> params = closure.fun.params;
 
+            // set default values for parameters
             if (closure.properties != null) {
                 Declare.mergeProperties(closure.properties, funScope);
             }
@@ -41,9 +41,8 @@ public class Call extends Node {
 
                 for (int i = 0; i < args.positional.size(); i++) {
                     Value value = args.positional.get(i).interp(s);
-                    Binder.define(params.get(i), value, funScope);
+                    funScope.putValue(params.get(i).id, value);
                 }
-                return closure.fun.body.interp(funScope);
             } else {
                 // keywords
                 Set<String> seen = new HashSet<>();
@@ -73,10 +72,9 @@ public class Call extends Node {
                 if (!extra.isEmpty()) {
                     _.abort(this, "extra keyword arguments: " + extra);
                     return Value.VOID;
-                } else {
-                    return closure.fun.body.interp(funScope);
                 }
             }
+            return closure.fun.body.interp(funScope);
         } else if (fun instanceof RecordType) {
             RecordType template = (RecordType) fun;
             Scope values = new Scope();
