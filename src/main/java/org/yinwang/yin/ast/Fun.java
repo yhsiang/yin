@@ -24,7 +24,7 @@ public class Fun extends Node {
 
     public Value interp(Scope s) {
         // evaluate and cache the properties in the closure
-        Scope properties = Declare.evalProperties(propertyForm, s);
+        Scope properties = propertyForm == null ? null : Declare.evalProperties(propertyForm, s);
         return new Closure(this, properties, s);
     }
 

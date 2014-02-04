@@ -23,12 +23,11 @@ public class Call extends Node {
     public Value interp(Scope s) {
         Value fun = this.func.interp(s);
         if (fun instanceof Closure) {
-            Fun def = ((Closure) fun).fun;
             Closure closure = (Closure) fun;
             Scope funScope = new Scope(closure.env);
             List<Name> params = closure.fun.params;
 
-            if (def.propertyForm != null) {
+            if (closure.properties != null) {
                 Declare.mergeProperties(closure.properties, funScope);
             }
 
