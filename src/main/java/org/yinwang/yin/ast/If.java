@@ -35,6 +35,12 @@ public class If extends Node {
     }
 
 
+    @Override
+    public Value typecheck(Scope s) {
+        return null;
+    }
+
+
     public String toString() {
         return "(" + Constants.IF_KEYWORD + " " + test + " " + then + " " + orelse + ")";
     }

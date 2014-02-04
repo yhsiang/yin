@@ -63,6 +63,12 @@ public class BigInt extends Node {
     }
 
 
+    @Override
+    public Value typecheck(Scope s) {
+        return null;
+    }
+
+
     public String toString() {
         return content;
     }

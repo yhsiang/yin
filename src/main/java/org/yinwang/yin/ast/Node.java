@@ -31,6 +31,9 @@ public abstract class Node {
     }
 
 
+    public abstract Value typecheck(Scope s);
+
+
     public static List<Value> interpList(List<Node> nodes, Scope s) {
         List<Value> values = new ArrayList<>();
         for (Node n : nodes) {

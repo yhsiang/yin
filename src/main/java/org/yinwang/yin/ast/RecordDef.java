@@ -60,6 +60,12 @@ public class RecordDef extends Node {
     }
 
 
+    @Override
+    public Value typecheck(Scope s) {
+        return null;
+    }
+
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(Constants.TUPLE_BEGIN);

@@ -1,7 +1,6 @@
 package org.yinwang.yin.ast;
 
 
-import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
 import org.yinwang.yin.value.IntValue;
@@ -46,6 +45,12 @@ public class Subscript extends Node {
             _.abort(this, "subscript out of bound: " + i + " v.s. [0, " + (values.size() - 1) + "]");
             return null;
         }
+    }
+
+
+    @Override
+    public Value typecheck(Scope s) {
+        return null;
     }
 
 

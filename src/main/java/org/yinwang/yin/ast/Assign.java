@@ -25,6 +25,12 @@ public class Assign extends Node {
     }
 
 
+    @Override
+    public Value typecheck(Scope s) {
+        return null;
+    }
+
+
     public String toString() {
         return "(" + Constants.ASSIGN_KEYWORD + " " + pattern + " " + value + ")";
     }

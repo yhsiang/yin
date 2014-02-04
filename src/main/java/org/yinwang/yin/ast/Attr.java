@@ -37,6 +37,12 @@ public class Attr extends Node {
     }
 
 
+    @Override
+    public Value typecheck(Scope s) {
+        return null;
+    }
+
+
     public void set(Value v, Scope s) {
         Value record = value.interp(s);
         if (record instanceof RecordType) {

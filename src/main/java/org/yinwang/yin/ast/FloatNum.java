@@ -34,6 +34,12 @@ public class FloatNum extends Node {
 
 
     @Override
+    public Value typecheck(Scope s) {
+        return null;
+    }
+
+
+    @Override
     public String toString() {
         return Double.toString(value);
     }

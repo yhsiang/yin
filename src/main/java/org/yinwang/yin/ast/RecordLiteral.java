@@ -48,6 +48,12 @@ public class RecordLiteral extends Node {
     }
 
 
+    @Override
+    public Value typecheck(Scope s) {
+        return null;
+    }
+
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(Constants.RECORD_BEGIN);

@@ -117,6 +117,12 @@ public class Call extends Node {
     }
 
 
+    @Override
+    public Value typecheck(Scope s) {
+        return null;
+    }
+
+
     public String toString() {
         if (args.positional.size() != 0) {
             return "(" + func + " " + args + ")";

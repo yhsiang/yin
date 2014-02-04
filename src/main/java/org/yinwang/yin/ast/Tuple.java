@@ -35,6 +35,12 @@ public class Tuple extends Node {
     }
 
 
+    @Override
+    public Value typecheck(Scope s) {
+        return null;
+    }
+
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
 

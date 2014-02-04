@@ -24,6 +24,12 @@ public class Declare extends Node {
     }
 
 
+    @Override
+    public Value typecheck(Scope s) {
+        return null;
+    }
+
+
     // helper
     // evaluate the properties inside propsNode
     // then merge into the Scope s
