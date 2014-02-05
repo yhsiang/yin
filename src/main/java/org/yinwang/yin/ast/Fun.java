@@ -31,7 +31,9 @@ public class Fun extends Node {
 
     @Override
     public Value typecheck(Scope s) {
-        return null;
+        // evaluate and cache the properties in the closure
+        Scope properties = propertyForm == null ? null : Declare.typecheckProperties(propertyForm, s);
+        return new Closure(this, properties, s);
     }
 
 

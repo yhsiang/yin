@@ -70,6 +70,32 @@ public class Scope {
     }
 
 
+    public Value lookupType(String name) {
+        Object v = lookupProperty(name, "type");
+        if (v == null) {
+            return null;
+        } else if (v instanceof Value) {
+            return (Value) v;
+        } else {
+            _.abort("value is not a Value, shouldn't happen: " + v);
+            return null;
+        }
+    }
+
+
+    public Value lookupLocalType(String name) {
+        Object v = lookupPropertyLocal(name, "type");
+        if (v == null) {
+            return null;
+        } else if (v instanceof Value) {
+            return (Value) v;
+        } else {
+            _.abort("value is not a Value, shouldn't happen: " + v);
+            return null;
+        }
+    }
+
+
     public Object lookupPropertyLocal(String name, String key) {
         Map<String, Object> item = table.get(name);
         if (item != null) {
@@ -157,9 +183,9 @@ public class Scope {
         init.putValue("true", new BoolType());
         init.putValue("false", new BoolType());
 
-//        init.putValue("Int", new IntType());
-//        init.putValue("Bool", new BoolType());
-//        init.putValue("String", new StringType());
+        init.putValue("Int", new IntType());
+        init.putValue("Bool", new BoolType());
+        init.putValue("String", new StringType());
 
         return init;
     }
@@ -187,6 +213,11 @@ public class Scope {
 
     public void putValue(String name, Value value) {
         put(name, "value", value);
+    }
+
+
+    public void putType(String name, Value value) {
+        put(name, "type", value);
     }
 
 

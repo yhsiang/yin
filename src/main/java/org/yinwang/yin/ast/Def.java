@@ -27,7 +27,10 @@ public class Def extends Node {
 
     @Override
     public Value typecheck(Scope s) {
-        return null;
+        Value t = value.typecheck(s);
+        Binder.checkDup(pattern);
+        Binder.define(pattern, t, s);
+        return Value.VOID;
     }
 
 
