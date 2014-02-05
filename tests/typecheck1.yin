@@ -1,15 +1,21 @@
-10
-"ok"
-true
+-- 10
+-- "ok"
+-- true
 
-(if true 10 "ok")
+-- (if true 10 "ok")
 
-(if true 10 (if false "ok" true))
+-- (if true 10 (if false "ok" true))
 
-(define f (fun ([x Int] [-> Int]) (+ x "hi")))
+-- (define f (fun ([x Int] [y Int] [-> Int]) (+ x y)))
 
 -- (f 1)
 
 
 -- (define g (fun ([x Int] [y Bool]) (if true x y)))
 -- g
+
+(define fact
+  (fun ([x Int] [-> Int])
+    (if (= x 0) 1 (* x (fact (- x 1))))))
+
+(fact 5)

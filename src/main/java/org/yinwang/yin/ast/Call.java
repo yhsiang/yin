@@ -1,6 +1,7 @@
 package org.yinwang.yin.ast;
 
 
+import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
 import org.yinwang.yin.value.*;
@@ -121,13 +122,13 @@ public class Call extends Node {
     public Value typecheck(Scope s) {
         Value fun = this.func.typecheck(s);
         if (fun instanceof FunType) {
-            FunType closure = (FunType) fun;
-            Scope funScope = new Scope(closure.env);
-            List<Name> params = closure.fun.params;
+            FunType funtype = (FunType) fun;
+            Scope funScope = new Scope(funtype.env);
+            List<Name> params = funtype.fun.params;
 
             // set default values for parameters
-            if (closure.properties != null) {
-                Declare.mergeProperties(closure.properties, funScope);
+            if (funtype.properties != null) {
+                Declare.mergeProperties(funtype.properties, funScope);
             }
 
             if (!args.positional.isEmpty() && args.keywords.isEmpty()) {
@@ -173,7 +174,13 @@ public class Call extends Node {
                     return Value.VOID;
                 }
             }
-            return closure.fun.body.typecheck(funScope);
+
+            Value retType = funtype.properties.lookupLocalType(Constants.RETURN_ARROW);
+            if (retType != null) {
+                return retType;
+            } else {
+                return funtype.fun.body.typecheck(funScope);
+            }
         } else if (fun instanceof RecordType) {
             RecordType template = (RecordType) fun;
             Scope values = new Scope();
