@@ -15,6 +15,7 @@ public class Constants {
     public static final String ARRAY_END = "]";
 
     public static final String ATTRIBUTE_ACCESS = ".";
+    public static final String RETURN_ARROW = "->";
 
     // keywords
     public static final String SEQ_KEYWORD = "seq";

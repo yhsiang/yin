@@ -143,7 +143,11 @@ public class Parser {
                             if (!(argElements.get(0) instanceof Name)) {
                                 _.abort(p, "illegal argument name : " + argElements.get(0));
                             }
-                            paramNames.add((Name) argElements.get(0));
+
+                            Name name = (Name) argElements.get(0);
+                            if (!name.id.equals(Constants.RETURN_ARROW)) {
+                                paramNames.add(name);
+                            }
                             paramTuples.add(p);
                         }
                     }
