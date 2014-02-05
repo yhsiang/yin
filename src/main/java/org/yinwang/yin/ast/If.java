@@ -3,7 +3,9 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
+import org.yinwang.yin.value.BoolType;
 import org.yinwang.yin.value.BoolValue;
+import org.yinwang.yin.value.UnionType;
 import org.yinwang.yin.value.Value;
 
 public class If extends Node {
@@ -37,7 +39,14 @@ public class If extends Node {
 
     @Override
     public Value typecheck(Scope s) {
-        return null;
+        Value tv = typecheck(test, s);
+        if (!(tv instanceof BoolType)) {
+            _.abort(test, "test is not boolean: " + tv);
+            return null;
+        }
+        Value thenType = typecheck(then, s);
+        Value elseType = typecheck(orelse, s);
+        return UnionType.union(thenType, elseType);
     }
 
 

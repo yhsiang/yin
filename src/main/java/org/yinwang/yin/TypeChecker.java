@@ -15,15 +15,15 @@ public class TypeChecker {
     }
 
 
-    public Value interp(String file) {
+    public Value typecheck(String file) {
         Node program = Parser.parse(file);
-        return program.typecheck(Scope.buildInitScope());
+        return program.typecheck(Scope.buildInitTypeScope());
     }
 
 
     public static void main(String[] args) {
         TypeChecker i = new TypeChecker(args[0]);
-        Value result = i.interp(args[0]);
+        Value result = i.typecheck(args[0]);
         _.msg(result.toString());
     }
 

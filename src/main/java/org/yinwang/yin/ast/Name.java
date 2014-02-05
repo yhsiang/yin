@@ -28,7 +28,13 @@ public class Name extends Node {
 
     @Override
     public Value typecheck(Scope s) {
-        return null;
+        Value v = s.lookup(id);
+        if (v != null) {
+            return v;
+        } else {
+            _.abort(this, "unbound variable: " + id);
+            return Value.VOID;
+        }
     }
 
 

@@ -1,2 +1,5 @@
 10
 "ok"
+true
+
+(if true 10 "ok")
