@@ -3,3 +3,5 @@
 true
 
 (if true 10 "ok")
+
+(if true 10 (if false "ok" true))
