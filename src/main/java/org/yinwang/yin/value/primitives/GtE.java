@@ -47,7 +47,7 @@ public class GtE extends PrimFun {
             _.abort(location, "incorrect argument types for +: " + v1 + ", " + v2);
         }
 
-        return new BoolType();
+        return Value.BOOL;
     }
 
 }

@@ -36,7 +36,7 @@ public class Or extends PrimFun {
         Value v2 = args.get(1);
 
         if (v1 instanceof BoolType && v2 instanceof BoolType) {
-            return new BoolType();
+            return Value.BOOL;
         }
         _.abort(location, "incorrect argument types for or: " + v1 + ", " + v2);
         return null;

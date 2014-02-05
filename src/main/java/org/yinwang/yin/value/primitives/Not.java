@@ -32,7 +32,7 @@ public class Not extends PrimFun {
     public Value typecheck(List<Value> args, Node location) {
         Value v1 = args.get(0);
         if (v1 instanceof BoolType) {
-            return new BoolType();
+            return Value.BOOL;
         }
         _.abort(location, "incorrect argument type for not: " + v1);
         return null;

@@ -16,12 +16,16 @@ public class UnionType extends Value {
     }
 
 
-    public static UnionType union(Value... values) {
+    public static Value union(Value... values) {
         UnionType u = new UnionType();
         for (Value v : values) {
             u.add(v);
         }
-        return u;
+        if (u.size() == 1) {
+            return u.first();
+        } else {
+            return u;
+        }
     }
 
 
@@ -36,6 +40,11 @@ public class UnionType extends Value {
 
     public int size() {
         return values.size();
+    }
+
+
+    public Value first() {
+        return values.iterator().next();
     }
 
 
