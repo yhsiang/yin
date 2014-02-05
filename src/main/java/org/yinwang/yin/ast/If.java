@@ -24,15 +24,14 @@ public class If extends Node {
 
     public Value interp(Scope s) {
         Value tv = interp(test, s);
-        if (tv instanceof BoolValue) {
-            if (((BoolValue) tv).value) {
-                return interp(then, s);
-            } else {
-                return interp(orelse, s);
-            }
-        } else {
+        if (!(tv instanceof BoolValue)) {
             _.abort(test, "test is not boolean: " + tv);
             return null;
+        }
+        if (((BoolValue) tv).value) {
+            return interp(then, s);
+        } else {
+            return interp(orelse, s);
         }
     }
 
