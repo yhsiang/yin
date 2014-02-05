@@ -48,7 +48,7 @@ public class Block extends Node {
             }
         }
 
-        sb.append(sep + ")");
+        sb.append(")");
         return sb.toString();
     }
 }

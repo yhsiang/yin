@@ -120,8 +120,8 @@ public class Call extends Node {
     @Override
     public Value typecheck(Scope s) {
         Value fun = this.func.typecheck(s);
-        if (fun instanceof Closure) {
-            Closure closure = (Closure) fun;
+        if (fun instanceof FunType) {
+            FunType closure = (FunType) fun;
             Scope funScope = new Scope(closure.env);
             List<Name> params = closure.fun.params;
 

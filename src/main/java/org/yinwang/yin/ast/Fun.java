@@ -4,6 +4,7 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin.value.Closure;
+import org.yinwang.yin.value.FunType;
 import org.yinwang.yin.value.Value;
 
 import java.util.List;
@@ -33,7 +34,7 @@ public class Fun extends Node {
     public Value typecheck(Scope s) {
         // evaluate and cache the properties in the closure
         Scope properties = propertyForm == null ? null : Declare.typecheckProperties(propertyForm, s);
-        return new Closure(this, properties, s);
+        return new FunType(this, properties, s);
     }
 
 
