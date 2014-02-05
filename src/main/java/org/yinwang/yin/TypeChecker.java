@@ -1,13 +1,20 @@
 package org.yinwang.yin;
 
 
+import org.yinwang.yin.ast.Declare;
 import org.yinwang.yin.ast.Node;
 import org.yinwang.yin.parser.Parser;
+import org.yinwang.yin.value.FunType;
 import org.yinwang.yin.value.Value;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TypeChecker {
 
-    String file;
+    public static TypeChecker self;
+    public String file;
+    public List<FunType> uncalled = new ArrayList<>();
 
 
     public TypeChecker(String file) {
@@ -17,13 +24,28 @@ public class TypeChecker {
 
     public Value typecheck(String file) {
         Node program = Parser.parse(file);
-        return program.typecheck(Scope.buildInitTypeScope());
+        Scope s = Scope.buildInitTypeScope();
+        Value ret = program.typecheck(s);
+        for (FunType ft : uncalled) {
+            invokeUncalled(ft, s);
+        }
+        return ret;
+    }
+
+
+    public void invokeUncalled(FunType fun, Scope s) {
+        Scope funScope = new Scope(fun.env);
+        if (fun.properties != null) {
+            Declare.mergeTypeProperties(fun.properties, funScope);
+        }
+        fun.fun.body.typecheck(funScope);
     }
 
 
     public static void main(String[] args) {
-        TypeChecker i = new TypeChecker(args[0]);
-        Value result = i.typecheck(args[0]);
+        TypeChecker tc = new TypeChecker(args[0]);
+        TypeChecker.self = tc;
+        Value result = tc.typecheck(args[0]);
         _.msg(result.toString());
     }
 

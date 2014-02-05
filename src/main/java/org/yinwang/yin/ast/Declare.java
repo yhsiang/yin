@@ -54,6 +54,27 @@ public class Declare extends Node {
     }
 
 
+    public static void mergeTypeProperties(Scope properties, Scope s) {
+        // merge the properties into current scope
+        s.putAll(properties);
+
+        // set default values for variables
+        for (String key : properties.keySet()) {
+            Object defaultValue = properties.lookupPropertyLocal(key, "type");
+            if (defaultValue == null) {
+                continue;
+            } else if (defaultValue instanceof Value) {
+                Value existing = s.lookup(key);
+                if (existing == null) {
+                    s.putValue(key, (Value) defaultValue);
+                }
+            } else {
+                _.abort("default value is not a value, shouldn't happen");
+            }
+        }
+    }
+
+
     public static Scope evalProperties(Scope unevaled, Scope s) {
         Scope evaled = new Scope();
 

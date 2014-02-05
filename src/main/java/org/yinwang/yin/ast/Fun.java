@@ -3,6 +3,7 @@ package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
+import org.yinwang.yin.TypeChecker;
 import org.yinwang.yin.value.Closure;
 import org.yinwang.yin.value.FunType;
 import org.yinwang.yin.value.Value;
@@ -34,7 +35,9 @@ public class Fun extends Node {
     public Value typecheck(Scope s) {
         // evaluate and cache the properties in the closure
         Scope properties = propertyForm == null ? null : Declare.typecheckProperties(propertyForm, s);
-        return new FunType(this, properties, s);
+        FunType ft = new FunType(this, properties, s);
+        TypeChecker.self.uncalled.add(ft);
+        return ft;
     }
 
 

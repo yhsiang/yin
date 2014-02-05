@@ -6,8 +6,9 @@ true
 
 (if true 10 (if false "ok" true))
 
-(define f (fun ([x Int] [-> Int]) x))
-f
+(define f (fun ([x Int] [-> Int]) (if x 1 "ok")))
+
+-- (f 1)
 
 
 -- (define g (fun ([x Int] [y Bool]) (if true x y)))
