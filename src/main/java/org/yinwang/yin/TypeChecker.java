@@ -8,13 +8,16 @@ import org.yinwang.yin.value.FunType;
 import org.yinwang.yin.value.Value;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TypeChecker {
 
     public static TypeChecker self;
     public String file;
     public List<FunType> uncalled = new ArrayList<>();
+    public Set<FunType> callStack = new HashSet<>();
 
 
     public TypeChecker(String file) {

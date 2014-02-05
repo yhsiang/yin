@@ -3,6 +3,7 @@ package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
+import org.yinwang.yin.TypeChecker;
 import org.yinwang.yin._;
 import org.yinwang.yin.value.*;
 
@@ -175,11 +176,20 @@ public class Call extends Node {
                 }
             }
 
+
             Value retType = funtype.properties.lookupLocalType(Constants.RETURN_ARROW);
             if (retType != null) {
                 return retType;
             } else {
-                return funtype.fun.body.typecheck(funScope);
+                if (TypeChecker.self.callStack.contains(fun)) {
+                    _.abort(func, "You must specify return type for recursive functions: " + func);
+                    return null;
+                } else {
+                    TypeChecker.self.callStack.add((FunType) fun);
+                    Value ret = funtype.fun.body.typecheck(funScope);
+                    TypeChecker.self.callStack.remove(fun);
+                    return ret;
+                }
             }
         } else if (fun instanceof RecordType) {
             RecordType template = (RecordType) fun;

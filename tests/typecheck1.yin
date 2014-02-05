@@ -19,3 +19,20 @@
     (if (= x 0) 1 (* x (fact (- x 1))))))
 
 (fact 5)
+
+
+(define even
+  (fun ([x Int] [-> Bool])
+    (if (= x 0)
+        true
+        (if (= x 1)
+            false
+            (not (odd (- x 1)))))))
+
+(define odd
+  (fun ([x Int])
+    (if (= x 0)
+        false
+        (if (= x 1)
+            true
+            (not (even (- x 1)))))))
