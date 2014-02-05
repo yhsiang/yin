@@ -207,7 +207,7 @@ public class Call extends Node {
                 return null;
             } else {
                 List<Value> args = Node.typecheckList(this.args.positional, s);
-                return prim.apply(args, this);
+                return prim.typecheck(args, this);
             }
         } else {
             _.abort(this.func, "calling non-function: " + fun);

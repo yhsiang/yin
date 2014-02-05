@@ -166,7 +166,7 @@ public class Scope {
     public static Scope buildInitTypeScope() {
         Scope init = new Scope();
 
-//        init.putValue("+", new Add());
+        init.putValue("+", new Add());
 //        init.putValue("-", new Sub());
 //        init.putValue("*", new Mult());
 //        init.putValue("/", new Div());

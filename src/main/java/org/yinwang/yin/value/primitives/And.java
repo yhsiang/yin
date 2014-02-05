@@ -3,6 +3,7 @@ package org.yinwang.yin.value.primitives;
 
 import org.yinwang.yin._;
 import org.yinwang.yin.ast.Node;
+import org.yinwang.yin.value.BoolType;
 import org.yinwang.yin.value.BoolValue;
 import org.yinwang.yin.value.PrimFun;
 import org.yinwang.yin.value.Value;
@@ -25,6 +26,18 @@ public class And extends PrimFun {
             return new BoolValue(((BoolValue) v1).value && ((BoolValue) v2).value);
         }
 
+        _.abort(location, "incorrect argument types for and: " + v1 + ", " + v2);
+        return null;
+    }
+
+
+    public Value typecheck(List<Value> args, Node location) {
+        Value v1 = args.get(0);
+        Value v2 = args.get(1);
+
+        if (v1 instanceof BoolType && v2 instanceof BoolType) {
+            return new BoolType();
+        }
         _.abort(location, "incorrect argument types for and: " + v1 + ", " + v2);
         return null;
     }
