@@ -28,7 +28,11 @@ public class Block extends Node {
 
     @Override
     public Value typecheck(Scope s) {
-        return null;
+        s = new Scope(s);
+        for (int i = 0; i < statements.size() - 1; i++) {
+            statements.get(i).interp(s);
+        }
+        return statements.get(statements.size() - 1).typecheck(s);
     }
 
 
