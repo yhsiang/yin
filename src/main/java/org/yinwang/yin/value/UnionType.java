@@ -4,6 +4,7 @@ package org.yinwang.yin.value;
 import org.yinwang.yin.Constants;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class UnionType extends Value {
@@ -13,6 +14,19 @@ public class UnionType extends Value {
 
     public UnionType() {
 
+    }
+
+
+    public static Value union(List<Value> values) {
+        UnionType u = new UnionType();
+        for (Value v : values) {
+            u.add(v);
+        }
+        if (u.size() == 1) {
+            return u.first();
+        } else {
+            return u;
+        }
     }
 
 

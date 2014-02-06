@@ -268,12 +268,12 @@ public class Parser {
                     _.abort(field, "empty record slot not allowed");
                 }
 
-                Node nameNode = elements.get(0);
+                Node nameNode = parseNode(elements.get(0));
                 if (!(nameNode instanceof Name)) {
                     _.abort(nameNode, "expect field name, but got: " + nameNode);
                 }
 
-                Node typeNode = elements.get(1);
+                Node typeNode = parseNode(elements.get(1));
                 properties.put(((Name) nameNode).id, "type", typeNode);
 
                 Map<String, Node> props = parseMap(elements.subList(2, elements.size()));

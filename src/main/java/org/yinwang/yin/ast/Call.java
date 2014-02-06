@@ -104,7 +104,7 @@ public class Call extends Node {
             return new RecordValue(template.name, template, values);
         } else if (fun instanceof PrimFun) {
             PrimFun prim = (PrimFun) fun;
-            if (args.positional.size() != prim.arity) {
+            if (prim.arity >= 0 && args.positional.size() != prim.arity) {
                 _.abort(this, "incorrect number of arguments for primitive " +
                         prim.name + ", expecting " + prim.arity + ", but got " + args.positional.size());
                 return null;
@@ -223,7 +223,7 @@ public class Call extends Node {
             return new RecordValue(template.name, template, values);
         } else if (fun instanceof PrimFun) {
             PrimFun prim = (PrimFun) fun;
-            if (args.positional.size() != prim.arity) {
+            if (prim.arity >= 0 && args.positional.size() != prim.arity) {
                 _.abort(this, "incorrect number of arguments for primitive " +
                         prim.name + ", expecting " + prim.arity + ", but got " + args.positional.size());
                 return null;

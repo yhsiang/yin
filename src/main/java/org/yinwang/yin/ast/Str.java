@@ -4,6 +4,7 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin.value.StringType;
 import org.yinwang.yin.value.StringValue;
+import org.yinwang.yin.value.Type;
 import org.yinwang.yin.value.Value;
 
 public class Str extends Node {
@@ -23,7 +24,7 @@ public class Str extends Node {
 
     @Override
     public Value typecheck(Scope s) {
-        return new StringType();
+        return Type.STRING;
     }
 
 
