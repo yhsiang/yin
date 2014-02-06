@@ -177,9 +177,14 @@ public class Call extends Node {
             }
 
 
-            Value retType = funtype.properties.lookupLocalType(Constants.RETURN_ARROW);
+            Object retType = funtype.properties.lookupPropertyLocal(Constants.RETURN_ARROW, "type");
             if (retType != null) {
-                return retType;
+                if (retType instanceof Node) {
+                    return ((Node) retType).typecheck(funScope);
+                } else {
+                    _.abort("illegal return type: " + retType);
+                    return null;
+                }
             } else {
                 if (TypeChecker.self.callStack.contains(fun)) {
                     _.abort(func, "You must specify return type for recursive functions: " + func);

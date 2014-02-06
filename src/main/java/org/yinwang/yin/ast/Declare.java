@@ -68,8 +68,13 @@ public class Declare extends Node {
                 if (existing == null) {
                     s.putValue(key, (Value) defaultValue);
                 }
+            } else if (defaultValue instanceof Node) {
+                Value existing = s.lookup(key);
+                if (existing == null) {
+                    s.put(key, "type", defaultValue);
+                }
             } else {
-                _.abort("default value is not a value, shouldn't happen");
+                _.abort("illegal type, shouldn't happen" + defaultValue);
             }
         }
     }
@@ -98,14 +103,18 @@ public class Declare extends Node {
         Scope evaled = new Scope();
 
         for (String field : unevaled.keySet()) {
-            Map<String, Object> props = unevaled.lookupAllProps(field);
-            for (Map.Entry<String, Object> e : props.entrySet()) {
-                Object v = e.getValue();
-                if (v instanceof Node) {
-                    Value vValue = ((Node) v).typecheck(s);
-                    evaled.put(field, e.getKey(), vValue);
-                } else {
-                    _.abort("property is not a node, parser bug: " + v);
+            if (field.equals(Constants.RETURN_ARROW)) {
+                evaled.putProperties(field, unevaled.lookupAllProps(field));
+            } else {
+                Map<String, Object> props = unevaled.lookupAllProps(field);
+                for (Map.Entry<String, Object> e : props.entrySet()) {
+                    Object v = e.getValue();
+                    if (v instanceof Node) {
+                        Value vValue = ((Node) v).typecheck(s);
+                        evaled.put(field, e.getKey(), vValue);
+                    } else {
+                        _.abort("property is not a node, parser bug: " + v);
+                    }
                 }
             }
         }
