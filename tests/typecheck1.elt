@@ -23,6 +23,8 @@
 
 (define even
   (fun ([x Int] [-> Bool])
+    (define f (fun ([x Int] [-> Bool]) x))
+    (f "ok")
     (if (= x 0)
         true
         (if (= x 1)
@@ -36,5 +38,3 @@
         (if (= x 1)
             true
             (even (- x 1))))))
-
-(even 10)

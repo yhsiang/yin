@@ -3,8 +3,8 @@ package org.yinwang.yin.value;
 
 import org.yinwang.yin.Constants;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class UnionType extends Value {
@@ -17,7 +17,7 @@ public class UnionType extends Value {
     }
 
 
-    public static Value union(List<Value> values) {
+    public static Value union(Collection<Value> values) {
         UnionType u = new UnionType();
         for (Value v : values) {
             u.add(v);

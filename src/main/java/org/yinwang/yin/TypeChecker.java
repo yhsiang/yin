@@ -30,9 +30,12 @@ public class TypeChecker {
         Node program = Parser.parse(file);
         Scope s = Scope.buildInitTypeScope();
         Value ret = program.typecheck(s);
-        for (FunType ft : uncalled) {
+
+        for (int i = 0; i < uncalled.size(); i++) {
+            FunType ft = uncalled.get(i);
             invokeUncalled(ft, s);
         }
+
         return ret;
     }
 
