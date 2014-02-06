@@ -45,7 +45,7 @@ public class Add extends PrimFun {
             return new FloatType();
         }
         if (v1 instanceof IntType && v2 instanceof IntType) {
-            return new IntType();
+            return Type.INT;
         }
         _.abort(location, "incorrect argument types for +: " + v1 + ", " + v2);
         return null;

@@ -155,8 +155,8 @@ public class Scope {
         init.putValue("true", new BoolValue(true));
         init.putValue("false", new BoolValue(false));
 
-        init.putValue("Int", new IntType());
-        init.putValue("Bool", Value.BOOL);
+        init.putValue("Int", Type.INT);
+        init.putValue("Bool", Type.BOOL);
         init.putValue("String", new StringType());
 
         return init;
@@ -180,11 +180,11 @@ public class Scope {
         init.putValue("or", new Or());
         init.putValue("not", new Not());
 
-        init.putValue("true", Value.BOOL);
-        init.putValue("false", Value.BOOL);
+        init.putValue("true", Type.BOOL);
+        init.putValue("false", Type.BOOL);
 
-        init.putValue("Int", new IntType());
-        init.putValue("Bool", Value.BOOL);
+        init.putValue("Int", Type.INT);
+        init.putValue("Bool", Type.BOOL);
         init.putValue("String", new StringType());
 
         return init;

@@ -3,10 +3,7 @@ package org.yinwang.yin.value.primitives;
 
 import org.yinwang.yin._;
 import org.yinwang.yin.ast.Node;
-import org.yinwang.yin.value.BoolType;
-import org.yinwang.yin.value.BoolValue;
-import org.yinwang.yin.value.PrimFun;
-import org.yinwang.yin.value.Value;
+import org.yinwang.yin.value.*;
 
 import java.util.List;
 
@@ -36,7 +33,7 @@ public class And extends PrimFun {
         Value v2 = args.get(1);
 
         if (v1 instanceof BoolType && v2 instanceof BoolType) {
-            return Value.BOOL;
+            return Type.BOOL;
         }
         _.abort(location, "incorrect argument types for and: " + v1 + ", " + v2);
         return null;

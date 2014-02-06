@@ -44,9 +44,9 @@ public class Eq extends PrimFun {
         if (!(v1 instanceof IntType || v1 instanceof FloatValue) ||
                 !(v2 instanceof IntType || v2 instanceof FloatValue))
         {
-            _.abort(location, "incorrect argument types for +: " + v1 + ", " + v2);
+            _.abort(location, "incorrect argument types for =: " + v1 + ", " + v2);
         }
 
-        return Value.BOOL;
+        return Type.BOOL;
     }
 }

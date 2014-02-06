@@ -5,6 +5,7 @@ import org.yinwang.yin.ast.Declare;
 import org.yinwang.yin.ast.Node;
 import org.yinwang.yin.parser.Parser;
 import org.yinwang.yin.value.FunType;
+import org.yinwang.yin.value.Type;
 import org.yinwang.yin.value.Value;
 
 import java.util.ArrayList;
@@ -41,7 +42,19 @@ public class TypeChecker {
         if (fun.properties != null) {
             Declare.mergeTypeProperties(fun.properties, funScope);
         }
-        fun.fun.body.typecheck(funScope);
+        Value actual = fun.fun.body.typecheck(funScope);
+        Object retNode = fun.properties.lookupPropertyLocal(Constants.RETURN_ARROW, "type");
+
+
+        if (retNode == null || !(retNode instanceof Node)) {
+            _.abort("illegal return type: " + retNode);
+        }
+
+        Value retType = ((Node) retNode).typecheck(s);
+
+        if (!Type.subtype(actual, retType)) {
+            _.abort(fun.fun, "type error in return value, expected: " + retType + ", actual: " + actual);
+        }
     }
 
 

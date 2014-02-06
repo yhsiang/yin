@@ -4,6 +4,7 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin.value.IntType;
 import org.yinwang.yin.value.IntValue;
+import org.yinwang.yin.value.Type;
 import org.yinwang.yin.value.Value;
 
 public class IntNum extends Node {
@@ -64,7 +65,7 @@ public class IntNum extends Node {
 
     @Override
     public Value typecheck(Scope s) {
-        return new IntType();
+        return Type.INT;
     }
 
 
