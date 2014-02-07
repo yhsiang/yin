@@ -1,0 +1,24 @@
+-- (define f
+--   (fun (x y)
+--     (declare [x :type Int :default 1]
+--              [y :type Bool :default true])
+--     [x y]))
+
+
+(define f
+  (fun ([x :type Int :default 10]
+        [y :type Bool :default true])
+    [x y]))
+
+(f :x 20 :y false)
+
+
+(define aa
+ (seq
+  (define x 1)
+  (record A
+    [x :type Int :default (+ x 2)]
+    [y :type Bool])))
+
+(define x 10)
+(aa :y 20)

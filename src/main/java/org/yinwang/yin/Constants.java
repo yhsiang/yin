@@ -15,8 +15,7 @@ public class Constants {
     public static final String ARRAY_END = "]";
 
     public static final String ATTRIBUTE_ACCESS = ".";
-    public static final String SUBSCRIPT_ACCESS = "#";
-
+    public static final String RETURN_ARROW = "->";
 
     // keywords
     public static final String SEQ_KEYWORD = "seq";
@@ -25,5 +24,7 @@ public class Constants {
     public static final String DEF_KEYWORD = "define";
     public static final String ASSIGN_KEYWORD = "set!";
     public static final String RECORD_KEYWORD = "record";
+    public static final String DECLARE_KEYWORD = "declare";
+    public static final String UNION_KEYWORD = "U";
 
 }

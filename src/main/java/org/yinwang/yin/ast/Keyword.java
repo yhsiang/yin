@@ -26,6 +26,13 @@ public class Keyword extends Node {
     }
 
 
+    @Override
+    public Value typecheck(Scope s) {
+        _.abort(this, "keyword used as value");
+        return null;
+    }
+
+
     public String toString() {
         return ":" + id;
     }

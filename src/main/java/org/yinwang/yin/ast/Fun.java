@@ -3,31 +3,41 @@ package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
+import org.yinwang.yin.TypeChecker;
 import org.yinwang.yin.value.Closure;
+import org.yinwang.yin.value.FunType;
 import org.yinwang.yin.value.Value;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class Fun extends Node {
-    public Parameter params;
+    public List<Name> params;
     public Node body;
+    public Scope propertyForm;
 
 
-    public Fun(Parameter params, Node body, String file, int start, int end, int line, int col) {
+    public Fun(List<Name> params, Scope propertyForm, Node body, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
         this.params = params;
+        this.propertyForm = propertyForm;     // unevaluated property form
         this.body = body;
     }
 
 
     public Value interp(Scope s) {
-        Map<String, Value> defaults = new HashMap<>();
-        for (Map.Entry<String, Node> e : params.keywords.entrySet()) {
-            Value v = e.getValue().interp(s);
-            defaults.put(e.getKey(), v);
-        }
-        return new Closure(this, defaults, s);
+        // evaluate and cache the properties in the closure
+        Scope properties = propertyForm == null ? null : Declare.evalProperties(propertyForm, s);
+        return new Closure(this, properties, s);
+    }
+
+
+    @Override
+    public Value typecheck(Scope s) {
+        // evaluate and cache the properties in the closure
+        Scope properties = propertyForm == null ? null : Declare.typecheckProperties(propertyForm, s);
+        FunType ft = new FunType(this, properties, s);
+        TypeChecker.self.uncalled.add(ft);
+        return ft;
     }
 
 

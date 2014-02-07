@@ -3,7 +3,7 @@ package org.yinwang.yin.ast;
 import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
-import org.yinwang.yin.value.Record;
+import org.yinwang.yin.value.RecordType;
 import org.yinwang.yin.value.Value;
 
 import java.util.LinkedHashMap;
@@ -40,11 +40,21 @@ public class RecordLiteral extends Node {
 
 
     public Value interp(Scope s) {
-        Map<String, Value> valueMap = new LinkedHashMap<>();
+        Scope properties = new Scope();
         for (Map.Entry<String, Node> e : map.entrySet()) {
-            valueMap.put(e.getKey(), e.getValue().interp(s));
+            properties.putValue(e.getKey(), e.getValue().interp(s));
         }
-        return new Record(null, valueMap, this);
+        return new RecordType(null, this, properties);
+    }
+
+
+    @Override
+    public Value typecheck(Scope s) {
+        Scope properties = new Scope();
+        for (Map.Entry<String, Node> e : map.entrySet()) {
+            properties.putValue(e.getKey(), e.getValue().typecheck(s));
+        }
+        return new RecordType(null, this, properties);
     }
 
 

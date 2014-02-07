@@ -2,11 +2,14 @@
 
 (if 1 2 3)
 
-(fun (x y) (+ x y))
+(fun (x y)
+  (+ x y))
 
-(fun (:x 1 :y 2) (+ x y))
+(fun (:x 1 :y 2)
+  (+ x y))
 
-(fun (:x 1 y) (+ x y))
+(fun (:x 1 y)
+  (+ x y))
 
 (f y)
 
@@ -14,12 +17,24 @@
 
 {:x 1 :y 2}
 
-(:: {:x a :y b} {:x 1 :y 2})
+(define
+  {:x a :y b}
+  {:x 1 :y 2})
 
-(<- {:x a :y b} {:x 1 :y 2})
+(set! {:x a :y b}
+      {:x 1 :y 2})
 
-(record A :x 1 :y int)
+(record A
+        (:x Int 1)
+        (:y Float 2.5))
 
-(record A (B C) :x 1 :y int)
+(record A
+        (:x Int)
+        (:y Float))
+
+(record A (B C)
+        (:x Int)
+        (:y Float))
+
 
 (A :x 3 :y 10)

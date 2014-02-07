@@ -47,6 +47,8 @@
 -- [a1 b1]
 
 
-(record A :a 1 :b 2)
+(record A :a (Int 1) :b Float)
 (A)
+
+(define a:Int 1)
 

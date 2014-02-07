@@ -21,4 +21,11 @@ public class VectorLiteral extends Node {
     public Value interp(Scope s) {
         return new Vector(interpList(elements, s));
     }
+
+
+    @Override
+    public Value typecheck(Scope s) {
+        return new Vector(typecheckList(elements, s));
+    }
+
 }

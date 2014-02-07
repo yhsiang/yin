@@ -3,7 +3,8 @@ package org.yinwang.yin.ast;
 
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
-import org.yinwang.yin.value.Record;
+import org.yinwang.yin.value.RecordType;
+import org.yinwang.yin.value.RecordValue;
 import org.yinwang.yin.value.Value;
 
 public class Attr extends Node {
@@ -21,8 +22,26 @@ public class Attr extends Node {
     @Override
     public Value interp(Scope s) {
         Value record = value.interp(s);
-        if (record instanceof Record) {
-            Value a = ((Record) record).values.get(attr.id);
+        if (record instanceof RecordValue) {
+            Value a = ((RecordValue) record).properties.lookupLocal(attr.id);
+            if (a != null) {
+                return a;
+            } else {
+                _.abort(attr, "attribute " + attr + " not found in record: " + record);
+                return null;
+            }
+        } else {
+            _.abort(attr, "getting attribute of non-record: " + record);
+            return null;
+        }
+    }
+
+
+    @Override
+    public Value typecheck(Scope s) {
+        Value record = value.typecheck(s);
+        if (record instanceof RecordValue) {
+            Value a = ((RecordValue) record).properties.lookupLocal(attr.id);
             if (a != null) {
                 return a;
             } else {
@@ -38,10 +57,10 @@ public class Attr extends Node {
 
     public void set(Value v, Scope s) {
         Value record = value.interp(s);
-        if (record instanceof Record) {
-            Value a = ((Record) record).values.get(attr.id);
+        if (record instanceof RecordType) {
+            Value a = ((RecordType) record).properties.lookup(attr.id);
             if (a != null) {
-                ((Record) record).values.put(attr.id, v);
+                ((RecordType) record).properties.putValue(attr.id, v);
             } else {
                 _.abort(attr, "can only assign to existing attribute in record, " + attr + " not found in: " + record);
             }

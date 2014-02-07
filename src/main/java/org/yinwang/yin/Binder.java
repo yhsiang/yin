@@ -2,7 +2,7 @@ package org.yinwang.yin;
 
 
 import org.yinwang.yin.ast.*;
-import org.yinwang.yin.value.Record;
+import org.yinwang.yin.value.RecordType;
 import org.yinwang.yin.value.Value;
 import org.yinwang.yin.value.Vector;
 
@@ -20,15 +20,15 @@ public class Binder {
             if (v != null) {
                 _.abort(pattern, "trying to redefine name: " + id);
             } else {
-                env.put(id, value);
+                env.putValue(id, value);
             }
         } else if (pattern instanceof RecordLiteral) {
-            if (value instanceof Record) {
+            if (value instanceof RecordType) {
                 Map<String, Node> elms1 = ((RecordLiteral) pattern).map;
-                Map<String, Value> elms2 = ((Record) value).values;
+                Scope elms2 = ((RecordType) value).properties;
                 if (elms1.keySet().equals(elms2.keySet())) {
                     for (String k1 : elms1.keySet()) {
-                        define(elms1.get(k1), elms2.get(k1), env);
+                        define(elms1.get(k1), elms2.lookupLocal(k1), env);
                     }
                 } else {
                     _.abort(pattern, "define with records of different attributes: " +
@@ -66,19 +66,19 @@ public class Binder {
             if (d == null) {
                 _.abort(pattern, "assigned name was not defined: " + id);
             } else {
-                d.put(id, value);
+                d.putValue(id, value);
             }
         } else if (pattern instanceof Subscript) {
             ((Subscript) pattern).set(value, env);
         } else if (pattern instanceof Attr) {
             ((Attr) pattern).set(value, env);
         } else if (pattern instanceof RecordLiteral) {
-            if (value instanceof Record) {
+            if (value instanceof RecordType) {
                 Map<String, Node> elms1 = ((RecordLiteral) pattern).map;
-                Map<String, Value> elms2 = ((Record) value).values;
+                Scope elms2 = ((RecordType) value).properties;
                 if (elms1.keySet().equals(elms2.keySet())) {
                     for (String k1 : elms1.keySet()) {
-                        assign(elms1.get(k1), elms2.get(k1), env);
+                        assign(elms1.get(k1), elms2.lookupLocal(k1), env);
                     }
                 } else {
                     _.abort(pattern, "assign with records of different attributes: " +

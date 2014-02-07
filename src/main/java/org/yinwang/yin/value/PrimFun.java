@@ -20,6 +20,9 @@ public abstract class PrimFun extends Value {
     public abstract Value apply(List<Value> args, Node location);
 
 
+    public abstract Value typecheck(List<Value> args, Node location);
+
+
     public String toString() {
         return name;
     }

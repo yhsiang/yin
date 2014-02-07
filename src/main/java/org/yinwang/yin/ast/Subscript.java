@@ -1,7 +1,6 @@
 package org.yinwang.yin.ast;
 
 
-import org.yinwang.yin.Constants;
 import org.yinwang.yin.Scope;
 import org.yinwang.yin._;
 import org.yinwang.yin.value.IntValue;
@@ -49,6 +48,12 @@ public class Subscript extends Node {
     }
 
 
+    @Override
+    public Value typecheck(Scope s) {
+        return null;
+    }
+
+
     public void set(Value v, Scope s) {
         Value vector = value.interp(s);
         Value indexValue = index.interp(s);
@@ -73,7 +78,7 @@ public class Subscript extends Node {
 
 
     public String toString() {
-        return value + Constants.SUBSCRIPT_ACCESS + index;
+        return "(ref " + value + " " + index + ")";
     }
 
 }
