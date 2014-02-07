@@ -185,11 +185,19 @@ public class Call extends Node {
                 }
             }
 
+            TypeChecker.self.callStack.add((FunType) fun);
+            Value actual = funtype.fun.body.typecheck(funScope);
+            TypeChecker.self.callStack.remove(fun);
+
             Object retType = funtype.properties.lookupPropertyLocal(Constants.RETURN_ARROW, "type");
             if (retType != null) {
                 if (retType instanceof Node) {
                     // evaluate the return type because it might be (typeof x)
-                    return ((Node) retType).typecheck(funScope);
+                    Value expected = ((Node) retType).typecheck(funScope);
+                    if (!Type.subtype(actual, expected)) {
+                        _.abort(this, "type error. expected: " + expected + ", actual: " + actual);
+                    }
+                    return actual;
                 } else {
                     _.abort("illegal return type: " + retType);
                     return null;
@@ -199,10 +207,7 @@ public class Call extends Node {
                     _.abort(func, "You must specify return type for recursive functions: " + func);
                     return null;
                 } else {
-                    TypeChecker.self.callStack.add((FunType) fun);
-                    Value ret = funtype.fun.body.typecheck(funScope);
-                    TypeChecker.self.callStack.remove(fun);
-                    return ret;
+                    return actual;
                 }
             }
         } else if (fun instanceof RecordType) {

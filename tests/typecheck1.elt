@@ -39,14 +39,14 @@
 --             true
 --             (even (- x 1))))))
 
--- (record A
---   [x Int]
---   [y String])
+(record A
+  [x Int]
+  [y String])
 
 -- (define o (A :x 1 :y "hi"))
 
 -- (+ 1 o.x)
 
 
-(define f (fun ([x Any] [-> x]) x))
-(f 1)
+(define f (fun ([x Any]) x))
+(f "hi")
