@@ -23,7 +23,7 @@
 
 (define even
   (fun ([x Int] [-> Bool])
-    (define f (fun ([x Int] [-> Bool]) x))
+    (define f (fun ([x Int] [-> (U Int Bool)]) (if true 1 false)))
     (f "ok")
     (if (= x 0)
         true
@@ -38,3 +38,11 @@
         (if (= x 1)
             true
             (even (- x 1))))))
+
+(record A
+  [x Int]
+  [y String])
+
+(define o (A :x 1 :y "hi"))
+
+(+ 1 o.y)

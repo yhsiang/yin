@@ -25,7 +25,7 @@ public class VectorLiteral extends Node {
 
     @Override
     public Value typecheck(Scope s) {
-        return null;
+        return new Vector(typecheckList(elements, s));
     }
 
 }

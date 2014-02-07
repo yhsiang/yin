@@ -43,9 +43,9 @@ public class If extends Node {
             _.abort(test, "test is not boolean: " + tv);
             return null;
         }
-        Value thenType = typecheck(then, s);
-        Value elseType = typecheck(orelse, s);
-        return UnionType.union(thenType, elseType);
+        Value type1 = typecheck(then, s);
+        Value type2 = typecheck(orelse, s);
+        return UnionType.union(type1, type2);
     }
 
 

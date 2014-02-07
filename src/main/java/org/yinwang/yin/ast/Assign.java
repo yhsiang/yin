@@ -27,7 +27,10 @@ public class Assign extends Node {
 
     @Override
     public Value typecheck(Scope s) {
-        return null;
+        Value valueValue = value.typecheck(s);
+        Binder.checkDup(pattern);
+        Binder.assign(pattern, valueValue, s);
+        return Value.VOID;
     }
 
 
