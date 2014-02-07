@@ -17,7 +17,7 @@ public class TypeChecker {
 
     public static TypeChecker self;
     public String file;
-    public List<FunType> uncalled = new ArrayList<>();
+    public Set<FunType> uncalled = new HashSet<>();
     public Set<FunType> callStack = new HashSet<>();
 
 
@@ -31,9 +31,12 @@ public class TypeChecker {
         Scope s = Scope.buildInitTypeScope();
         Value ret = program.typecheck(s);
 
-        for (int i = 0; i < uncalled.size(); i++) {
-            FunType ft = uncalled.get(i);
-            invokeUncalled(ft, s);
+        while (!uncalled.isEmpty()) {
+            List<FunType> toRemove = new ArrayList<>(uncalled);
+            for (FunType ft : toRemove) {
+                invokeUncalled(ft, s);
+            }
+            uncalled.removeAll(toRemove);
         }
 
         return ret;
@@ -51,6 +54,7 @@ public class TypeChecker {
 
         if (retNode == null || !(retNode instanceof Node)) {
             _.abort("illegal return type: " + retNode);
+            return;
         }
 
         Value retType = ((Node) retNode).typecheck(s);

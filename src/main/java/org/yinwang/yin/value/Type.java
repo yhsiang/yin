@@ -3,6 +3,10 @@ package org.yinwang.yin.value;
 public class Type {
 
     public static boolean subtype(Value type1, Value type2) {
+        if (type2 instanceof AnyType) {
+            return true;
+        }
+
         if (type1 instanceof UnionType) {
             for (Value t : ((UnionType) type1).values) {
                 if (!subtype(t, type2)) {

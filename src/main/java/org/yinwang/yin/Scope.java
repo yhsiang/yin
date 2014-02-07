@@ -1,7 +1,9 @@
 package org.yinwang.yin;
 
 
-import org.yinwang.yin.value.*;
+import org.yinwang.yin.value.BoolValue;
+import org.yinwang.yin.value.Type;
+import org.yinwang.yin.value.Value;
 import org.yinwang.yin.value.primitives.*;
 
 import java.util.LinkedHashMap;
@@ -187,6 +189,7 @@ public class Scope {
         init.putValue("Int", Type.INT);
         init.putValue("Bool", Type.BOOL);
         init.putValue("String", Type.STRING);
+        init.putValue("Any", Value.ANY);
 
         return init;
     }

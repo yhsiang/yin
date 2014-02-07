@@ -124,12 +124,14 @@ public class Call extends Node {
         Value fun = this.func.typecheck(s);
         if (fun instanceof FunType) {
             FunType funtype = (FunType) fun;
+            TypeChecker.self.uncalled.remove(funtype);
+
             Scope funScope = new Scope(funtype.env);
             List<Name> params = funtype.fun.params;
 
             // set default values for parameters
             if (funtype.properties != null) {
-                Declare.mergeProperties(funtype.properties, funScope);
+                Declare.mergeTypeProperties(funtype.properties, funScope);
             }
 
             if (!args.positional.isEmpty() && args.keywords.isEmpty()) {
@@ -142,6 +144,10 @@ public class Call extends Node {
 
                 for (int i = 0; i < args.positional.size(); i++) {
                     Value value = args.positional.get(i).typecheck(s);
+                    Value expected = funScope.lookup(params.get(i).id);
+                    if (!Type.subtype(value, expected)) {
+                        _.abort(args.positional.get(i), "type error. expected: " + expected + ", actual: " + value);
+                    }
                     funScope.putValue(params.get(i).id, value);
                 }
             } else {
@@ -154,12 +160,15 @@ public class Call extends Node {
                     if (actual != null) {
                         seen.add(param.id);
                         Value value = actual.typecheck(funScope);
+                        Value expected = funScope.lookup(param.id);
+                        if (!Type.subtype(value, expected)) {
+                            _.abort(actual, "type error. expected: " + expected + ", actual: " + value);
+                        }
                         funScope.putValue(param.id, value);
+                    } else {
+                        _.abort(this, "argument not supplied for: " + param);
+                        return Value.VOID;
                     }
-//                    else {
-//                        _.abort(param, "argument not supplied for: " + param);
-//                        return Value.VOID;
-//                    }
                 }
 
                 // detect extra arguments
@@ -176,10 +185,10 @@ public class Call extends Node {
                 }
             }
 
-
             Object retType = funtype.properties.lookupPropertyLocal(Constants.RETURN_ARROW, "type");
             if (retType != null) {
                 if (retType instanceof Node) {
+                    // evaluate the return type because it might be (typeof x)
                     return ((Node) retType).typecheck(funScope);
                 } else {
                     _.abort("illegal return type: " + retType);
