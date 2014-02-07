@@ -1,6 +1,7 @@
-(record F :x (fun (x) x.a))
+(record F [x :default (fun (x) x.a)])
+(record A [a :default 42])
 (define d (F))
-(d.x {:a 1})
+(d.x (A))
 
 (define x [10 20 30 40])
 
@@ -23,21 +24,24 @@ x#idx
 
 mat #0 #(+ 1 1)
 
-(define u 1)
+-- (define u 1)
 
-(define setU
- (fun (x)
-  (set! u x)))
+-- (define setU
+--  (fun (x)
+--   (set! u x)))
 
-(setU 10)
-u
+-- (setU 10)
+-- u
 
-(define ^ (fun (x y) (* x y)))
-(^ 2 3.2)
+-- (define ^ (fun (x y) (* x y)))
+-- (^ 2 3.2)
 
-(define aa [1 2 3])
-(set! aa#1 10)
-aa#1
+-- (define aa [1 2 3])
+-- (set! aa#1 10)
+-- aa#1
 
 
-(<= 5 (+ 2 3))
+(define v1 [1 2 3 4 5 6])
+(define v2 [1 2 3 4 5 6])
+
+v1#(v2#1)
