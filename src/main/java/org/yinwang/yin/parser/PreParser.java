@@ -134,10 +134,12 @@ public class PreParser {
             if (offset + Constants.LINE_COMMENT.length() <= text.length() &&
                     text.substring(offset, offset + Constants.LINE_COMMENT.length()).equals(Constants.LINE_COMMENT))
             {
-                while (text.charAt(offset) != '\n') {
+                while (offset < text.length() && text.charAt(offset) != '\n') {
                     forward();
                 }
-                forward();
+                if (offset < text.length()) {
+                    forward();
+                }
                 seenComment = true;
             }
         }
