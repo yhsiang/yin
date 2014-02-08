@@ -48,5 +48,7 @@
 -- (+ 1 o.x)
 
 
-(define f (fun ([x Any]) x))
-(f "hi")
+-- (define f (fun ([x Any]) x))
+-- (f "hi")
+
+(A :x 1 :y "hi")

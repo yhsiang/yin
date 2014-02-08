@@ -95,7 +95,7 @@ public class Call extends Node {
 
             // check uninitialized fields
             for (String field : template.properties.keySet()) {
-                if (!values.containsKey(field)) {
+                if (values.lookupLocal(field) == null) {
                     _.abort(this, "field is not initialized: " + field);
                 }
             }
@@ -221,14 +221,19 @@ public class Call extends Node {
             for (Map.Entry<String, Node> e : args.keywords.entrySet()) {
                 if (!template.properties.keySet().contains(e.getKey())) {
                     _.abort(this, "extra keyword argument: " + e.getKey());
-                } else {
-                    values.putValue(e.getKey(), e.getValue().typecheck(s));
                 }
+
+                Value actual = args.keywords.get(e.getKey()).typecheck(s);
+                Value expected = template.properties.lookupLocalType(e.getKey());
+                if (!Type.subtype(actual, expected)) {
+                    _.abort(this, "type error. expected: " + expected + ", actual: " + actual);
+                }
+                values.putValue(e.getKey(), e.getValue().typecheck(s));
             }
 
             // check uninitialized fields
             for (String field : template.properties.keySet()) {
-                if (!values.containsKey(field)) {
+                if (values.lookupLocal(field) == null) {
                     _.abort(this, "field is not initialized: " + field);
                 }
             }
