@@ -33,27 +33,9 @@ public class RecordDef extends Node {
         if (parents != null) {
             for (Node p : parents) {
                 Value pv = p.interp(s);
-                if (!(pv instanceof RecordType)) {
-                    _.abort(p, "parent is not a record");
-                    return null;
-                }
-                Scope parentProps = ((RecordType) pv).properties;
-
-                // check for duplicated keys
-                for (String key : parentProps.keySet()) {
-                    Value existing = properties.lookupLocal(key);
-                    if (existing != null) {
-                        _.abort(p, "conflicting field " + key +
-                                " inherited from parent: " + p + ", value: " + pv);
-                        return null;
-                    }
-                }
-
-                // add all properties or all fields in parent
-                properties.putAll(parentProps);
+                properties.putAll(((RecordType) pv).properties);
             }
         }
-
         Value r = new RecordType(name.id, this, properties);
         s.putValue(name.id, r);
         return r;
@@ -68,17 +50,17 @@ public class RecordDef extends Node {
             for (Node p : parents) {
                 Value pv = p.typecheck(s);
                 if (!(pv instanceof RecordType)) {
-                    _.abort(p, "parent is not a record");
+                    _.abort(p, "parent is not a record: " + pv);
                     return null;
                 }
                 Scope parentProps = ((RecordType) pv).properties;
 
                 // check for duplicated keys
                 for (String key : parentProps.keySet()) {
-                    Value existing = properties.lookupLocal(key);
+                    Value existing = properties.lookupLocalType(key);
                     if (existing != null) {
                         _.abort(p, "conflicting field " + key +
-                                " inherited from parent: " + p + ", value: " + pv);
+                                " inherited from parent " + p + ": " + pv);
                         return null;
                     }
                 }

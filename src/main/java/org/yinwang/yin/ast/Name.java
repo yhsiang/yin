@@ -16,13 +16,7 @@ public class Name extends Node {
 
 
     public Value interp(Scope s) {
-        Value v = s.lookup(id);
-        if (v != null) {
-            return v;
-        } else {
-            _.abort(this, "unbound variable: " + id);
-            return Value.VOID;
-        }
+        return s.lookup(id);
     }
 
 

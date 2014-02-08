@@ -272,9 +272,13 @@ public class Parser {
                 if (!(nameNode instanceof Name)) {
                     _.abort(nameNode, "expect field name, but got: " + nameNode);
                 }
+                String id = ((Name) nameNode).id;
+                if (properties.containsKey(id)) {
+                    _.abort(nameNode, "duplicated field name: " + nameNode);
+                }
 
                 Node typeNode = parseNode(elements.get(1));
-                properties.put(((Name) nameNode).id, "type", typeNode);
+                properties.put(id, "type", typeNode);
 
                 Map<String, Node> props = parseMap(elements.subList(2, elements.size()));
                 Map<String, Object> propsObj = new LinkedHashMap<>();
