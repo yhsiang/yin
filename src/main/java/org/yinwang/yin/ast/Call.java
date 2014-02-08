@@ -34,46 +34,18 @@ public class Call extends Node {
             }
 
             if (!args.positional.isEmpty() && args.keywords.isEmpty()) {
-                // positional
-                if (args.positional.size() != params.size()) {
-                    _.abort(this.func,
-                            "calling function with wrong number of arguments. expected: " + params.size()
-                                    + " actual: " + args.positional.size());
-                }
-
                 for (int i = 0; i < args.positional.size(); i++) {
                     Value value = args.positional.get(i).interp(s);
                     funScope.putValue(params.get(i).id, value);
                 }
             } else {
-                // keywords
-                Set<String> seen = new HashSet<>();
-
                 // try to bind all arguments
                 for (Name param : params) {
                     Node actual = args.keywords.get(param.id);
                     if (actual != null) {
-                        seen.add(param.id);
                         Value value = actual.interp(funScope);
                         funScope.putValue(param.id, value);
                     }
-//                    else {
-//                        _.abort(param, "argument not supplied for: " + param);
-//                        return Value.VOID;
-//                    }
-                }
-
-                // detect extra arguments
-                List<String> extra = new ArrayList<>();
-                for (String id : args.keywords.keySet()) {
-                    if (!seen.contains(id)) {
-                        extra.add(id);
-                    }
-                }
-
-                if (!extra.isEmpty()) {
-                    _.abort(this, "extra keyword arguments: " + extra);
-                    return Value.VOID;
                 }
             }
             return closure.fun.body.interp(funScope);
@@ -84,35 +56,13 @@ public class Call extends Node {
             // set default values for fields
             Declare.mergeProperties(template.properties, values);
 
-            // set actual values, overwrite defaults if any
-            for (Map.Entry<String, Node> e : args.keywords.entrySet()) {
-                if (!template.properties.keySet().contains(e.getKey())) {
-                    _.abort(this, "extra keyword argument: " + e.getKey());
-                } else {
-                    values.putValue(e.getKey(), e.getValue().interp(s));
-                }
-            }
-
-            // check uninitialized fields
-            for (String field : template.properties.keySet()) {
-                if (values.lookupLocal(field) == null) {
-                    _.abort(this, "field is not initialized: " + field);
-                }
-            }
-
             // instantiate
             return new RecordValue(template.name, template, values);
         } else if (fun instanceof PrimFun) {
             PrimFun prim = (PrimFun) fun;
-            if (prim.arity >= 0 && args.positional.size() != prim.arity) {
-                _.abort(this, "incorrect number of arguments for primitive " +
-                        prim.name + ", expecting " + prim.arity + ", but got " + args.positional.size());
-                return null;
-            } else {
-                List<Value> args = Node.interpList(this.args.positional, s);
-                return prim.apply(args, this);
-            }
-        } else {
+            List<Value> args = Node.interpList(this.args.positional, s);
+            return prim.apply(args, this);
+        } else {  // can't happen
             _.abort(this.func, "calling non-function: " + fun);
             return Value.VOID;
         }
