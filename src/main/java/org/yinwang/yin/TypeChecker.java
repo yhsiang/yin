@@ -46,7 +46,7 @@ public class TypeChecker {
     public void invokeUncalled(FunType fun, Scope s) {
         Scope funScope = new Scope(fun.env);
         if (fun.properties != null) {
-            Declare.mergeTypeProperties(fun.properties, funScope);
+            Declare.mergeType(fun.properties, funScope);
         }
         Value actual = fun.fun.body.typecheck(funScope);
         Object retNode = fun.properties.lookupPropertyLocal(Constants.RETURN_ARROW, "type");

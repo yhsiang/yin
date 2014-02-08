@@ -10,27 +10,27 @@ import org.yinwang.yin.value.*;
 import java.util.*;
 
 public class Call extends Node {
-    public Node func;
+    public Node op;
     public Argument args;
 
 
-    public Call(Node func, Argument args, String file, int start, int end, int line, int col) {
+    public Call(Node op, Argument args, String file, int start, int end, int line, int col) {
         super(file, start, end, line, col);
-        this.func = func;
+        this.op = op;
         this.args = args;
     }
 
 
     public Value interp(Scope s) {
-        Value fun = this.func.interp(s);
-        if (fun instanceof Closure) {
-            Closure closure = (Closure) fun;
+        Value opv = this.op.interp(s);
+        if (opv instanceof Closure) {
+            Closure closure = (Closure) opv;
             Scope funScope = new Scope(closure.env);
             List<Name> params = closure.fun.params;
 
             // set default values for parameters
             if (closure.properties != null) {
-                Declare.mergeProperties(closure.properties, funScope);
+                Declare.mergeDefault(closure.properties, funScope);
             }
 
             if (!args.positional.isEmpty() && args.keywords.isEmpty()) {
@@ -49,21 +49,21 @@ public class Call extends Node {
                 }
             }
             return closure.fun.body.interp(funScope);
-        } else if (fun instanceof RecordType) {
-            RecordType template = (RecordType) fun;
+        } else if (opv instanceof RecordType) {
+            RecordType template = (RecordType) opv;
             Scope values = new Scope();
 
             // set default values for fields
-            Declare.mergeProperties(template.properties, values);
+            Declare.mergeDefault(template.properties, values);
 
             // instantiate
             return new RecordValue(template.name, template, values);
-        } else if (fun instanceof PrimFun) {
-            PrimFun prim = (PrimFun) fun;
+        } else if (opv instanceof PrimFun) {
+            PrimFun prim = (PrimFun) opv;
             List<Value> args = Node.interpList(this.args.positional, s);
             return prim.apply(args, this);
         } else {  // can't happen
-            _.abort(this.func, "calling non-function: " + fun);
+            _.abort(this.op, "calling non-function: " + opv);
             return Value.VOID;
         }
     }
@@ -71,7 +71,7 @@ public class Call extends Node {
 
     @Override
     public Value typecheck(Scope s) {
-        Value fun = this.func.typecheck(s);
+        Value fun = this.op.typecheck(s);
         if (fun instanceof FunType) {
             FunType funtype = (FunType) fun;
             TypeChecker.self.uncalled.remove(funtype);
@@ -81,13 +81,13 @@ public class Call extends Node {
 
             // set default values for parameters
             if (funtype.properties != null) {
-                Declare.mergeTypeProperties(funtype.properties, funScope);
+                Declare.mergeType(funtype.properties, funScope);
             }
 
             if (!args.positional.isEmpty() && args.keywords.isEmpty()) {
                 // positional
                 if (args.positional.size() != params.size()) {
-                    _.abort(this.func,
+                    _.abort(this.op,
                             "calling function with wrong number of arguments. expected: " + params.size()
                                     + " actual: " + args.positional.size());
                 }
@@ -154,7 +154,7 @@ public class Call extends Node {
                 }
             } else {
                 if (TypeChecker.self.callStack.contains(fun)) {
-                    _.abort(func, "You must specify return type for recursive functions: " + func);
+                    _.abort(op, "You must specify return type for recursive functions: " + op);
                     return null;
                 } else {
                     return actual;
@@ -165,7 +165,7 @@ public class Call extends Node {
             Scope values = new Scope();
 
             // set default values for fields
-            Declare.mergeProperties(template.properties, values);
+            Declare.mergeDefault(template.properties, values);
 
             // set actual values, overwrite defaults if any
             for (Map.Entry<String, Node> e : args.keywords.entrySet()) {
@@ -201,7 +201,7 @@ public class Call extends Node {
                 return prim.typecheck(args, this);
             }
         } else {
-            _.abort(this.func, "calling non-function: " + fun);
+            _.abort(this.op, "calling non-function: " + fun);
             return Value.VOID;
         }
 
@@ -210,9 +210,9 @@ public class Call extends Node {
 
     public String toString() {
         if (args.positional.size() != 0) {
-            return "(" + func + " " + args + ")";
+            return "(" + op + " " + args + ")";
         } else {
-            return "(" + func + ")";
+            return "(" + op + ")";
         }
     }
 

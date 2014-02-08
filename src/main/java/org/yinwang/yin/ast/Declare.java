@@ -30,14 +30,7 @@ public class Declare extends Node {
     }
 
 
-    // helper
-    // evaluate the properties inside propsNode
-    // then merge into the Scope s
-    public static void mergeProperties(Scope properties, Scope s) {
-        // merge the properties into current scope
-        s.putAll(properties);
-
-        // set default values for variables
+    public static void mergeDefault(Scope properties, Scope s) {
         for (String key : properties.keySet()) {
             Object defaultValue = properties.lookupPropertyLocal(key, "default");
             if (defaultValue == null) {
@@ -54,11 +47,7 @@ public class Declare extends Node {
     }
 
 
-    public static void mergeTypeProperties(Scope properties, Scope s) {
-        // merge the properties into current scope
-        s.putAll(properties);
-
-        // set default values for variables
+    public static void mergeType(Scope properties, Scope s) {
         for (String key : properties.keySet()) {
             Object defaultValue = properties.lookupPropertyLocal(key, "type");
             if (defaultValue == null) {
