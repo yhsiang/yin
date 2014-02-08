@@ -48,19 +48,21 @@ public class TypeChecker {
         if (fun.properties != null) {
             Declare.mergeType(fun.properties, funScope);
         }
-        Value actual = fun.fun.body.typecheck(funScope);
-        Object retNode = fun.properties.lookupPropertyLocal(Constants.RETURN_ARROW, "type");
 
+        TypeChecker.self.callStack.add(fun);
+        Value actual = fun.fun.body.typecheck(funScope);
+        TypeChecker.self.callStack.remove(fun);
+
+        Object retNode = fun.properties.lookupPropertyLocal(Constants.RETURN_ARROW, "type");
 
         if (retNode == null || !(retNode instanceof Node)) {
             _.abort("illegal return type: " + retNode);
             return;
         }
 
-        Value retType = ((Node) retNode).typecheck(s);
-
-        if (!Type.subtype(actual, retType)) {
-            _.abort(fun.fun, "type error in return value, expected: " + retType + ", actual: " + actual);
+        Value expected = ((Node) retNode).typecheck(funScope);
+        if (!Type.subtype(actual, expected, true)) {
+            _.abort(fun.fun, "type error in return value, expected: " + expected + ", actual: " + actual);
         }
     }
 

@@ -74,7 +74,7 @@ public class Call extends Node {
         Value fun = this.op.typecheck(s);
         if (fun instanceof FunType) {
             FunType funtype = (FunType) fun;
-            TypeChecker.self.uncalled.remove(funtype);
+//            TypeChecker.self.uncalled.remove(funtype);
 
             Scope funScope = new Scope(funtype.env);
             List<Name> params = funtype.fun.params;
@@ -95,7 +95,7 @@ public class Call extends Node {
                 for (int i = 0; i < args.positional.size(); i++) {
                     Value value = args.positional.get(i).typecheck(s);
                     Value expected = funScope.lookup(params.get(i).id);
-                    if (!Type.subtype(value, expected)) {
+                    if (!Type.subtype(value, expected, false)) {
                         _.abort(args.positional.get(i), "type error. expected: " + expected + ", actual: " + value);
                     }
                     funScope.putValue(params.get(i).id, value);
@@ -111,7 +111,7 @@ public class Call extends Node {
                         seen.add(param.id);
                         Value value = actual.typecheck(funScope);
                         Value expected = funScope.lookup(param.id);
-                        if (!Type.subtype(value, expected)) {
+                        if (!Type.subtype(value, expected, false)) {
                             _.abort(actual, "type error. expected: " + expected + ", actual: " + value);
                         }
                         funScope.putValue(param.id, value);
@@ -135,19 +135,11 @@ public class Call extends Node {
                 }
             }
 
-            TypeChecker.self.callStack.add((FunType) fun);
-            Value actual = funtype.fun.body.typecheck(funScope);
-            TypeChecker.self.callStack.remove(fun);
-
             Object retType = funtype.properties.lookupPropertyLocal(Constants.RETURN_ARROW, "type");
             if (retType != null) {
                 if (retType instanceof Node) {
                     // evaluate the return type because it might be (typeof x)
-                    Value expected = ((Node) retType).typecheck(funScope);
-                    if (!Type.subtype(actual, expected)) {
-                        _.abort(this, "type error. expected: " + expected + ", actual: " + actual);
-                    }
-                    return actual;
+                    return ((Node) retType).typecheck(funScope);
                 } else {
                     _.abort("illegal return type: " + retType);
                     return null;
@@ -156,9 +148,12 @@ public class Call extends Node {
                 if (TypeChecker.self.callStack.contains(fun)) {
                     _.abort(op, "You must specify return type for recursive functions: " + op);
                     return null;
-                } else {
-                    return actual;
                 }
+
+                TypeChecker.self.callStack.add((FunType) fun);
+                Value actual = funtype.fun.body.typecheck(funScope);
+                TypeChecker.self.callStack.remove(fun);
+                return actual;
             }
         } else if (fun instanceof RecordType) {
             RecordType template = (RecordType) fun;
@@ -175,7 +170,7 @@ public class Call extends Node {
 
                 Value actual = args.keywords.get(e.getKey()).typecheck(s);
                 Value expected = template.properties.lookupLocalType(e.getKey());
-                if (!Type.subtype(actual, expected)) {
+                if (!Type.subtype(actual, expected, false)) {
                     _.abort(this, "type error. expected: " + expected + ", actual: " + actual);
                 }
                 values.putValue(e.getKey(), e.getValue().typecheck(s));

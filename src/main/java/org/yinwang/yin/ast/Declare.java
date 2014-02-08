@@ -49,21 +49,19 @@ public class Declare extends Node {
 
     public static void mergeType(Scope properties, Scope s) {
         for (String key : properties.keySet()) {
-            Object defaultValue = properties.lookupPropertyLocal(key, "type");
-            if (defaultValue == null) {
+            if (key.equals(Constants.RETURN_ARROW)) {
                 continue;
-            } else if (defaultValue instanceof Value) {
+            }
+            Object type = properties.lookupPropertyLocal(key, "type");
+            if (type == null) {
+                continue;
+            } else if (type instanceof Value) {
                 Value existing = s.lookup(key);
                 if (existing == null) {
-                    s.putValue(key, (Value) defaultValue);
-                }
-            } else if (defaultValue instanceof Node) {
-                Value existing = s.lookup(key);
-                if (existing == null) {
-                    s.put(key, "type", defaultValue);
+                    s.putValue(key, (Value) type);
                 }
             } else {
-                _.abort("illegal type, shouldn't happen" + defaultValue);
+                _.abort("illegal type, shouldn't happen" + type);
             }
         }
     }
