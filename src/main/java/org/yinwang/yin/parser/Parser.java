@@ -13,16 +13,14 @@ import java.util.Map;
 public class Parser {
 
     public static Node parse(String file) {
-        PreParser p = new PreParser(file);
-        Node prenode = p.parse();
-        return parseNode(prenode);
+        PreParser preparser = new PreParser(file);
+        Node prenode = preparser.parse();
+        Node grouped = groupAttr(prenode);
+        return parseNode(grouped);
     }
 
 
     public static Node parseNode(Node prenode) {
-
-        // group attribute access first
-        prenode = groupAttr(prenode);
 
         // initial program is in a block
         if (prenode instanceof Block) {
@@ -246,8 +244,8 @@ public class Parser {
         }
 
         for (int i = 0; i < prenodes.size(); i += 2) {
-            Node key = parseNode(prenodes.get(i));
-            Node value = parseNode(prenodes.get(i + 1));
+            Node key = prenodes.get(i);
+            Node value = prenodes.get(i + 1);
             if (!(key instanceof Keyword)) {
                 _.abort(key, "key must be a keyword, but got: " + key);
             }
@@ -263,12 +261,12 @@ public class Parser {
             if (field instanceof Tuple &&
                     delimType(((Tuple) field).open, Constants.ARRAY_BEGIN))
             {
-                List<Node> elements = ((Tuple) field).elements;
+                List<Node> elements = parseList(((Tuple) field).elements);
                 if (elements.size() < 2) {
                     _.abort(field, "empty record slot not allowed");
                 }
 
-                Node nameNode = parseNode(elements.get(0));
+                Node nameNode = elements.get(0);
                 if (!(nameNode instanceof Name)) {
                     _.abort(nameNode, "expect field name, but got: " + nameNode);
                 }
@@ -277,7 +275,7 @@ public class Parser {
                     _.abort(nameNode, "duplicated field name: " + nameNode);
                 }
 
-                Node typeNode = parseNode(elements.get(1));
+                Node typeNode = elements.get(1);
                 properties.put(id, "type", typeNode);
 
                 Map<String, Node> props = parseMap(elements.subList(2, elements.size()));
@@ -306,23 +304,23 @@ public class Parser {
                 grouped = groupAttr(grouped);
 
                 for (int i = 1; i < elements.size(); i++) {
-                    Node n1 = elements.get(i);
-                    if (delimType(n1, Constants.ATTRIBUTE_ACCESS)) {
+                    Node node1 = elements.get(i);
+                    if (delimType(node1, Constants.ATTRIBUTE_ACCESS)) {
                         if (i + 1 >= elements.size()) {
-                            _.abort(n1, "illegal position for .");
+                            _.abort(node1, "illegal position for .");
                         }
-                        Node n2 = elements.get(i + 1);
-                        if (delimType(n1, Constants.ATTRIBUTE_ACCESS)) {
-                            if (!(n2 instanceof Name)) {
-                                _.abort(n2, "attribute is not a name");
+                        Node node2 = elements.get(i + 1);
+                        if (delimType(node1, Constants.ATTRIBUTE_ACCESS)) {
+                            if (!(node2 instanceof Name)) {
+                                _.abort(node2, "attribute is not a name");
                             }
-                            grouped = new Attr(grouped, (Name) n2, grouped.file,
-                                    grouped.start, n2.end, grouped.line, grouped.col);
+                            grouped = new Attr(grouped, (Name) node2, grouped.file,
+                                    grouped.start, node2.end, grouped.line, grouped.col);
                             i++;   // skip
                         }
                     } else {
                         newElems.add(grouped);
-                        grouped = n1;
+                        grouped = groupAttr(node1);
                     }
                 }
                 newElems.add(grouped);
