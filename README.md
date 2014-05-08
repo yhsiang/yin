@@ -1,5 +1,13 @@
 # The Yin Programming Language
 
+#### Discussion Forum
+
+For now let's use this Google Group:
+
+<https://groups.google.com/forum/#!forum/yin-lang>
+
+
+
 #### License (GNU AGPLv3)
 
 Copyright (c) 2013-2014 Yin Wang
