@@ -1,6 +1,6 @@
 # The Yin Programming Language
 
-#### Discussion Forum
+### Discussion Forum
 
 For now let's use this Google Group:
 
@@ -8,7 +8,7 @@ For now let's use this Google Group:
 
 
 
-#### License (GNU AGPLv3)
+### License (GNU AGPLv3)
 
 Copyright (c) 2013-2014 Yin Wang
 
